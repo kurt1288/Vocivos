@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import Api from '../Api';
-import { setToken } from '../store';
+import { setToken, setUser } from '../store';
 
 const GetApiKey = () => {
    const [userName, setUserName] = useState('');
@@ -29,10 +29,11 @@ const GetApiKey = () => {
       if (formValid) {
          try {
             // Validate the user/token
-            await Api.getUser(userName, userToken);
+            const user = await Api.getUser(userName, userToken);
 
             localStorage.setItem('apiKey', JSON.stringify({ username: userName, token: userToken }));
-            dispatch(setToken(userToken));
+            dispatch(setToken(JSON.stringify({ username: userName, token: userToken })));
+            dispatch(setUser(user));
          } catch (err:unknown) {
             setError((err as Error).message);
          }
@@ -46,7 +47,8 @@ const GetApiKey = () => {
 
    return (
       <div className="bg-gray-800 text-gray-200 w-full h-full flex flex-col items-center justify-center">
-         <h1 className="text-4xl mb-6">Welcome to SpaceTraders!</h1>
+         <h1 className="text-4xl">Welcome to Vocivos!</h1>
+         <h2 className="mb-6">A SpaceTraders API interface</h2>
          { error
             && <p className="bg-red-300 text-red-800 px-4 py-3 mb-4">{ error }</p>}
          <div className="flex items-left flex-col">
