@@ -1,18 +1,18 @@
 {
   "files": {
-    "main.css": "/vocivos/static/css/main.1967ea82.chunk.css",
-    "main.js": "/vocivos/static/js/main.cbbaf7e1.chunk.js",
-    "main.js.map": "/vocivos/static/js/main.cbbaf7e1.chunk.js.map",
-    "runtime-main.js": "/vocivos/static/js/runtime-main.55a7c2f0.js",
-    "runtime-main.js.map": "/vocivos/static/js/runtime-main.55a7c2f0.js.map",
-    "static/js/2.acb30e88.chunk.js": "/vocivos/static/js/2.acb30e88.chunk.js",
-    "static/js/2.acb30e88.chunk.js.map": "/vocivos/static/js/2.acb30e88.chunk.js.map",
-    "index.html": "/vocivos/index.html",
-    "static/css/main.1967ea82.chunk.css.map": "/vocivos/static/css/main.1967ea82.chunk.css.map",
-    "static/js/2.acb30e88.chunk.js.LICENSE.txt": "/vocivos/static/js/2.acb30e88.chunk.js.LICENSE.txt"
+    "main.css": "/Vocivos/static/css/main.1967ea82.chunk.css",
+    "main.js": "/Vocivos/static/js/main.cbbaf7e1.chunk.js",
+    "main.js.map": "/Vocivos/static/js/main.cbbaf7e1.chunk.js.map",
+    "runtime-main.js": "/Vocivos/static/js/runtime-main.335d6e9c.js",
+    "runtime-main.js.map": "/Vocivos/static/js/runtime-main.335d6e9c.js.map",
+    "static/js/2.acb30e88.chunk.js": "/Vocivos/static/js/2.acb30e88.chunk.js",
+    "static/js/2.acb30e88.chunk.js.map": "/Vocivos/static/js/2.acb30e88.chunk.js.map",
+    "index.html": "/Vocivos/index.html",
+    "static/css/main.1967ea82.chunk.css.map": "/Vocivos/static/css/main.1967ea82.chunk.css.map",
+    "static/js/2.acb30e88.chunk.js.LICENSE.txt": "/Vocivos/static/js/2.acb30e88.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.55a7c2f0.js",
+    "static/js/runtime-main.335d6e9c.js",
     "static/js/2.acb30e88.chunk.js",
     "static/css/main.1967ea82.chunk.css",
     "static/js/main.cbbaf7e1.chunk.js"
