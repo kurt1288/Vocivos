@@ -21,6 +21,7 @@ const ShipCard = ({ ship, compact }:Props) => {
    const [showSellModal, setSellModalShow] = useState(false);
    const [showTravelModal, setTravelModalShow] = useState(false);
    const [activeFlightPlan, setActiveFlightPlan] = useState<FlightPlan>();
+   const [remainingTime, setRemainingTime] = useState<string>();
 
    useEffect(() => {
       if (!flightPlans) { return; }
@@ -31,20 +32,20 @@ const ShipCard = ({ ship, compact }:Props) => {
       }
    }, [flightPlans]);
 
-   const setRemainingTime = ():string => {
-      if (!activeFlightPlan) { return ''; }
+   const remainingTimeString = () => {
+      if (!activeFlightPlan) { return; }
 
       if (isPast(new Date(activeFlightPlan.arrivesAt))) {
          dispatch(removeFlightPlan(activeFlightPlan));
       }
 
-      return formatDistanceToNowStrict(new Date(activeFlightPlan.arrivesAt));
+      setRemainingTime(formatDistanceToNowStrict(new Date(activeFlightPlan.arrivesAt)));
    };
 
    useEffect(() => {
       if (!activeFlightPlan) { return () => null; }
 
-      const interval = setInterval(() => setRemainingTime(), 1000);
+      const interval = setInterval(() => remainingTimeString(), 1000);
 
       return () => clearInterval(interval);
    }, [activeFlightPlan]);
@@ -70,7 +71,7 @@ const ShipCard = ({ ship, compact }:Props) => {
                      ? (
                         <div className="text-right">
                            <p className="text-xs text-gray-400">In Transit</p>
-                           <p className="text-sm text-gray-300">Arrives in { setRemainingTime() }</p>
+                           <p className="text-sm text-gray-300">{ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown'}</p>
                         </div>
                      ) : (
                         <div>
