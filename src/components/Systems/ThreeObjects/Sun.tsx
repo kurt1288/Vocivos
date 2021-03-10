@@ -1,12 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { MeshProps, useFrame, useLoader } from 'react-three-fiber';
 import { Color, Mesh, TextureLoader } from 'three';
-import { Location } from '../../../Api/types';
-
-interface Props {
-   meshProps: MeshProps,
-   system: Location
-}
 
 const Sphere: React.FC<MeshProps> = (props) => {
    const mesh = useRef<Mesh>();
