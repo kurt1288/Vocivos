@@ -2,6 +2,7 @@
   "name": "vocivos",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://kurt1288.github.io/vocivos/",
   "dependencies": {
     "@craco/craco": "^6.1.1",
     "@reduxjs/toolkit": "^1.5.0",
