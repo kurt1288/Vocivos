@@ -4,7 +4,7 @@ import { Mesh, TextureLoader } from 'three';
 
 const Sphere: React.FC<MeshProps> = (props) => {
    const mesh = useRef<Mesh>();
-   const imageTexture = useLoader(TextureLoader, '/images/asteroid.jpg');
+   const imageTexture = useLoader(TextureLoader, `${process.env.PUBLIC_URL}/images/asteroid.jpg`);
 
    const [hovered, setHover] = useState(false);
    const [active, setActive] = useState(false);

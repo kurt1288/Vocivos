@@ -10,7 +10,7 @@ interface Props {
 
 const Sphere: React.FC<MeshProps> = (props) => {
    const mesh = useRef<Mesh>();
-   const imageTexture = useLoader(TextureLoader, '/images/sun.jpg');
+   const imageTexture = useLoader(TextureLoader, `${process.env.PUBLIC_URL}/images/sun.jpg`);
 
    const [hovered, setHover] = useState(false);
    const [active, setActive] = useState(false);

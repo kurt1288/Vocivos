@@ -17,7 +17,7 @@ interface IMoon {
 }
 
 const SystemMap = () => {
-   const bgImageTexture = useLoader(TextureLoader, '/images/stars.jpg');
+   const bgImageTexture = useLoader(TextureLoader, `${process.env.PUBLIC_URL}/images/stars.jpg`);
    const token = useSelector((state:RootState) => state.account.token);
    const [system, setSystem] = useState<System>();
    const [stars, setStars] = useState<Location[]>();

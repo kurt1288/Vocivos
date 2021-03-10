@@ -4,7 +4,7 @@ import { Mesh, TextureLoader } from 'three';
 
 const Sphere: React.FC<MeshProps> = (props) => {
    const mesh = useRef<Mesh>();
-   const imageTexture = useLoader(TextureLoader, '/images/planet.jpg');
+   const imageTexture = useLoader(TextureLoader, `${process.env.PUBLIC_URL}/images/planet.jpg`);
    const [rotateSpeed, setrotateSpeed] = useState(0);
 
    const [hovered, setHover] = useState(false);
