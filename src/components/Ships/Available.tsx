@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import Api from '../../Api';
 import { Ship } from '../../Api/types';
 import { RootState } from '../../store';
+import { CardLoader } from '../SkeletonLoaders';
 import PurchaseShipModal from './PurchaseShipModal';
 
 const Available = () => {
@@ -85,6 +86,20 @@ const Available = () => {
             </select>
          </div>
          <div className="grid grid-cols-4 gap-4">
+            { !ships
+               && (
+                  <React.Fragment>
+                     <div className="p-3 bg-gray-900 border border-gray-700 rounded">
+                        <CardLoader />
+                     </div>
+                     <div className="p-3 bg-gray-900 border border-gray-700 rounded">
+                        <CardLoader />
+                     </div>
+                     <div className="p-3 bg-gray-900 border border-gray-700 rounded">
+                        <CardLoader />
+                     </div>
+                  </React.Fragment>
+               )}
             { ships?.map((ship) => (
                <button type="button" className="p-3 bg-gray-900 border border-gray-700 rounded hover:border-yellow-900 hover:shadow-xl" key={ship.class + ship.speed + ship.manufacturer + ship.maxCargo} onClick={() => { setModalShow(true); setSelectedShip(ship); }}>
                   <div className="flex justify-between items-center mb-5">

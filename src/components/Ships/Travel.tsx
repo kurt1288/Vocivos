@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
 import { OwnedShip, Location } from '../../Api/types';
 import { addFlightPlan, RootState } from '../../store';
+import { ModalPlaceholder } from '../SkeletonLoaders';
 
 interface Props {
    handleClose: () => void,
@@ -47,28 +48,38 @@ const Travel = ({ handleClose, show, ship }: Props) => {
                { error
                && <p className="py-4 px-2 bg-red-500 text-gray-100 text-center">{ error }</p>}
                <div className="relative">
-                  <div className="divide-y">
-                     {locations?.map((location) => (
-                        <div className="py-2 flex justify-between items-center" key={location.symbol + location.name}>
-                           <div>
-                              <p>{ location.name }</p>
-                              <p className="text-sm text-gray-500">{ location.symbol }</p>
-                           </div>
-                           <div>
-                              { ship.location === location.symbol
-                                 ? <p className="text-sm text-gray-600 cursor-default">Current location</p>
-                                 : (
-                                    <button
-                                       type="button"
-                                       className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 disabled:opacity-50 disabled:cursor-default disabled:bg-blue-500"
-                                       onClick={() => createFlightPlan(location.symbol)}
-                                    >Travel
-                                    </button>
-                                 )}
-                           </div>
+                  {!locations
+                     ? (
+                        <React.Fragment>
+                           <ModalPlaceholder />
+                           <ModalPlaceholder />
+                           <ModalPlaceholder />
+                        </React.Fragment>
+                     )
+                     : (
+                        <div className="divide-y">
+                           {locations.map((location) => (
+                              <div className="py-2 flex justify-between items-center" key={location.symbol + location.name}>
+                                 <div>
+                                    <p>{ location.name }</p>
+                                    <p className="text-sm text-gray-500">{ location.symbol }</p>
+                                 </div>
+                                 <div>
+                                    { ship.location === location.symbol
+                                       ? <p className="text-sm text-gray-600 cursor-default">Current location</p>
+                                       : (
+                                          <button
+                                             type="button"
+                                             className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 disabled:opacity-50 disabled:cursor-default disabled:bg-blue-500"
+                                             onClick={() => createFlightPlan(location.symbol)}
+                                          >Travel
+                                          </button>
+                                       )}
+                                 </div>
+                              </div>
+                           ))}
                         </div>
-                     ))}
-                  </div>
+                     )}
                </div>
             </div>
          </div>

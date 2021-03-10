@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
 import { Cargo, Marketplace, OwnedShip } from '../../Api/types';
 import { RootState, setCredits, updateShip } from '../../store';
+import { ModalPlaceholder } from '../SkeletonLoaders';
 
 interface Props {
    handleClose: () => void,
@@ -49,29 +50,39 @@ const Sell = ({ handleClose, show, ship }:Props) => {
             <div className="modal-content py-4 text-left px-6">
                <h3 className="text-xl font-semibold mb-6">Sell Cargo</h3>
                <div className="relative">
-                  <div className="divide-y">
-                     {ship.cargo?.map((cargo) => (
-                        <div className={`py-3 flex justify-between items-center bg-gray-100 w-full ${selectedMarket ? 'absolute' : ''} ${selectedMarket?.good === cargo.good ? 'z-10' : ''}`} key={cargo.good + cargo.quantity + cargo.totalVolume}>
-                           <div>
-                              <p className="font-semibold">{ formatString(cargo.good) } <span className="ml-3 text-sm text-gray-500 font-normal">{ cargo.quantity.toLocaleString() } units available</span></p>
-                              { marketData?.some((x) => x.symbol === cargo.good)
-                                 && <p className="text-sm">{ marketData.find((x) => x.symbol === cargo.good)?.pricePerUnit.toLocaleString() } credits per unit</p>}
-                           </div>
-                           { !selectedMarket
-                              && (
+                  {!marketData
+                     ? (
+                        <React.Fragment>
+                           <ModalPlaceholder />
+                           <ModalPlaceholder />
+                           <ModalPlaceholder />
+                        </React.Fragment>
+                     )
+                     : (
+                        <div className="divide-y">
+                           {ship.cargo?.map((cargo) => (
+                              <div className={`py-3 flex justify-between items-center bg-gray-100 w-full ${selectedMarket ? 'absolute' : ''} ${selectedMarket?.good === cargo.good ? 'z-10' : ''}`} key={cargo.good + cargo.quantity + cargo.totalVolume}>
                                  <div>
-                                    <button
-                                       type="button"
-                                       className="text-sm bg-blue-500 text-white px-4 py-1 rounded mr-3 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-default disabled:bg-blue-500"
-                                       disabled={!marketData?.some((x) => x.symbol === cargo.good)}
-                                       onClick={() => setSelectedMarket(cargo)}
-                                    >Sell
-                                    </button>
+                                    <p className="font-semibold">{ formatString(cargo.good) } <span className="ml-3 text-sm text-gray-500 font-normal">{ cargo.quantity.toLocaleString() } units available</span></p>
+                                    { marketData?.some((x) => x.symbol === cargo.good)
+                                       && <p className="text-sm">{ marketData.find((x) => x.symbol === cargo.good)?.pricePerUnit.toLocaleString() } credits per unit</p>}
                                  </div>
-                              )}
+                                 { !selectedMarket
+                                    && (
+                                       <div>
+                                          <button
+                                             type="button"
+                                             className="text-sm bg-blue-500 text-white px-4 py-1 rounded mr-3 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-default disabled:bg-blue-500"
+                                             disabled={!marketData?.some((x) => x.symbol === cargo.good)}
+                                             onClick={() => setSelectedMarket(cargo)}
+                                          >Sell
+                                          </button>
+                                       </div>
+                                    )}
+                              </div>
+                           ))}
                         </div>
-                     ))}
-                  </div>
+                     )}
                   { selectedMarket
                         && (
                            <div className="absolute top-20 w-full text-center">

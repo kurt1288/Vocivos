@@ -58,26 +58,28 @@ const SystemMap = () => {
    return (
       <React.Fragment>
          <div className="h-1/4">
-            <Canvas camera={{ position: [4.5, 0, 10], fov: 20 }} onCreated={(state) => { state.scene.background = bgImageTexture; state.camera.lookAt(4.5, 0, 0); }}>
-               <ambientLight intensity={0.4} />
-               {stars?.map((star) => (
-                  <Suspense key={star.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Sun position={[0, 0, 0]} /></Suspense>
-               ))}
-               {planets?.map((planet, index) => (
-                  <Suspense key={planet.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Planet position={[(index + 3) + index, 0, 0]} /></Suspense>
-               ))}
-               {asteroids?.map((asteroid) => (
-                  <Suspense key={asteroid.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Asteroid position={[planets ? planets.length + 7 : 0, 0, 0]} /></Suspense>
-               ))}
-               {moons?.map((moon) => (
-                  <Suspense key={moon.moon.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Moon position={[(moon.parent + 3) + moon.parent, getMoonPosition(moon), 0]} /></Suspense>
-               ))}
-            </Canvas>
             { system && stars && planets && moons && asteroids
                && (
-                  <div className="mt-4">
-                     <SystemInfo system={system} stars={stars} planets={planets} moons={moons} asteroids={asteroids} />
-                  </div>
+                  <React.Fragment>
+                     <Canvas camera={{ position: [4.5, 0, 10], fov: 20 }} onCreated={(state) => { state.scene.background = bgImageTexture; state.camera.lookAt(4.5, 0, 0); }}>
+                        <ambientLight intensity={0.4} />
+                        {stars?.map((star) => (
+                           <Suspense key={star.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Sun position={[0, 0, 0]} /></Suspense>
+                        ))}
+                        {planets?.map((planet, index) => (
+                           <Suspense key={planet.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Planet position={[(index + 3) + index, 0, 0]} /></Suspense>
+                        ))}
+                        {asteroids?.map((asteroid) => (
+                           <Suspense key={asteroid.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Asteroid position={[planets ? planets.length + 7 : 0, 0, 0]} /></Suspense>
+                        ))}
+                        {moons?.map((moon) => (
+                           <Suspense key={moon.moon.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Moon position={[(moon.parent + 3) + moon.parent, getMoonPosition(moon), 0]} /></Suspense>
+                        ))}
+                     </Canvas>
+                     <div className="mt-4">
+                        <SystemInfo system={system} stars={stars} planets={planets} moons={moons} asteroids={asteroids} />
+                     </div>
+                  </React.Fragment>
                )}
          </div>
       </React.Fragment>

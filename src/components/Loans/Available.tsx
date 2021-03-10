@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import Api from '../../Api';
 import { Loan } from '../../Api/types';
 import { RootState } from '../../store';
+import { CardLoader } from '../SkeletonLoaders';
 import GetLoan from './GetLoadModal';
 
 const Available = () => {
@@ -23,6 +24,20 @@ const Available = () => {
          <GetLoan show={showModal} loan={selectedLoan} handleClose={() => { setModalShow(false); setSelectedLoan(undefined); }} />
          <h2 className="text-3xl mb-5">Available Loans</h2>
          <div className="grid grid-cols-4 gap-4">
+            { !loans
+               && (
+                  <React.Fragment>
+                     <div className="p-3 bg-gray-900 border border-gray-700 rounded">
+                        <CardLoader />
+                     </div>
+                     <div className="p-3 bg-gray-900 border border-gray-700 rounded">
+                        <CardLoader />
+                     </div>
+                     <div className="p-3 bg-gray-900 border border-gray-700 rounded">
+                        <CardLoader />
+                     </div>
+                  </React.Fragment>
+               )}
             { loans?.map((loan) => (
                <button type="button" className="p-3 bg-gray-900 border border-gray-700 rounded text-left hover:border-yellow-900 hover:shadow-xl" key={loan.amount + loan.type + loan.rate} onClick={() => { setModalShow(true); setSelectedLoan(loan); }}>
                   <div className="flex justify-between items-start">
