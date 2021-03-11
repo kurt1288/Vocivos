@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatDistanceToNowStrict, isFuture, isPast } from 'date-fns';
 import {
-   Cargo, CargoType, FlightPlan, OwnedShip,
+   Cargo, CargoType, OwnedShip,
 } from '../../Api/types';
 import { removeFlightPlan, RootState } from '../../store';
 import Buy from '../Markets/Buy';
@@ -11,44 +11,27 @@ import Travel from './Travel';
 
 interface Props {
    ship: OwnedShip,
-   compact?: boolean
+   time?: number,
+   compact?: boolean,
 }
 
-const ShipCard = ({ ship, compact }:Props) => {
-   const flightPlans = useSelector((state:RootState) => state.flightPlans);
+const ShipCard = ({ ship, time, compact }:Props) => {
+   const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.ship === ship.id));
    const dispatch = useDispatch();
    const [showBuyModal, setBuyModalShow] = useState(false);
    const [showSellModal, setSellModalShow] = useState(false);
    const [showTravelModal, setTravelModalShow] = useState(false);
-   const [activeFlightPlan, setActiveFlightPlan] = useState<FlightPlan>();
    const [remainingTime, setRemainingTime] = useState<string>();
 
    useEffect(() => {
-      if (!flightPlans) { return; }
+      if (!flightPlan) { return; }
 
-      const result = flightPlans.find((x) => x.ship === ship.id);
-      if (result) {
-         setActiveFlightPlan(result);
-      }
-   }, [flightPlans]);
-
-   const remainingTimeString = () => {
-      if (!activeFlightPlan) { return; }
-
-      if (isPast(new Date(activeFlightPlan.arrivesAt))) {
-         dispatch(removeFlightPlan(activeFlightPlan));
+      if (isPast(new Date(flightPlan.arrivesAt))) {
+         dispatch(removeFlightPlan(flightPlan));
       }
 
-      setRemainingTime(formatDistanceToNowStrict(new Date(activeFlightPlan.arrivesAt)));
-   };
-
-   useEffect(() => {
-      if (!activeFlightPlan) { return () => null; }
-
-      const interval = setInterval(() => remainingTimeString(), 1000);
-
-      return () => clearInterval(interval);
-   }, [activeFlightPlan]);
+      setRemainingTime(formatDistanceToNowStrict(new Date(flightPlan.arrivesAt)));
+   }, [time]);
 
    const fuelIsEmpty = (cargo:Cargo[]) => {
       const fuel = cargo.filter((x) => x.good === CargoType.Fuel).reduce((acc, item) => acc + item.quantity, 0);
@@ -67,7 +50,7 @@ const ShipCard = ({ ship, compact }:Props) => {
                      <h3>{ ship.type }</h3>
                      <p className="text-xs text-gray-400">{ ship.location }</p>
                   </div>
-                  { (activeFlightPlan && isFuture(new Date(activeFlightPlan.arrivesAt))) || !ship.location
+                  { (flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
                      ? (
                         <div className="text-right">
                            <p className="text-xs text-gray-400">In Transit</p>
@@ -103,7 +86,7 @@ const ShipCard = ({ ship, compact }:Props) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                      </svg>
                   </div>
-                  <p>{ (activeFlightPlan && isFuture(new Date(activeFlightPlan.arrivesAt))) || !ship.location ? 'In Transit' : ship.location }</p>
+                  <p>{ (flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location ? 'In Transit' : ship.location }</p>
                </div>
                <div className="flex mt-3">
                   <div className="w-6 h-6 mr-3">
@@ -155,7 +138,7 @@ const ShipCard = ({ ship, compact }:Props) => {
                   </div>
                   <p>{ ship.weapons }</p>
                </div>
-               {(activeFlightPlan && isFuture(new Date(activeFlightPlan.arrivesAt))) || !ship.location
+               {(flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
                   ? null
                   : (
                      <div className="mt-5 grid grid-cols-3 gap-x-4">
@@ -178,6 +161,7 @@ const ShipCard = ({ ship, compact }:Props) => {
 
 ShipCard.defaultProps = {
    compact: false,
+   time: Date.now(),
 };
 
 export default ShipCard;
