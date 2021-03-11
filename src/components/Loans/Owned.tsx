@@ -18,7 +18,7 @@ const Owned = () => {
                   </div>
                   <div>
                      <p className="text-xs text-gray-400">Due in</p>
-                     <p>{ formatDistanceToNow(new Date(loan.due)) }</p>
+                     <p>{ formatDistanceToNow(new Date(loan.due), { addSuffix: true }) }</p>
                   </div>
                </button>
             ))}

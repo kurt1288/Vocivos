@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { RootState } from '../store';
@@ -7,10 +7,19 @@ import ShipCard from './Ships/ShipCard';
 
 const Profile = () => {
    const { username, loans, ships } = useSelector((state:RootState) => state.user);
+   const [time, setTime] = useState<number>(Date.now());
+
+   useEffect(() => {
+      // Update the 'time' state, in order for ship cards to update (for keeping track of flight plan time)
+      const interval = setInterval(() => setTime(Date.now()), 1000);
+
+      return () => clearInterval(interval);
+   }, []);
 
    return (
       <React.Fragment>
-         <h2 className="text-3xl mb-10">Welcome { username }</h2>
+         <p className="text-gray-400">Welcome</p>
+         <h2 className="text-3xl mb-10">{ username }</h2>
          <div className="mb-4 min-h-1/4">
             <h3 className="text-xl mb-4">Loans</h3>
             <div className="pl-5">
@@ -24,7 +33,7 @@ const Profile = () => {
                   : (
                      <div>
                         { loans.map((loan) => (
-                           <p key={loan.id}>{ loan.repaymentAmount.toLocaleString() } credits due in { formatDistanceToNow(new Date(loan.due)) }</p>
+                           <p key={loan.id}>{ loan.repaymentAmount.toLocaleString() } credits due { formatDistanceToNow(new Date(loan.due), { addSuffix: true }) }</p>
                         ))}
                      </div>
                   )}
@@ -42,7 +51,7 @@ const Profile = () => {
                   )
                   : (
                      ships.map((ship) => (
-                        <ShipCard ship={ship} compact key={ship.class + ship.speed + ship.manufacturer + ship.maxCargo} />
+                        <ShipCard time={time} ship={ship} compact key={ship.class + ship.speed + ship.manufacturer + ship.maxCargo} />
                      ))
                   )}
             </div>
