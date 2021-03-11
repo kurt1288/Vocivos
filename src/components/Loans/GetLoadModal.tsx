@@ -18,18 +18,25 @@ const GetLoan = ({ handleClose, show, loan }:Props) => {
    const dispatch = useDispatch();
    const user = useSelector((state:RootState) => state.account);
    const [loading, setLoading] = useState(false);
+   const [error, setError] = useState<string>('');
    const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900' : 'hidden';
 
    useEffect(() => {
       setLoading(false);
+      setError('');
    }, [loan]);
 
    const requestLoan = async () => {
       setLoading(true);
-      const result = await Api.newLoan(user.username, user.token, LoanType.Startup);
-      dispatch(setUser(result));
-      handleClose;
-      history.push('/loans');
+      try {
+         const result = await Api.newLoan(user.username, user.token, LoanType.Startup);
+         dispatch(setUser(result));
+         handleClose;
+         history.push('/loans');
+      } catch (err: unknown) {
+         setLoading(false);
+         setError((err as Error).message);
+      }
    };
 
    return (
@@ -53,13 +60,23 @@ const GetLoan = ({ handleClose, show, loan }:Props) => {
                      {' '} credits
                   </p>
                </div>
+               { error
+                  && (
+                     <div className="bg-red-300 text-red-800 px-4 py-3 mb-4 text-center">
+                        <p>{ error }</p>
+                     </div>
+                  )}
                <div className="flex justify-end pt-2">
                   { !loading
                      ? (
                         <React.Fragment>
                            <button type="button" className="px-4 py-2 text-red-500 text-sm rounded mr-4 hover:text-red-400" onClick={handleClose}>Close</button>
-                           <button type="button" className="w-1/4 flex items-center justify-center px-4 py-2 text-white text-sm bg-green-500 rounded hover:bg-green-400" disabled={loading} onClick={requestLoan}>
-                              Get Loan
+                           <button
+                              type="button"
+                              className="w-1/4 px-4 py-2 text-white text-sm bg-green-500 rounded hover:bg-green-400 disabled:opacity-50 disabled:cursor-default disabled:bg-green-500"
+                              disabled={loading || (error.length > 0)}
+                              onClick={requestLoan}
+                           >Get Loan
                            </button>
                         </React.Fragment>
                      )
