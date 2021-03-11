@@ -2,7 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { Route, Switch } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-   addFlightPlan, RootState, setToken, setUser,
+   addFlightPlan, RootState, setToken, setUser, StoredMarket, updateMarketData,
 } from './store';
 import Api from './Api/index';
 import './App.css';
@@ -13,6 +13,7 @@ import Ships from './components/Ships/Ships';
 import Systems from './components/Systems/Systems';
 import Loans from './components/Loans/Loans';
 import { FlightPlan } from './Api/types';
+import Markets from './components/Markets/Markets';
 
 interface Token {
    username: string,
@@ -48,6 +49,13 @@ function App() {
          });
       }
 
+      // Update market data stored in local storage
+      const marketDataStore = localStorage.getItem('marketData');
+      const marketData = marketDataStore !== null ? JSON.parse(marketDataStore) as StoredMarket[] : null;
+      marketData?.map((data) => (
+         dispatch(updateMarketData(data))
+      ));
+
       FetchAccount();
    }, []);
 
@@ -56,14 +64,15 @@ function App() {
          { (key === undefined || key === null) ? <SignIn /> : (
             <React.Fragment>
                <NavBar />
-               <div className="bg-gray-800 pt-4 flex-grow text-gray-200">
-                  <div className="container h-full mx-auto">
+               <div className="bg-gray-800 py-4 flex-grow text-gray-200">
+                  <div className="container min-h-full mx-auto">
                      { user.account.token.length !== 0
                         && (
                            <Switch>
                               <Route exact path="/" component={Profile} />
                               <Route path="/ships" component={Ships} />
                               <Route path="/loans" component={Loans} />
+                              <Route path="/markets" component={Markets} />
                               <Suspense fallback={<div />}>
                                  <Route path="/systems" component={Systems} />
                               </Suspense>
