@@ -2,7 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { Route, Switch } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-   addFlightPlan, RootState, setToken, setUser, StoredMarket, updateMarketData,
+   addFlightPlan, removeFlightPlan, RootState, setToken, setUser, StoredMarket, updateMarketData,
 } from './store';
 import Api from './Api/index';
 import './App.css';
@@ -45,6 +45,9 @@ function App() {
             const { flightPlan } = await Api.queryFlightPlan(apiKey.token, apiKey.username, plan.id);
             if (flightPlan.terminatedAt === null) {
                dispatch(addFlightPlan(flightPlan));
+            } else if (flightPlan.terminatedAt) {
+               // This will remove outdated flights from the local storage
+               dispatch(removeFlightPlan(flightPlan));
             }
          });
       }

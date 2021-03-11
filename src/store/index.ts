@@ -65,14 +65,16 @@ const spacetraders = createSlice({
          localStorage.setItem('flightPlans', JSON.stringify(state.flightPlans));
       },
       removeFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {
-         const temp = state.flightPlans.filter((x) => x !== payload);
-         state.flightPlans = temp;
-         // update ship with new location
-         const ship = state.user.ships.find((x) => x.id === payload.ship);
-         if (ship) {
-            ship.location = payload.destination;
+         if (state.flightPlans.findIndex((x) => x.id === payload.id) > -1) {
+            state.flightPlans.splice(state.flightPlans.findIndex((x) => x.id === payload.id), 1);
+
+            // update ship with new location
+            const ship = state.user.ships.find((x) => x.id === payload.ship);
+            if (ship) {
+               ship.location = payload.destination;
+            }
+            localStorage.setItem('flightPlans', JSON.stringify(state.flightPlans));
          }
-         localStorage.setItem('flightPlans', JSON.stringify(state.flightPlans));
       },
       updateMarketData: (state, { payload }:PayloadAction<StoredMarket>) => {
          // check state for existing market object
