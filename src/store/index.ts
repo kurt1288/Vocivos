@@ -1,7 +1,12 @@
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-   FlightPlan, OwnedLoan, OwnedShip, User,
+   FlightPlan, Planet, OwnedLoan, OwnedShip, User,
 } from '../Api/types';
+
+export interface StoredMarket {
+   updatedAt: number,
+   planet: Planet,
+}
 
 interface InitialState {
    user: {
@@ -14,7 +19,8 @@ interface InitialState {
       token: string,
       username: string
    },
-   flightPlans: FlightPlan[]
+   flightPlans: FlightPlan[],
+   marketData: StoredMarket[],
 }
 
 const initialState: InitialState = {
@@ -29,6 +35,7 @@ const initialState: InitialState = {
       username: '',
    },
    flightPlans: [],
+   marketData: [],
 };
 
 const spacetraders = createSlice({
@@ -49,18 +56,38 @@ const spacetraders = createSlice({
       },
       addFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {
          state.flightPlans.push(payload);
+         // when in transit, ship location is 'undefined'
+         const ship = state.user.ships.find((x) => x.id === payload.ship);
+         if (ship) {
+            ship.location = undefined;
+         }
+
          localStorage.setItem('flightPlans', JSON.stringify(state.flightPlans));
       },
       removeFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {
          const temp = state.flightPlans.filter((x) => x !== payload);
          state.flightPlans = temp;
+         // update ship with new location
+         const ship = state.user.ships.find((x) => x.id === payload.ship);
+         if (ship) {
+            ship.location = payload.destination;
+         }
          localStorage.setItem('flightPlans', JSON.stringify(state.flightPlans));
+      },
+      updateMarketData: (state, { payload }:PayloadAction<StoredMarket>) => {
+         // check state for existing market object
+         if (state.marketData.some((item) => (item.planet.symbol === payload.planet.symbol))) {
+            state.marketData = state.marketData.map((item) => ((item.planet.symbol === payload.planet.symbol) ? payload : item));
+         } else {
+            state.marketData.push(payload);
+         }
+         localStorage.setItem('marketData', JSON.stringify(state.marketData));
       },
    },
 });
 
 export const {
-   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan,
+   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData,
 } = spacetraders.actions;
 
 const { reducer } = spacetraders;
