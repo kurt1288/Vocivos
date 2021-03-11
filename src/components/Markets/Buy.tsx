@@ -20,6 +20,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
    const [marketData, setMarketData] = useState<Marketplace[]>();
    const [selectedMarket, setSelectedMarket] = useState<Marketplace>();
    const [purchaseQuantity, setPurchaseQuantity] = useState<number>(0);
+   const [working, setWorking] = useState<boolean>(false);
    const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900' : 'hidden';
 
    useEffect(() => {
@@ -52,6 +53,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
 
    const purchaseMarket = async () => {
       if (!selectedMarket) { return; }
+      setWorking(true);
       const result = await Api.purchaseOrder(token, username, ship.id, selectedMarket.symbol, purchaseQuantity);
       dispatch(setCredits(result.credits));
       dispatch(updateShip(result.ship));
@@ -108,10 +110,11 @@ const Buy = ({ handleClose, show, ship }:Props) => {
                               <button
                                  type="button"
                                  className="mt-2 w-full px-3 py-2 bg-green-400 text-white rounded hover:bg-green-500 disabled:opacity-50 disabled:bg-green-400 disabled:cursor-default"
-                                 disabled={(purchaseQuantity * selectedMarket.pricePerUnit <= 0) || ((purchaseQuantity * selectedMarket.pricePerUnit > credits))}
+                                 disabled={(purchaseQuantity * selectedMarket.pricePerUnit <= 0) || ((purchaseQuantity * selectedMarket.pricePerUnit > credits) || (working))}
                                  onClick={purchaseMarket}
                               >
-                                 Purchase for { (purchaseQuantity * selectedMarket.pricePerUnit).toLocaleString() } credit{ purchaseQuantity * selectedMarket.pricePerUnit > 1 ? 's' : ''}
+                                 <span className={working ? 'hidden' : 'inline'}>Purchase for { (purchaseQuantity * selectedMarket.pricePerUnit).toLocaleString() } credit{ purchaseQuantity * selectedMarket.pricePerUnit > 1 ? 's' : ''}</span>
+                                 <span className={!working ? 'hidden' : 'inline'}>Please wait...</span>
                               </button>
                               <button type="button" className="text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setPurchaseQuantity(0); }}>Back</button>
                            </div>

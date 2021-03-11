@@ -19,6 +19,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
    const [marketData, setMarketData] = useState<Marketplace[]>();
    const [selectedMarket, setSelectedMarket] = useState<Cargo>();
    const [sellQuantity, setSellQuantity] = useState<number>(0);
+   const [working, setWorking] = useState<boolean>(false);
    const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900' : 'hidden';
 
    useEffect(() => {
@@ -32,6 +33,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
 
    const sellMarket = async () => {
       if (!selectedMarket) { return; }
+      setWorking(true);
       const result = await Api.sellOrder(token, username, ship.id, selectedMarket.good, sellQuantity);
       dispatch(setCredits(result.credits));
       dispatch(updateShip(result.ship));
@@ -93,10 +95,11 @@ const Sell = ({ handleClose, show, ship }:Props) => {
                               <button
                                  type="button"
                                  className="mt-2 w-full px-3 py-2 bg-green-400 text-white rounded hover:bg-green-500 disabled:opacity-50 disabled:bg-green-400 disabled:cursor-default"
-                                 disabled={sellQuantity <= 0}
+                                 disabled={(sellQuantity <= 0) || working}
                                  onClick={sellMarket}
                               >
-                                 Sell for { (sellQuantity * (marketData?.find((x) => x.symbol === selectedMarket.good) as Marketplace).pricePerUnit).toLocaleString() } credits
+                                 <span className={working ? 'hidden' : 'inline'}>Sell for { (sellQuantity * (marketData?.find((x) => x.symbol === selectedMarket.good) as Marketplace).pricePerUnit).toLocaleString() } credits</span>
+                                 <span className={!working ? 'hidden' : 'inline'}>Please wait...</span>
                               </button>
                               <button type="button" className="text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setSellQuantity(0); }}>Back</button>
                            </div>
