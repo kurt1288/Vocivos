@@ -5,6 +5,7 @@ module.exports = {
       extend: {},
       minHeight: {
          0: '0',
+         16: '4rem',
          '1/4': '25%',
          '1/3': '33%',
          '1/2': '50%',
