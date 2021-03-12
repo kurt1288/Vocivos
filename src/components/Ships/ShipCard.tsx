@@ -38,6 +38,9 @@ const ShipCard = ({ ship, time, compact }:Props) => {
       return !(fuel > 0);
    };
 
+   const formatString = (value:string) => (
+      value.toLowerCase().split('_').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(' '));
+
    return (
       <React.Fragment>
          { showBuyModal ? <Buy show={showBuyModal} ship={ship} handleClose={() => setBuyModalShow(false)} /> : null }
@@ -54,7 +57,7 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      ? (
                         <div className="text-right">
                            <p className="text-xs text-gray-400">In Transit</p>
-                           <p className="text-sm text-gray-300">{ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' }</p>
+                           <p className="text-xs text-gray-300">{ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' }</p>
                         </div>
                      ) : (
                         <div>
@@ -73,26 +76,46 @@ const ShipCard = ({ ship, time, compact }:Props) => {
             </div>
          ) : (
             <div className="p-3 focus:outline-none bg-gray-900 border border-gray-700 rounded">
-               <div className="flex justify-between items-center mb-5">
-                  <div className="text-left">
+               <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-600">
+                  <div>
                      <h3 className="text-xl">{ ship.type }</h3>
                      <p className="text-xs text-gray-400">{ ship.manufacturer }</p>
                   </div>
-               </div>
-               <div className="flex mt-3">
-                  <div className="w-6 h-6 mr-3">
-                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                     </svg>
+                  <div className="flex flex-col">
+                     <div className="grid grid-cols-3 gap-2 mt-1">
+                        <div className="flex items-center">
+                           <div className="w-5 h-5 mr-1">
+                              <svg fill="#E5E7EB" enableBackground="new 0 0 512 512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m512 358.121c0-68.38-26.629-132.667-74.98-181.02-48.353-48.352-112.64-74.98-181.02-74.98s-132.667 26.629-181.02 74.98c-48.351 48.353-74.98 112.64-74.98 181.02v15h205.016c4.085 12.323 12.371 22.642 23.657 29.305 8.558 5.052 17.953 7.453 27.236 7.453 18.406 0 36.36-9.448 46.376-26.413 1.956-3.313 3.522-6.781 4.717-10.345h204.998zm-235.548 10.093c-6.656 11.276-21.247 15.037-32.526 8.378-5.463-3.225-9.343-8.384-10.925-14.528-1.583-6.144-.679-12.535 2.547-17.998s8.385-9.343 14.528-10.925c1.976-.509 3.977-.76 5.964-.76 4.194 0 8.328 1.12 12.034 3.308 5.463 3.225 9.343 8.384 10.925 14.528 1.583 6.143.679 12.535-2.547 17.997zm31.689-25.093c-.032-.129-.057-.259-.09-.388-2.296-8.916-6.74-16.908-12.887-23.425l43.106-73.015-25.834-15.252-43.106 73.015c-8.675-2.233-17.819-2.264-26.737.032-13.903 3.581-25.58 12.362-32.879 24.726-2.674 4.53-4.636 9.344-5.882 14.307h-173.34c1.992-30.247 9.976-58.88 22.75-84.742l33.311 19.232 15-25.98-33.274-19.21c16.444-24.477 37.541-45.578 62.018-62.022l19.212 33.276 25.98-15-19.236-33.318c25.861-12.774 54.5-20.737 84.746-22.729v38.493h30v-38.493c30.246 1.992 58.885 9.955 84.746 22.729l-19.236 33.318 25.98 15 19.212-33.276c24.477 16.444 45.573 37.545 62.018 62.022l-33.274 19.21 15 25.98 33.311-19.232c12.774 25.862 20.758 54.495 22.75 84.742z" /></svg>
+                           </div>
+                           <p>{ ship.speed }</p>
+                        </div>
+                        <div className="flex items-center">
+                           <div className="w-4 h-4 mr-1">
+                              <svg fill="#E5E7EB" enableBackground="new 0 0 510.192 510.192" viewBox="0 0 510.192 510.192" xmlns="http://www.w3.org/2000/svg"><g><path d="m510.192 0-122.656 13.628-300.462 300.463-22.694-22.694 33.301-33.3-21.213-21.213-54.514 54.513c10.689 10.689 55.253 55.254 65.86 65.861l-87.814 87.814 65.12 65.12 87.813-87.814c10.633 10.632 55.212 55.211 65.861 65.86l54.513-54.514-21.213-21.213-33.3 33.301-22.694-22.693 300.464-300.463zm-467.766 445.072 22.693-22.694 22.695 22.695-22.694 22.693zm66.602-21.212-22.695-22.695 22.694-22.693 22.694 22.694zm358.881-314.976-293.022 293.022-22.693-22.694 252.835-252.835-21.213-21.213-252.835 252.835-22.694-22.693 293.021-293.023 74.927-8.325z" /></g></svg>
+                           </div>
+                           <p>{ ship.weapons }</p>
+                        </div>
+                        <div className="flex items-center">
+                           <div className="w-4 h-4 mr-1">
+                              <svg fill="#E5E7EB" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512 512">
+                                 <g>
+                                    <path d="M461.144,60.883L260.312,0.633c-2.809-0.844-5.808-0.844-8.62,0L50.858,60.883c-6.345,1.903-10.69,7.743-10.69,14.367
+                                       v220.916c0,28.734,11.632,58.148,34.573,87.425c17.522,22.36,41.762,44.813,72.048,66.736
+                                       c50.877,36.828,100.975,59.42,103.083,60.363c1.95,0.873,4.039,1.31,6.129,1.31c2.089,0,4.179-0.436,6.129-1.31
+                                       c2.108-0.943,52.205-23.535,103.082-60.363c30.285-21.923,54.525-44.376,72.047-66.736c22.941-29.276,34.573-58.69,34.573-87.425
+                                       V75.25C471.833,68.626,467.489,62.786,461.144,60.883z M441.833,296.166c0,50.852-51.023,98.534-93.826,129.581
+                                       c-38.374,27.833-77.291,47.583-92.005,54.678c-14.714-7.095-53.632-26.845-92.006-54.678
+                                       c-42.804-31.047-93.828-78.729-93.828-129.581V86.41l185.833-55.75l185.832,55.75V296.166z"
+                                    />
+                                 </g>
+                              </svg>
+                           </div>
+                           <p>{ ship.plating }</p>
+                        </div>
+                     </div>
                   </div>
-                  {(flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
-                     ? (
-                        <p>In Transit <span className="text-sm text-gray-400">({ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' })</span></p>
-                     )
-                     : ship.location}
                </div>
-               <div className="flex mt-3">
+               {/* <div className="flex mt-3">
                   <div className="w-6 h-6 mr-3">
                      <svg enableBackground="new 0 0 510 510" fill="#E5E7EB" viewBox="0 0 510 510" xmlns="http://www.w3.org/2000/svg">
                         <path strokeWidth={1} d="m111.333 235.667h198v-174h-198zm30-144h138v114h-138z" />
@@ -102,8 +125,8 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      </svg>
                   </div>
                   <p>{ ship.cargo.find((x) => x.good === 'FUEL')?.quantity }</p>
-               </div>
-               <div className="flex mt-3">
+               </div> */}
+               {/* <div className="flex mt-3">
                   <div className="w-6 h-6 mr-3">
                      <svg version="1.1" fill="#E5E7EB" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 485.32 485.32" enableBackground="new 0 0 485.32 485.32">
                         <g>
@@ -112,35 +135,27 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      </svg>
                   </div>
                   <p>{ ship.maxCargo - ship.spaceAvailable } of { ship.maxCargo }</p>
-               </div>
-               <div className="flex mt-3">
-                  <div className="w-6 h-6 mr-3">
-                     <svg fill="#E5E7EB" enableBackground="new 0 0 512 512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m512 358.121c0-68.38-26.629-132.667-74.98-181.02-48.353-48.352-112.64-74.98-181.02-74.98s-132.667 26.629-181.02 74.98c-48.351 48.353-74.98 112.64-74.98 181.02v15h205.016c4.085 12.323 12.371 22.642 23.657 29.305 8.558 5.052 17.953 7.453 27.236 7.453 18.406 0 36.36-9.448 46.376-26.413 1.956-3.313 3.522-6.781 4.717-10.345h204.998zm-235.548 10.093c-6.656 11.276-21.247 15.037-32.526 8.378-5.463-3.225-9.343-8.384-10.925-14.528-1.583-6.144-.679-12.535 2.547-17.998s8.385-9.343 14.528-10.925c1.976-.509 3.977-.76 5.964-.76 4.194 0 8.328 1.12 12.034 3.308 5.463 3.225 9.343 8.384 10.925 14.528 1.583 6.143.679 12.535-2.547 17.997zm31.689-25.093c-.032-.129-.057-.259-.09-.388-2.296-8.916-6.74-16.908-12.887-23.425l43.106-73.015-25.834-15.252-43.106 73.015c-8.675-2.233-17.819-2.264-26.737.032-13.903 3.581-25.58 12.362-32.879 24.726-2.674 4.53-4.636 9.344-5.882 14.307h-173.34c1.992-30.247 9.976-58.88 22.75-84.742l33.311 19.232 15-25.98-33.274-19.21c16.444-24.477 37.541-45.578 62.018-62.022l19.212 33.276 25.98-15-19.236-33.318c25.861-12.774 54.5-20.737 84.746-22.729v38.493h30v-38.493c30.246 1.992 58.885 9.955 84.746 22.729l-19.236 33.318 25.98 15 19.212-33.276c24.477 16.444 45.573 37.545 62.018 62.022l-33.274 19.21 15 25.98 33.311-19.232c12.774 25.862 20.758 54.495 22.75 84.742z" /></svg>
-                  </div>
-                  <p>{ ship.speed }</p>
-               </div>
-               <div className="flex mt-3">
-                  <div className="w-6 h-6 mr-3">
-                     <svg version="1.1" fill="#E5E7EB" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512 512">
-                        <g>
-                           <path d="M461.144,60.883L260.312,0.633c-2.809-0.844-5.808-0.844-8.62,0L50.858,60.883c-6.345,1.903-10.69,7.743-10.69,14.367
-                              v220.916c0,28.734,11.632,58.148,34.573,87.425c17.522,22.36,41.762,44.813,72.048,66.736
-                              c50.877,36.828,100.975,59.42,103.083,60.363c1.95,0.873,4.039,1.31,6.129,1.31c2.089,0,4.179-0.436,6.129-1.31
-                              c2.108-0.943,52.205-23.535,103.082-60.363c30.285-21.923,54.525-44.376,72.047-66.736c22.941-29.276,34.573-58.69,34.573-87.425
-                              V75.25C471.833,68.626,467.489,62.786,461.144,60.883z M441.833,296.166c0,50.852-51.023,98.534-93.826,129.581
-                              c-38.374,27.833-77.291,47.583-92.005,54.678c-14.714-7.095-53.632-26.845-92.006-54.678
-                              c-42.804-31.047-93.828-78.729-93.828-129.581V86.41l185.833-55.75l185.832,55.75V296.166z"
-                           />
-                        </g>
+               </div> */}
+               <div className="flex items-center mt-4 mb-3">
+                  <div className="w-6 h-6 mr-1">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                      </svg>
                   </div>
-                  <p>{ ship.plating }</p>
+                  {(flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
+                     ? (
+                        <p>In Transit <span className="text-sm text-gray-400">({ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' })</span></p>
+                     )
+                     : <p className="">{ ship.location }</p>}
                </div>
-               <div className="flex mt-3">
-                  <div className="w-6 h-6 mr-3">
-                     <svg fill="#E5E7EB" enableBackground="new 0 0 510.192 510.192" viewBox="0 0 510.192 510.192" xmlns="http://www.w3.org/2000/svg"><g><path d="m510.192 0-122.656 13.628-300.462 300.463-22.694-22.694 33.301-33.3-21.213-21.213-54.514 54.513c10.689 10.689 55.253 55.254 65.86 65.861l-87.814 87.814 65.12 65.12 87.813-87.814c10.633 10.632 55.212 55.211 65.861 65.86l54.513-54.514-21.213-21.213-33.3 33.301-22.694-22.693 300.464-300.463zm-467.766 445.072 22.693-22.694 22.695 22.695-22.694 22.693zm66.602-21.212-22.695-22.695 22.694-22.693 22.694 22.694zm358.881-314.976-293.022 293.022-22.693-22.694 252.835-252.835-21.213-21.213-252.835 252.835-22.694-22.693 293.021-293.023 74.927-8.325z" /></g></svg>
+               <div>
+                  <p className="mb-2">Cargo <span className="ml-2 text-sm text-gray-400">{ ship.maxCargo - ship.spaceAvailable } of { ship.maxCargo }</span></p>
+                  <div className="pl-3">
+                     { ship.cargo.slice().sort((a, b) => ((a.good > b.good) ? 1 : (b.good > a.good) ? -1 : 0)).map((cargo) => (
+                        <p className="text-sm py-0.5">{ formatString(cargo.good) } ({ cargo.quantity } units)</p>
+                     ))}
                   </div>
-                  <p>{ ship.weapons }</p>
                </div>
                {(flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
                   ? null
