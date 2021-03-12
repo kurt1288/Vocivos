@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
 import { OwnedShip, Location } from '../../Api/types';
-import { addFlightPlan, RootState } from '../../store';
+import { addFlightPlan, RootState, updateShip } from '../../store';
 import { ModalPlaceholder } from '../SkeletonLoaders';
 
 interface Props {
@@ -34,6 +34,9 @@ const Travel = ({ handleClose, show, ship }: Props) => {
          const result = (await Api.createFlightPlan(token, username, ship.id, location)).flightPlan;
          dispatch(addFlightPlan(result));
          handleClose();
+         // ship fuel and cargo space change after flight plan, so update the ship
+         const updatedShip = await Api.shipInfo(token, username, ship.id);
+         dispatch(updateShip(updatedShip.ship));
       } catch (err: unknown) {
          setError((err as Error).message);
       }

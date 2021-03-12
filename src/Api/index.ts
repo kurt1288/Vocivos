@@ -1,5 +1,5 @@
 import {
-   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes,
+   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo,
 } from './types';
 
 enum FetchMethod {
@@ -98,6 +98,11 @@ export default {
    async buyShip(token: string, username: string, location: string, type: string) {
       const url = `${BASE_URL}/users/${username}/ships`;
       return AuthFetch<User>(url, token, FetchMethod.Post, { location, type });
+   },
+
+   async shipInfo(token: string, username: string, shipId: string) {
+      const url = `${BASE_URL}/users/${username}/ships/${shipId}`;
+      return AuthFetch<ShipInfo>(url, token, FetchMethod.Get);
    },
 
    async systemsInfo(token: string) {

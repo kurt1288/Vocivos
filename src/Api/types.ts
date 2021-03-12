@@ -54,6 +54,10 @@ export interface ShipsAvailable {
    ships: Ship[]
 }
 
+export interface ShipInfo {
+   ship: OwnedShip
+}
+
 export interface Ship {
    class: string,
    manufacturer: string,
