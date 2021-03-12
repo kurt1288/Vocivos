@@ -13,7 +13,7 @@ interface InitialState {
       credits: number,
       loans: OwnedLoan[],
       ships: OwnedShip[],
-      username: string
+      username: string | undefined
    },
    account: {
       token: string,
@@ -28,7 +28,7 @@ const initialState: InitialState = {
       credits: 0,
       loans: [],
       ships: [],
-      username: 'undefined',
+      username: undefined,
    },
    account: {
       token: '',

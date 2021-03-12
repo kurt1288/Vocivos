@@ -2,6 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 import { RootState } from '../store';
+import { HeaderLoader } from './SkeletonLoaders';
 
 const NavBar = () => {
    const user = useSelector((state:RootState) => state.user);
@@ -9,8 +10,14 @@ const NavBar = () => {
    return (
       <div className="px-8 text-gray-50 w-full min-h-16 bg-gray-900 flex justify-between items-center">
          <div className="flex items-center">
-            <h1><NavLink to="/" className="hover:text-yellow-600">{user.username}</NavLink></h1>
-            <span className="text-xs text-gray-400 ml-4">{ user.credits.toLocaleString() } credits</span>
+            {user.username === undefined
+               ? <HeaderLoader />
+               : (
+                  <React.Fragment>
+                     <h1><NavLink to="/" className="hover:text-yellow-600">{user.username}</NavLink></h1>
+                     <span className="text-xs text-gray-400 ml-4">{ user.credits.toLocaleString() } credits</span>
+                  </React.Fragment>
+               )}
          </div>
          <div className="flex flex-row">
             <NavLink to="/ships" title="ships" className="w-7 h-7 mx-2 hover:text-yellow-600">
