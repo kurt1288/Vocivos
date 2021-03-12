@@ -4,7 +4,7 @@ import {
 
 enum FetchMethod {
    Get = 'get',
-   Post = 'post'
+   Post = 'post',
 }
 
 const BASE_URL = 'https://api.spacetraders.io';

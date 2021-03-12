@@ -1,16 +1,16 @@
 export enum LoanType {
-   Startup = 'STARTUP'
+   Startup = 'STARTUP',
 }
 
 export enum LocationType {
    Planet = 'PLANET',
    Moon = 'MOON',
    GasGiant = 'GAS_GIANT',
-   Asteroid = 'ASTEROID'
+   Asteroid = 'ASTEROID',
 }
 
 export enum CargoType {
-   Fuel = 'FUEL'
+   Fuel = 'FUEL',
 }
 
 export interface Status {
@@ -26,12 +26,12 @@ export interface Account {
       email: string,
       picture: string,
       updatedAt: string,
-      username: string
+      username: string,
    }
 }
 
 export interface Loans {
-   loans: Loan[]
+   loans: Loan[],
 }
 
 export interface Loan {
@@ -39,7 +39,7 @@ export interface Loan {
    amount: number,
    collateralRequired: boolean,
    rate: number,
-   termInDays: number
+   termInDays: number,
 }
 
 export interface OwnedLoan {
@@ -51,11 +51,11 @@ export interface OwnedLoan {
 }
 
 export interface ShipsAvailable {
-   ships: Ship[]
+   ships: Ship[],
 }
 
 export interface ShipInfo {
-   ship: OwnedShip
+   ship: OwnedShip,
 }
 
 export interface Ship {
@@ -66,7 +66,7 @@ export interface Ship {
    purchaseLocations: PurchaseLocation[],
    speed: number,
    type: string,
-   weapons: number
+   weapons: number,
 }
 
 export interface OwnedShip {
@@ -82,18 +82,18 @@ export interface OwnedShip {
    type: string,
    weapons: number,
    x: number,
-   y: number
+   y: number,
 }
 
 export interface Cargo {
    good: CargoType,
    quantity: number,
-   totalVolume: number
+   totalVolume: number,
 }
 
 export interface PurchaseLocation {
    location: string,
-   price: number
+   price: number,
 }
 
 export interface User {
@@ -101,7 +101,7 @@ export interface User {
       credits: number,
       loans: OwnedLoan[],
       ships: OwnedShip[],
-      username: string
+      username: string,
    }
 }
 
@@ -110,25 +110,25 @@ export interface Location {
    type: LocationType,
    name: string,
    x: number,
-   y: number
+   y: number,
 }
 
 export interface Locations {
-   locations: Location[]
+   locations: Location[],
 }
 
 export interface System {
    symbol: string,
    name: string,
-   locations: Location[]
+   locations: Location[],
 }
 
 export interface Systems {
-   systems: System[]
+   systems: System[],
 }
 
 export interface Market {
-   planet: Planet
+   planet: Planet,
 }
 
 export interface Marketplace {
@@ -150,18 +150,18 @@ export interface Planet {
 export interface Purchase {
    credits: number,
    order: Order[],
-   ship: OwnedShip
+   ship: OwnedShip,
 }
 
 export interface Order {
    good: string,
    pricePerUnit: number,
    quantity: number,
-   total: number
+   total: number,
 }
 
 export interface FlightPlanRes {
-   flightPlan: FlightPlan
+   flightPlan: FlightPlan,
 }
 
 export interface FlightPlan {
@@ -174,5 +174,5 @@ export interface FlightPlan {
    id: string,
    ship: string,
    terminatedAt: Date | null,
-   timeRemainingInSeconds: number
+   timeRemainingInSeconds: number,
 }

@@ -27,6 +27,8 @@ module.exports = {
       'no-unused-expressions': 0,
       'react/jsx-props-no-spreading': 0,
       'no-param-reassign': ['error', { props: true, ignorePropertyModificationsForRegex: ['^state'] }],
+      'comma-dangle': 'off',
+      '@typescript-eslint/comma-dangle': ['error', 'always-multiline'],
    },
    settings: {
       'import/resolver': {
