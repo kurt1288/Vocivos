@@ -10,6 +10,14 @@ const Owned = () => {
    const [sortedShips, setShips] = useState<OwnedShip[]>();
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('class');
+   const [time, setTime] = useState<number>(Date.now());
+
+   useEffect(() => {
+      // Update the 'time' state, in order for ship cards to update (for keeping track of flight plan time)
+      const interval = setInterval(() => setTime(Date.now()), 1000);
+
+      return () => clearInterval(interval);
+   }, []);
 
    useEffect(() => {
       const sort = (value:string) => {
@@ -68,7 +76,7 @@ const Owned = () => {
          </div>
          <div className="grid grid-cols-4 gap-4">
             { sortedShips?.map((ship) => (
-               <ShipCard ship={ship} key={ship.class + ship.speed + ship.manufacturer + ship.maxCargo} />
+               <ShipCard time={time} ship={ship} key={ship.class + ship.speed + ship.manufacturer + ship.maxCargo} />
             ))}
          </div>
       </React.Fragment>

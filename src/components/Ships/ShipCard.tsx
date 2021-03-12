@@ -54,7 +54,7 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      ? (
                         <div className="text-right">
                            <p className="text-xs text-gray-400">In Transit</p>
-                           <p className="text-sm text-gray-300">{ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown'}</p>
+                           <p className="text-sm text-gray-300">{ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' }</p>
                         </div>
                      ) : (
                         <div>
@@ -86,7 +86,11 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                      </svg>
                   </div>
-                  <p>{ (flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location ? 'In Transit' : ship.location }</p>
+                  {(flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
+                     ? (
+                        <p>In Transit <span className="text-sm text-gray-400">({ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' })</span></p>
+                     )
+                     : ship.location}
                </div>
                <div className="flex mt-3">
                   <div className="w-6 h-6 mr-3">
