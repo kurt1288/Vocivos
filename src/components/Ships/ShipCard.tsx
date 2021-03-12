@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { formatDistanceToNowStrict, isFuture, isPast } from 'date-fns';
+import {
+   formatDistanceToNowStrict, getUnixTime, isFuture, isPast,
+} from 'date-fns';
 import {
    Cargo, CargoType, OwnedShip,
 } from '../../Api/types';
@@ -8,6 +10,7 @@ import { removeFlightPlan, RootState } from '../../store';
 import Buy from '../Markets/Buy';
 import Sell from '../Markets/Sell';
 import Travel from './Travel';
+import TravelProgressBar from './TravelProgress';
 
 interface Props {
    ship: OwnedShip,
@@ -41,6 +44,12 @@ const ShipCard = ({ ship, time, compact }:Props) => {
    const formatString = (value:string) => (
       value.toLowerCase().split('_').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(' '));
 
+   const calcProgress = ():number => {
+      if (!flightPlan) { return 0; }
+
+      return (((Date.now() / 1000) - (getUnixTime(new Date(flightPlan.arrivesAt)) - flightPlan.timeRemainingInSeconds)) / flightPlan.timeRemainingInSeconds) * 100;
+   };
+
    return (
       <React.Fragment>
          { showBuyModal ? <Buy show={showBuyModal} ship={ship} handleClose={() => setBuyModalShow(false)} /> : null }
@@ -51,7 +60,7 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                <div className="flex justify-between items-center ">
                   <div className="text-left">
                      <h3>{ ship.type }</h3>
-                     <p className="text-xs text-gray-400">{ ship.location }</p>
+                     <p className="text-xs text-gray-400">{ ship.location ?? 'In transit' }</p>
                   </div>
                   { (flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
                      ? (
@@ -73,6 +82,8 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                         </div>
                      )}
                </div>
+               { (flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
+                  ? <div className="mt-2"><TravelProgressBar completed={calcProgress()} /></div> : null}
             </div>
          ) : (
             <div className="p-3 focus:outline-none bg-gray-900 border border-gray-700 rounded">
@@ -115,27 +126,6 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      </div>
                   </div>
                </div>
-               {/* <div className="flex mt-3">
-                  <div className="w-6 h-6 mr-3">
-                     <svg enableBackground="new 0 0 510 510" fill="#E5E7EB" viewBox="0 0 510 510" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeWidth={1} d="m111.333 235.667h198v-174h-198zm30-144h138v114h-138z" />
-                        <path strokeWidth={1} d="m441.667 180.557v-56.552l-70.334-20v-104.005h-322v480h-39v30h400v-30h-39v-119.29c19.516 6.339 33.667 24.688 33.667 46.29v20.667c0 26.1 21.233 47.333 47.333 47.333s47.334-21.234 47.334-47.333v-175.667c0-35.112-24.92-64.506-58-71.443zm-30-33.894v80.671c0 3.125-2.542 5.667-5.667 5.667h-34.667v-97.807zm-332.334 333.337v-450h262v450zm390.334-52.333c0 9.558-7.776 17.333-17.334 17.333s-17.333-7.776-17.333-17.333v-20.667c0-38.247-27.442-70.19-63.667-77.215v-66.785h34.667c19.667 0 35.667-16 35.667-35.667v-15.629c16.335 6.101 28 21.859 28 40.295z" />
-                        <path strokeWidth={1} d="m111.333 295h123.667v30h-123.667z" />
-                        <path strokeWidth={1} d="m268.333 295h41v30h-41z" />
-                     </svg>
-                  </div>
-                  <p>{ ship.cargo.find((x) => x.good === 'FUEL')?.quantity }</p>
-               </div> */}
-               {/* <div className="flex mt-3">
-                  <div className="w-6 h-6 mr-3">
-                     <svg version="1.1" fill="#E5E7EB" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 485.32 485.32" enableBackground="new 0 0 485.32 485.32">
-                        <g>
-                           <path d="m480.76,79.05c-0.6-0.2-235-78.3-235-78.3-2.1-1-4.1-1-6.2,0l-231.9,76.3c-5.8,2.4-7.2,7.4-7.2,10.3v313.3c0,5.2 3.1,9.3 7.2,10.3l229,73.2c3.5,1.3 7.3,1.8 12.1,0l228.9-73.2c4.1-2.1 7.2-6.2 7.2-10.3v-313.3c5.68434e-14-3.1-1-6.2-4.1-8.3zm-238.1-56.7l198.9,63.9-75.1,24.1-196-64.5 72.2-23.5zm-10.3,438l-211.3-67v-291.4l211.3,67.6v290.8zm10.3-310.2l-198.9-62.8 93.7-30.6 195.3,64.5-90.1,28.9zm10.3,310.2v-291.6l105.1-33.3v32.3l20.6-8.8v-30l85.5-27v290.4h0.1l-211.3,68z" />
-                        </g>
-                     </svg>
-                  </div>
-                  <p>{ ship.maxCargo - ship.spaceAvailable } of { ship.maxCargo }</p>
-               </div> */}
                <div className="flex items-center mt-4 mb-3">
                   <div className="w-6 h-6 mr-1">
                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,11 +139,17 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      )
                      : <p className="">{ ship.location }</p>}
                </div>
+               {((flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location)
+                  && (
+                     <div className="mb-3">
+                        <div className="mt-2"><TravelProgressBar completed={calcProgress()} /></div>
+                     </div>
+                  )}
                <div>
                   <p className="mb-2">Cargo <span className="ml-2 text-sm text-gray-400">{ ship.maxCargo - ship.spaceAvailable } of { ship.maxCargo }</span></p>
                   <div className="pl-3">
                      { ship.cargo.slice().sort((a, b) => ((a.good > b.good) ? 1 : (b.good > a.good) ? -1 : 0)).map((cargo) => (
-                        <p className="text-sm py-0.5">{ formatString(cargo.good) } ({ cargo.quantity } units)</p>
+                        <p className="text-sm py-0.5" key={cargo.good + cargo.quantity + cargo.totalVolume + ship.id}>{ formatString(cargo.good) } ({ cargo.quantity } units)</p>
                      ))}
                   </div>
                </div>
