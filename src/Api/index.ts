@@ -54,7 +54,7 @@ export default {
    },
 
    async getToken(username: string) {
-      const response = await fetch(`${BASE_URL}/users/${username}/token`);
+      const response = await fetch(`${BASE_URL}/users/${username}/token`, { method: 'post' });
 
       if (response.status >= 400) {
          throw new Error('Username already exists');

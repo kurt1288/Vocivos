@@ -31,7 +31,7 @@ const Markets = () => {
          locations?.forEach(async (location) => {
             if (ships.some((x) => x.location === location.symbol)) {
                const data = await Api.getMarket(token, location.symbol);
-               dispatch(updateMarketData({ updatedAt: Date.now(), planet: data.planet }));
+               dispatch(updateMarketData({ updatedAt: Date.now(), planet: data.location }));
             }
          });
       };

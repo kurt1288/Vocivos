@@ -25,7 +25,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
    useEffect(() => {
       const getMarket = async () => {
          if (!ship.location) { return; }
-         const data = (await Api.getMarket(token, ship.location)).planet.marketplace;
+         const data = (await Api.getMarket(token, ship.location)).location.marketplace;
          setMarketData(data);
       };
       getMarket();

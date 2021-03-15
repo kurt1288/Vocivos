@@ -26,7 +26,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
    useEffect(() => {
       const getMarket = async () => {
          if (!ship.location) { return; }
-         const data = (await Api.getMarket(token, ship.location)).planet.marketplace;
+         const data = (await Api.getMarket(token, ship.location)).location.marketplace;
          // sort market data alphabetically by symbol
          setMarketData([...data].sort(((a, b) => ((a.symbol > b.symbol) ? 1 : (b.symbol > a.symbol) ? -1 : 0))));
       };

@@ -16,8 +16,10 @@ const GetApiKey = () => {
       if (formValid) {
          try {
             const token = await Api.getToken(userName);
-            localStorage.setItem('apiKey', JSON.stringify({ username: token.user, token: token.token }));
-            dispatch(setToken(token.token));
+            localStorage.setItem('apiKey', JSON.stringify({ username: token.user.username, token: token.token }));
+            dispatch(setToken({ username: token.user.username, token: token.token }));
+            const user = await Api.getUser(token.user.username, token.token);
+            dispatch(setUser(user));
          } catch (err:unknown) {
             setError((err as Error).message);
          }
@@ -32,7 +34,7 @@ const GetApiKey = () => {
             const user = await Api.getUser(userName, userToken);
 
             localStorage.setItem('apiKey', JSON.stringify({ username: userName, token: userToken }));
-            dispatch(setToken(JSON.stringify({ username: userName, token: userToken })));
+            dispatch(setToken({ username: userName, token: userToken }));
             dispatch(setUser(user));
          } catch (err:unknown) {
             setError((err as Error).message);

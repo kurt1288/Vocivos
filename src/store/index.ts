@@ -45,8 +45,8 @@ const spacetraders = createSlice({
       setUser: (state, { payload }:PayloadAction<User>) => {
          state.user = payload.user;
       },
-      setToken: (state, { payload }:PayloadAction<string>) => {
-         state.account = JSON.parse(payload);
+      setToken: (state, { payload }:PayloadAction<{ username:string, token:string }>) => {
+         state.account = payload;
       },
       setCredits: (state, { payload }:PayloadAction<number>) => {
          state.user.credits = payload;

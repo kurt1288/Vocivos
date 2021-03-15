@@ -30,7 +30,7 @@ function App() {
 
       const apiKey = JSON.parse(key) as Token;
 
-      dispatch(setToken(key));
+      dispatch(setToken(apiKey));
 
       const FetchAccount = async () => {
          const result = await Api.getUser(apiKey.username, apiKey.token);
