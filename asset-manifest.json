@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/Vocivos/static/css/main.165dd0c2.chunk.css",
-    "main.js": "/Vocivos/static/js/main.88c767f8.chunk.js",
-    "main.js.map": "/Vocivos/static/js/main.88c767f8.chunk.js.map",
+    "main.js": "/Vocivos/static/js/main.bdd188a2.chunk.js",
+    "main.js.map": "/Vocivos/static/js/main.bdd188a2.chunk.js.map",
     "runtime-main.js": "/Vocivos/static/js/runtime-main.335d6e9c.js",
     "runtime-main.js.map": "/Vocivos/static/js/runtime-main.335d6e9c.js.map",
     "static/js/2.b80a6062.chunk.js": "/Vocivos/static/js/2.b80a6062.chunk.js",
@@ -15,6 +15,6 @@
     "static/js/runtime-main.335d6e9c.js",
     "static/js/2.b80a6062.chunk.js",
     "static/css/main.165dd0c2.chunk.css",
-    "static/js/main.88c767f8.chunk.js"
+    "static/js/main.bdd188a2.chunk.js"
   ]
 }
