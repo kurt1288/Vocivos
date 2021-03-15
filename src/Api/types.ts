@@ -128,7 +128,7 @@ export interface Systems {
 }
 
 export interface Market {
-   planet: Planet,
+   location: Planet,
 }
 
 export interface Marketplace {
@@ -149,7 +149,7 @@ export interface Planet {
 
 export interface Purchase {
    credits: number,
-   order: Order[],
+   order: Order,
    ship: OwnedShip,
 }
 

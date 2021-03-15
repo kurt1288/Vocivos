@@ -33,7 +33,7 @@ async function AuthFetch<T>(
    }
 
    if (response.status === 401) {
-      throw new Error('Incorrect username or token.');
+      throw new Error('Invalid username or token.');
    }
 
    const result = await response.json();
