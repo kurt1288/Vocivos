@@ -15,7 +15,7 @@ import Profile from './components/Profile';
 import Ships from './components/Ships/Ships';
 import Systems from './components/Systems/Systems';
 import Loans from './components/Loans/Loans';
-import { FlightPlan, Purchase } from './Api/types';
+import { FlightPlan, Market, OwnedShip, Purchase } from './Api/types';
 import Markets from './components/Markets/Markets';
 import { AutoAction } from './components/Automation/Models';
 
@@ -40,7 +40,7 @@ export interface WorkerError {
 
 function App({ Worker }:Props) {
    const [automationsList, setAutomationsList] = useState<{ shipId:string, instance: Comlink.Remote<Automation>}[]>([]);
-   const { account, automations } = useSelector((state:RootState) => state);
+   const { account, automations, user } = useSelector((state:RootState) => state);
    const dispatch = useDispatch();
    const key = localStorage.getItem('apiKey');
 
@@ -99,15 +99,27 @@ function App({ Worker }:Props) {
       }
    };
 
+   const webworkerGetLocalStorage = (worker: Automation) => {
+      worker.setMarketData(localStorage.getItem('marketData'));
+   };
+
+   const webworkerUpdateMarketData = (data: Market) => {
+      dispatch(updateMarketData({ updatedAt: Date.now(), planet: data.location }));
+   };
+
    useEffect(() => {
       automations.forEach(async (item) => {
          const automation = automationsList.find((x) => x.shipId === item.shipId);
 
          // If the automation in the store is not enabled and there's no running automation, then we should create a new one and start it.
          if (item.enabled && !automation) {
-            // This will start a new worker for each automation, which isn't sustainable
-            // const AutomationClass = Comlink.wrap<WorkerType>(new Worker());
-            const instance = await new Worker(account.token, account.username, item, Comlink.proxy(webworkerError), Comlink.proxy(webworkerUpdateState));
+            const ship = user.ships.find((x) => x.id === item.shipId) as OwnedShip;
+            const instance = await new Worker(account.token,
+               account.username, item, ship, user.credits,
+               Comlink.proxy(webworkerError),
+               Comlink.proxy(webworkerUpdateState),
+               Comlink.proxy(webworkerGetLocalStorage),
+               Comlink.proxy(webworkerUpdateMarketData));
             await instance.run();
             setAutomationsList([...automationsList, { shipId: item.shipId, instance }]);
          }

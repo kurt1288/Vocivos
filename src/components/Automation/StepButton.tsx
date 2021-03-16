@@ -52,11 +52,11 @@ const StepButton = ({
 
    const travelComp = () => (
       <React.Fragment>
-         <p>to</p>
+         <p className="text-sm">to</p>
          <select
             name={`dest-${step.id}`}
             id={`dest-${step.id}`}
-            className="ml-3 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer"
+            className="text-sm ml-3 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer"
             value={(step.type as TravelStep).destination}
             onChange={(e) => editSubAction(e.target.value)}
          >
@@ -72,11 +72,11 @@ const StepButton = ({
          <select
             name={`buy-${step.id}`}
             id={`buy-${step.id}`}
-            className="ml-1 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer"
+            className="text-sm ml-1 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer"
             value={(step.type as MarketStep).good}
             onChange={(e) => editSubAction(e.target.value)}
          >
-            {Object.keys(CargoType).map((type) => (
+            {Object.values(CargoType).map((type) => (
                <option value={type} key={`${step.id}-buy-${type}`}>{ formatString(type) }</option>
             ))}
          </select>
@@ -84,10 +84,10 @@ const StepButton = ({
             type="number"
             min={-1}
             value={(step.type as MarketStep).quantity}
-            className="w-1/4 ml-2 border border-gray-200 focus:outline-none focus:border-blue-300"
+            className="text-sm w-1/4 ml-2 border border-gray-200 focus:outline-none focus:border-blue-300"
             onChange={(e) => editSubAction(e.target.value)}
          />
-         {/* <span className="text-xs ml-0.5">(-1 = max)</span> */}
+         <span className="text-xs ml-0.5">(-1 = max)</span>
       </React.Fragment>
    );
 
@@ -96,11 +96,11 @@ const StepButton = ({
          <select
             name={`buy-${step.id}`}
             id={`buy-${step.id}`}
-            className="ml-1 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer"
+            className="text-sm ml-1 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer"
             value={(step.type as MarketStep).good}
             onChange={(e) => editSubAction(e.target.value)}
          >
-            {Object.keys(CargoType).map((type) => (
+            {Object.values(CargoType).map((type) => (
                <option value={type} key={`${step.id}-sell-${type}`}>{ formatString(type) }</option>
             ))}
          </select>
@@ -108,10 +108,10 @@ const StepButton = ({
             type="number"
             min={-1}
             value={(step.type as MarketStep).quantity}
-            className="w-1/4 ml-2 border border-gray-200 focus:outline-none focus:border-blue-300"
+            className="text-sm w-1/4 ml-2 border border-gray-200 focus:outline-none focus:border-blue-300"
             onChange={(e) => editSubAction(e.target.value)}
          />
-         {/* <span className="text-xs ml-0.5">(-1 = max)</span> */}
+         <span className="text-xs ml-0.5">(-1 = max)</span>
       </React.Fragment>
    );
 
@@ -152,7 +152,7 @@ const StepButton = ({
             <select
                name={`stepType-${step.id}`}
                id={`stepType-${step.id}`}
-               className="mr-2 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer"
+               className="text-sm mr-2 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer"
                value={step.type.action}
                onChange={(e) => editAction(e.target.value)}
             >

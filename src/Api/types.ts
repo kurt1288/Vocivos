@@ -20,6 +20,7 @@ export enum CargoType {
    Metals = 'METALS',
    Research = 'RESEARCH',
    ShipParts = 'SHIP_PARTS',
+   ShipPlating = 'SHIP_PLATING',
    Textiles = 'TEXTILES',
    Workers = 'WORKERS',
 }
