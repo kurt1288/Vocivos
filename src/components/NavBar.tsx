@@ -1,15 +1,62 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
-import { RootState } from '../store';
+import { reset, RootState } from '../store';
 import { HeaderLoader } from './SkeletonLoaders';
 
 const NavBar = () => {
    const user = useSelector((state:RootState) => state.user);
+   const { token } = useSelector((state:RootState) => state.account);
+   const [dropDownOpen, setDropDownOpen] = useState(false);
+   const ref = useRef<HTMLDivElement>(null);
+   const dispatch = useDispatch();
+
+   useEffect(() => {
+      // All to close the user dropdown on page click
+      const pageEvent = (e:MouseEvent) => {
+         if (ref.current !== null && !ref.current.contains(e.target as Node)) {
+            setDropDownOpen(false);
+         }
+      };
+
+      if (dropDownOpen) {
+         window.addEventListener('mousedown', pageEvent);
+      }
+
+      return () => {
+         window.removeEventListener('mousedown', pageEvent);
+      };
+   }, [dropDownOpen]);
+
+   const logout = () => {
+      dispatch(reset());
+      localStorage.removeItem('apiKey');
+      localStorage.removeItem('flightPlans');
+      // note, not removing market data from localStorage
+   };
 
    return (
       <div className="px-8 text-gray-50 w-full min-h-16 bg-gray-900 flex justify-between items-center">
          <div className="flex items-center">
+            <div className="relative mr-1 pt-1">
+               <button type="button" className="text-gray-50 hover:text-gray-300" onClick={() => setDropDownOpen(true)}>
+                  <svg className="mt-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+               </button>
+               { dropDownOpen
+               && (
+                  <div ref={ref} className="origin-top-left absolute left-0 mt-2 w-72 rounded-sm shadow-lg text-gray-700 bg-gray-200 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                     <div className="py-1" role="none">
+                        <p className="text-gray-900 text-xs px-4 pt-2">Token</p>
+                        <p className="text-xs px-4 pt-1">{ token }</p>
+                        <button type="button" className="block w-full text-left px-4 py-2 mt-2 text-sm hover:bg-gray-300 hover:text-gray-900" role="menuitem" onClick={logout}>
+                           Log out
+                        </button>
+                     </div>
+                  </div>
+               )}
+            </div>
             {user.username === undefined
                ? <HeaderLoader />
                : (

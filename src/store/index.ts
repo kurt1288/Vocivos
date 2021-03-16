@@ -46,6 +46,9 @@ const spacetraders = createSlice({
    name: 'spacetraders',
    initialState,
    reducers: {
+      reset: (state) => {
+         Object.assign(state, initialState);
+      },
       setUser: (state, { payload }:PayloadAction<User>) => {
          state.user = payload.user;
       },
@@ -113,7 +116,7 @@ const spacetraders = createSlice({
 });
 
 export const {
-   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData, addAutomation, setAutomationState, addAutomationError,
+   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData, addAutomation, setAutomationState, addAutomationError, reset,
 } = spacetraders.actions;
 
 const { reducer } = spacetraders;
