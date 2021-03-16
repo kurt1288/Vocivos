@@ -6,11 +6,12 @@ import {
 import {
    Cargo, CargoType, OwnedShip,
 } from '../../Api/types';
-import { removeFlightPlan, RootState } from '../../store';
+import { addAutomationError, removeFlightPlan, RootState } from '../../store';
 import Buy from '../Markets/Buy';
 import Sell from '../Markets/Sell';
 import Travel from './Travel';
 import TravelProgressBar from './TravelProgress';
+import AutomateModal from '../Automation/AutomateModal';
 
 interface Props {
    ship: OwnedShip,
@@ -20,10 +21,12 @@ interface Props {
 
 const ShipCard = ({ ship, time, compact }:Props) => {
    const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.ship === ship.id));
+   const automation = useSelector((state:RootState) => state.automations.find((x) => x.shipId === ship.id));
    const dispatch = useDispatch();
    const [showBuyModal, setBuyModalShow] = useState(false);
    const [showSellModal, setSellModalShow] = useState(false);
    const [showTravelModal, setTravelModalShow] = useState(false);
+   const [showAutomateModal, setAutomateModalShow] = useState(false);
    const [remainingTime, setRemainingTime] = useState<string>();
 
    useEffect(() => {
@@ -50,11 +53,55 @@ const ShipCard = ({ ship, time, compact }:Props) => {
       return (((Date.now() / 1000) - (getUnixTime(new Date(flightPlan.arrivesAt)) - flightPlan.timeRemainingInSeconds)) / flightPlan.timeRemainingInSeconds) * 100;
    };
 
+   const closeModal = () => {
+      setAutomateModalShow(false);
+      if (automation?.error) {
+         dispatch(addAutomationError({ shipId: ship.id, error: null }));
+      }
+   };
+
+   const shipActions = () => {
+      if ((flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location) {
+         return null;
+      } if (automation?.enabled) {
+         return (
+            <div className="flex items-center justify-end">
+               {automation.error
+               && (
+                  <div className="w-6 h-6 mr-1 pt-0.5" title="Automation error">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#EF4444">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                     </svg>
+                  </div>
+               )}
+               <p className="text-xs">Automating</p>
+               <button type="button" className="text-xs ml-2 px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Tasks</button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="mt-5 grid grid-cols-4 gap-x-4">
+            <button
+               type="button"
+               className="px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default"
+               onClick={() => setTravelModalShow(true)}
+               disabled={fuelIsEmpty(ship.cargo)}
+            >{ fuelIsEmpty(ship.cargo) ? 'No fuel' : 'Travel' }
+            </button>
+            <button type="button" className="px-2 py-1 bg-green-500 rounded hover:bg-green-600" onClick={() => setBuyModalShow(true)}>Buy</button>
+            <button type="button" className="px-2 py-1 bg-red-500 rounded hover:bg-red-600" onClick={() => setSellModalShow(true)}>Sell</button>
+            <button type="button" className="text-xs px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Automate</button>
+         </div>
+      );
+   };
+
    return (
       <React.Fragment>
          { showBuyModal ? <Buy show={showBuyModal} ship={ship} handleClose={() => setBuyModalShow(false)} /> : null }
          { showSellModal ? <Sell show={showSellModal} ship={ship} handleClose={() => setSellModalShow(false)} /> : null }
          { showTravelModal ? <Travel show={showTravelModal} ship={ship} handleClose={() => setTravelModalShow(false)} /> : null }
+         { showAutomateModal ? <AutomateModal show={showAutomateModal} ship={ship} handleClose={() => closeModal()} /> : null }
          { compact ? (
             <div className="w-1/4 p-3 bg-gray-900 border border-gray-700 rounded divide-y divide-gray-500 hover:border-yellow-900 hover:shadow-xl">
                <div className="flex justify-between items-center ">
@@ -70,15 +117,21 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                         </div>
                      ) : (
                         <div>
-                           <button type="button" title="Travel" className="mr-2 w-6 h-6 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default" onClick={() => setTravelModalShow(true)} disabled={fuelIsEmpty(ship.cargo)}>
-                              <p className="text-sm font-bold">T</p>
-                           </button>
-                           <button type="button" title="Buy" className="mr-2 w-6 h-6 bg-green-500 rounded hover:bg-green-600" onClick={() => setBuyModalShow(true)}>
-                              <p className="text-sm font-bold">B</p>
-                           </button>
-                           <button type="button" title="Sell" className="mr-2 w-6 h-6 bg-red-500 rounded hover:bg-red-600" onClick={() => setSellModalShow(true)}>
-                              <p className="text-sm font-bold">S</p>
-                           </button>
+                           { automation?.enabled
+                              ? <p className="text-sm">Automating</p>
+                              : (
+                                 <React.Fragment>
+                                    <button type="button" title="Travel" className="mr-2 w-6 h-6 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default" onClick={() => setTravelModalShow(true)} disabled={fuelIsEmpty(ship.cargo)}>
+                                       <p className="text-sm font-bold">T</p>
+                                    </button>
+                                    <button type="button" title="Buy" className="mr-2 w-6 h-6 bg-green-500 rounded hover:bg-green-600" onClick={() => setBuyModalShow(true)}>
+                                       <p className="text-sm font-bold">B</p>
+                                    </button>
+                                    <button type="button" title="Sell" className="mr-2 w-6 h-6 bg-red-500 rounded hover:bg-red-600" onClick={() => setSellModalShow(true)}>
+                                       <p className="text-sm font-bold">S</p>
+                                    </button>
+                                 </React.Fragment>
+                              )}
                         </div>
                      )}
                </div>
@@ -153,21 +206,7 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      ))}
                   </div>
                </div>
-               {(flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
-                  ? null
-                  : (
-                     <div className="mt-5 grid grid-cols-3 gap-x-4">
-                        <button
-                           type="button"
-                           className="px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default"
-                           onClick={() => setTravelModalShow(true)}
-                           disabled={fuelIsEmpty(ship.cargo)}
-                        >{ fuelIsEmpty(ship.cargo) ? 'No fuel' : 'Travel' }
-                        </button>
-                        <button type="button" className="px-2 py-1 bg-green-500 rounded hover:bg-green-600" onClick={() => setBuyModalShow(true)}>Buy</button>
-                        <button type="button" className="px-2 py-1 bg-red-500 rounded hover:bg-red-600" onClick={() => setSellModalShow(true)}>Sell</button>
-                     </div>
-                  )}
+               {shipActions()}
             </div>
          )}
       </React.Fragment>

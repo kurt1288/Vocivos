@@ -2,6 +2,8 @@ import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
    FlightPlan, Planet, OwnedLoan, OwnedShip, User,
 } from '../Api/types';
+import { WorkerError } from '../App';
+import { Steps } from '../components/Automation/Models';
 
 export interface StoredMarket {
    updatedAt: number,
@@ -21,6 +23,7 @@ interface InitialState {
    },
    flightPlans: FlightPlan[],
    marketData: StoredMarket[],
+   automations: Steps[],
 }
 
 const initialState: InitialState = {
@@ -36,6 +39,7 @@ const initialState: InitialState = {
    },
    flightPlans: [],
    marketData: [],
+   automations: [],
 };
 
 const spacetraders = createSlice({
@@ -85,11 +89,31 @@ const spacetraders = createSlice({
          }
          localStorage.setItem('marketData', JSON.stringify(state.marketData));
       },
+      addAutomation: (state, { payload }:PayloadAction<Steps>) => {
+         // check for existing automation for given ship and replace if it exists
+         if (state.automations.findIndex((x) => x.shipId === payload.shipId) !== -1) {
+            state.automations.splice(state.automations.findIndex((x) => x.shipId === payload.shipId), 1);
+         }
+
+         state.automations.push(payload);
+      },
+      setAutomationState: (state, { payload }:PayloadAction<{ shipId: string, enabled: boolean}>) => {
+         const ship = state.automations.find((x) => x.shipId === payload.shipId);
+         if (ship) {
+            ship.enabled = payload.enabled;
+         }
+      },
+      addAutomationError: (state, { payload }:PayloadAction<WorkerError>) => {
+         const ship = state.automations.find((x) => x.shipId === payload.shipId);
+         if (ship) {
+            ship.error = payload.error;
+         }
+      },
    },
 });
 
 export const {
-   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData,
+   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData, addAutomation, setAutomationState, addAutomationError,
 } = spacetraders.actions;
 
 const { reducer } = spacetraders;

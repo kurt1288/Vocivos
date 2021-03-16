@@ -10,7 +10,18 @@ export enum LocationType {
 }
 
 export enum CargoType {
+   Chemicals = 'CHEMICALS',
+   Construction = 'CONSTRUCTION_MATERIALS',
+   Consumer = 'CONSUMER_GOODS',
+   Electronics = 'ELECTRONICS',
+   Food = 'FOOD',
    Fuel = 'FUEL',
+   Machinery = 'MACHINERY',
+   Metals = 'METALS',
+   Research = 'RESEARCH',
+   ShipParts = 'SHIP_PARTS',
+   Textiles = 'TEXTILES',
+   Workers = 'WORKERS',
 }
 
 export interface Status {

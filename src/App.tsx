@@ -1,8 +1,11 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Route, Switch } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import * as Comlink from 'comlink';
+import { Automation, WorkerType } from './webworker';
 import {
-   addFlightPlan, removeFlightPlan, RootState, setToken, setUser, StoredMarket, updateMarketData,
+   addAutomationError,
+   addFlightPlan, removeFlightPlan, RootState, setAutomationState, setCredits, setToken, setUser, StoredMarket, updateMarketData, updateShip,
 } from './store';
 import Api from './Api/index';
 import './App.css';
@@ -12,16 +15,32 @@ import Profile from './components/Profile';
 import Ships from './components/Ships/Ships';
 import Systems from './components/Systems/Systems';
 import Loans from './components/Loans/Loans';
-import { FlightPlan } from './Api/types';
+import { FlightPlan, Purchase } from './Api/types';
 import Markets from './components/Markets/Markets';
+import { AutoAction } from './components/Automation/Models';
+
+interface Props {
+   Worker: Comlink.Remote<WorkerType>
+}
 
 interface Token {
    username: string,
    token: string
 }
 
-function App() {
-   const user = useSelector((state:RootState) => state);
+export interface WorkerDataUpdate {
+   type: AutoAction.Travel | AutoAction.Buy | AutoAction.Sell,
+   data: FlightPlan | Purchase,
+}
+
+export interface WorkerError {
+   shipId: string,
+   error: string | null,
+}
+
+function App({ Worker }:Props) {
+   const [automationsList, setAutomationsList] = useState<{ shipId:string, instance: Comlink.Remote<Automation>}[]>([]);
+   const { account, automations } = useSelector((state:RootState) => state);
    const dispatch = useDispatch();
    const key = localStorage.getItem('apiKey');
 
@@ -62,6 +81,45 @@ function App() {
       FetchAccount();
    }, []);
 
+   const webworkerError = (data:WorkerError) => {
+      console.log(data);
+      dispatch(setAutomationState({ shipId: data.shipId, enabled: false }));
+      dispatch(addAutomationError(data));
+   };
+
+   const webworkerUpdateState = async (data:WorkerDataUpdate) => {
+      if (data.type === AutoAction.Travel) {
+         dispatch(addFlightPlan(data.data as FlightPlan));
+         // ship fuel and cargo space change after flight plan, so update the ship
+         const updatedShip = await Api.shipInfo(account.token, account.username, (data.data as FlightPlan).ship);
+         dispatch(updateShip(updatedShip.ship));
+      } else {
+         dispatch(setCredits((data.data as Purchase).credits));
+         dispatch(updateShip((data.data as Purchase).ship));
+      }
+   };
+
+   useEffect(() => {
+      automations.forEach(async (item) => {
+         const automation = automationsList.find((x) => x.shipId === item.shipId);
+
+         // If the automation in the store is not enabled and there's no running automation, then we should create a new one and start it.
+         if (item.enabled && !automation) {
+            // This will start a new worker for each automation, which isn't sustainable
+            // const AutomationClass = Comlink.wrap<WorkerType>(new Worker());
+            const instance = await new Worker(account.token, account.username, item, Comlink.proxy(webworkerError), Comlink.proxy(webworkerUpdateState));
+            await instance.run();
+            setAutomationsList([...automationsList, { shipId: item.shipId, instance }]);
+         }
+
+         // If the automation in the store is not enabled and there's an automation worker, we should stop it.
+         if (!item.enabled && automation) {
+            await automation.instance.stop();
+            setAutomationsList(automationsList.filter((x) => x.shipId !== automation.shipId));
+         }
+      });
+   }, [automations]);
+
    return (
       <React.Fragment>
          { (key === undefined || key === null) ? <SignIn /> : (
@@ -69,7 +127,7 @@ function App() {
                <NavBar />
                <div className="bg-gray-800 py-4 flex-grow text-gray-200">
                   <div className="container min-h-full mx-auto">
-                     { user.account.token.length !== 0
+                     { account.token.length !== 0
                         && (
                            <Switch>
                               <Route exact path="/" component={Profile} />

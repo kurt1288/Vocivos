@@ -54,3 +54,17 @@ export const ProfileLoader = () => (
       <rect x="0" y="30" rx="15" ry="15" width="250" height="30" />
    </ContentLoader>
 );
+
+export const AutoStepLoader = () => (
+   <ContentLoader
+      speed={2}
+      width={398}
+      height={100}
+      viewBox="0 0 398 100"
+      backgroundColor="#D1D5DB"
+      foregroundColor="#E5E7EB"
+   >
+      <rect x="0" y="0" rx="5" ry="5" width="398" height="48" />
+      <rect x="0" y="50" rx="5" ry="5" width="398" height="48" />
+   </ContentLoader>
+);
