@@ -29,8 +29,7 @@ const AutomateModal = ({ handleClose, show, ship }: Props) => {
 
    useEffect(() => {
       const getLocations = async () => {
-         if (!ship.location) { return; }
-         const loc = (await Api.getLocations(token, ship.location.split('-')[0])).locations;
+         const loc = (await Api.getLocations(token, 'OE')).locations;
          setSystem(loc);
 
          if (automations) {
