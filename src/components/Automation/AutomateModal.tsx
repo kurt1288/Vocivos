@@ -126,7 +126,7 @@ const AutomateModal = ({ handleClose, show, ship }: Props) => {
                      <option disabled selected value=""> -- Copy from -- </option>
                      { automations.map((automation) => {
                         if (automation.shipId !== ship.id) {
-                           return <option value={automation.shipId}>{ ships.find((x) => x.id === automation.shipId)?.type }</option>
+                           return <option key={automation.shipId} value={automation.shipId}>{ ships.find((x) => x.id === automation.shipId)?.type }</option>;
                         }
                         return null;
                      })}
