@@ -66,7 +66,7 @@ const ShipCard = ({ ship, time, compact }:Props) => {
       }
 
       return (
-         <div className="mt-5 grid grid-cols-4 gap-x-4">
+         <div className="mt-4 grid grid-cols-4 gap-x-4">
             <button
                type="button"
                className="px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default"
@@ -88,7 +88,7 @@ const ShipCard = ({ ship, time, compact }:Props) => {
          { showTravelModal ? <Travel show={showTravelModal} ship={ship} handleClose={() => setTravelModalShow(false)} /> : null }
          { showAutomateModal ? <AutomateModal show={showAutomateModal} ship={ship} handleClose={() => closeModal()} /> : null }
          { compact ? (
-            <div className="w-1/4 p-3 bg-gray-900 border border-gray-700 rounded divide-y divide-gray-500 hover:border-yellow-900 hover:shadow-xl">
+            <div className="w-1/4 my-2 p-3 bg-gray-900 border border-gray-700 rounded divide-y divide-gray-500 hover:border-yellow-900 hover:shadow-xl">
                <div className="flex justify-between items-center ">
                   <div className="text-left">
                      <h3>{ ship.type }</h3>
@@ -164,6 +164,21 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      </div>
                   </div>
                </div>
+               {automation?.enabled
+                  ? (
+                     <div className="flex items-center justify-end">
+                        {automation.error
+                        && (
+                           <div className="w-6 h-6 mr-1 pt-0.5" title="Automation error">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#EF4444">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                           </div>
+                        )}
+                        <p className="text-xs">Automating</p>
+                        <button type="button" className="text-xs ml-2 px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Tasks</button>
+                     </div>
+                  ) : shipActions()}
                <div className="flex items-center mt-4 mb-3">
                   <div className="w-6 h-6 mr-1">
                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -191,21 +206,6 @@ const ShipCard = ({ ship, time, compact }:Props) => {
                      ))}
                   </div>
                </div>
-               {automation?.enabled
-                  ? (
-                     <div className="flex items-center justify-end">
-                        {automation.error
-                        && (
-                           <div className="w-6 h-6 mr-1 pt-0.5" title="Automation error">
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#EF4444">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                              </svg>
-                           </div>
-                        )}
-                        <p className="text-xs">Automating</p>
-                        <button type="button" className="text-xs ml-2 px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Tasks</button>
-                     </div>
-                  ) : shipActions()}
             </div>
          )}
       </React.Fragment>

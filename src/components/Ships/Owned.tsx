@@ -76,7 +76,7 @@ const Owned = () => {
          </div>
          <div className="grid grid-cols-4 gap-4">
             { sortedShips?.map((ship) => (
-               <ShipCard time={time} ship={ship} key={ship.class + ship.speed + ship.manufacturer + ship.maxCargo} />
+               <ShipCard time={time} ship={ship} key={ship.id} />
             ))}
          </div>
       </React.Fragment>

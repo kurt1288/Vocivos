@@ -60,7 +60,7 @@ const Profile = () => {
                            )
                            : (
                               ships.map((ship) => (
-                                 <ShipCard time={time} ship={ship} compact key={ship.class + ship.speed + ship.manufacturer + ship.maxCargo} />
+                                 <ShipCard time={time} ship={ship} compact key={ship.id} />
                               ))
                            )}
                      </div>
