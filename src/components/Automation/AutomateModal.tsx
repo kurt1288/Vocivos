@@ -19,7 +19,8 @@ interface Props {
 
 const AutomateModal = ({ handleClose, show, ship }: Props) => {
    const { token } = useSelector((state:RootState) => state.account);
-   const automations = useSelector((state:RootState) => state.automations.find((x) => x.shipId === ship.id));
+   const automations = useSelector((state:RootState) => state.automations);
+   const { ships } = useSelector((state:RootState) => state.user);
    const dispatch = useDispatch();
    const [autoSteps, setAutoSteps] = useState<Steps>({
       shipId: ship.id, steps: [], enabled: false, error: null,
@@ -32,8 +33,9 @@ const AutomateModal = ({ handleClose, show, ship }: Props) => {
          const loc = (await Api.getLocations(token, 'OE')).locations;
          setSystem(loc);
 
-         if (automations) {
-            setAutoSteps(automations);
+         const currentAutomation = automations.find((x) => x.shipId === ship.id);
+         if (currentAutomation) {
+            setAutoSteps(currentAutomation);
          }
       };
       getLocations();
@@ -96,6 +98,12 @@ const AutomateModal = ({ handleClose, show, ship }: Props) => {
       handleClose();
    };
 
+   const copyAutomation = (shipId:string) => {
+      const steps = automations.find((x) => x.shipId === shipId)?.steps;
+      if (!steps) { return; }
+      setAutoSteps({ ...autoSteps, steps });
+   };
+
    return (
       <div className={showHideModal}>
          <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onClick={() => { handleClose(); }} />
@@ -105,10 +113,24 @@ const AutomateModal = ({ handleClose, show, ship }: Props) => {
                <p className="text-sm mt-2 mb-1">Steps will begin at ship&apos;s current location</p>
                <p className="text-sm">Browser tab must be kept open for automation to run.</p>
             </div>
-            { automations?.error
+            { autoSteps.error
             && (
                <div className="px-6 mb-4">
-                  <p className="bg-red-300 text-red-800 py-3 px-4">{ automations.error }</p>
+                  <p className="bg-red-300 text-red-800 py-3 px-4">{ autoSteps.error }</p>
+               </div>
+            )}
+            { automations.length > 0
+            && (
+               <div className="flex items-center p-4 pt-0">
+                  <select name="copyAutomation" id="copyAutomation" className="text-sm ml-2 bg-gray-100 border-b border-yellow-500 appearance-none cursor-pointer" onChange={(e) => copyAutomation(e.target.value)}>
+                     <option disabled selected value=""> -- Copy from -- </option>
+                     { automations.map((automation) => {
+                        if (automation.shipId !== ship.id) {
+                           return <option value={automation.shipId}>{ ships.find((x) => x.id === automation.shipId)?.type }</option>
+                        }
+                        return null;
+                     })}
+                  </select>
                </div>
             )}
             <div className="flex flex-grow p-4 pt-0">
