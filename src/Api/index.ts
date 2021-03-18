@@ -1,3 +1,4 @@
+import Bottleneck from 'bottleneck';
 import {
    Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo,
 } from './types';
@@ -11,27 +12,44 @@ enum fetchMethod {
 
 const BASE_URL = 'https://api.spacetraders.io';
 
+const limiter = new Bottleneck({
+   minTime: 500,
+   maxConcurrent: 1,
+});
+
+const wait = (time:number) => (
+   new Promise((resolve) => setTimeout(resolve, time))
+);
+
 async function authFetch<T>(
-   url: string, token: string, type: fetchMethod, payload: Record<string, any> = {},
+   url: string, token: string, type: fetchMethod, payload: Record<string, any> = {}, retry = 0,
 ): Promise<T> {
    let response;
 
    if (type === fetchMethod.Get) {
-      response = await fetch(url, {
+      response = await limiter.schedule(() => fetch(url, {
          method: type,
          headers: {
             Authorization: `Bearer ${token}`,
          },
-      });
+      }));
    } else {
-      response = await fetch(url, {
+      response = await limiter.schedule(() => fetch(url, {
          method: type,
          headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
          },
          body: JSON.stringify(payload),
-      });
+      }));
+   }
+
+   // Retry 3 times if rate limit error
+   if (response.status === 429 && retry < 3) {
+      const header = response.headers.get('retry-after');
+      const retryAfter = header ? parseInt(header, 10) * 1000 : 1000;
+      await wait(retryAfter);
+      authFetch(url, token, type, payload, retry + 1);
    }
 
    if (response.status === 401) {
