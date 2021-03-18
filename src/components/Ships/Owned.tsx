@@ -9,7 +9,7 @@ const Owned = () => {
    const { ships } = useSelector((state:RootState) => state.user);
    const [sortedShips, setShips] = useState<OwnedShip[]>();
    const [sortOrder, setOrder] = useState(false);
-   const [sortType, setSortType] = useState('class');
+   const [sortType, setSortType] = useState('type');
    const [time, setTime] = useState<number>(Date.now());
 
    useEffect(() => {
