@@ -18,7 +18,7 @@ const Travel = ({ handleClose, show, ship }: Props) => {
    const dispatch = useDispatch();
    const [locations, setLocations] = useState<Location[]>();
    const [error, setError] = useState<string>('');
-   const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900' : 'hidden';
+   const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900 z-10' : 'hidden';
 
    useEffect(() => {
       const getLocations = async () => {

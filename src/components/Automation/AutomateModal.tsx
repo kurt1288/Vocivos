@@ -26,7 +26,7 @@ const AutomateModal = ({ handleClose, show, ship }: Props) => {
       shipId: ship.id, steps: [], enabled: false, error: null,
    });
    const [system, setSystem] = useState<Location[]>([]);
-   const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900' : 'hidden';
+   const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900 z-10' : 'hidden';
 
    useEffect(() => {
       const getLocations = async () => {

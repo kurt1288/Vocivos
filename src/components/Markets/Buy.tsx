@@ -21,7 +21,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
    const [selectedMarket, setSelectedMarket] = useState<Marketplace>();
    const [purchaseQuantity, setPurchaseQuantity] = useState<number>(0);
    const [working, setWorking] = useState<boolean>(false);
-   const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900' : 'hidden';
+   const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900 z-10' : 'hidden';
 
    useEffect(() => {
       const getMarket = async () => {
