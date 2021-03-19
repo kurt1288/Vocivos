@@ -3,17 +3,22 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
-import { OwnedShip, Location } from '../../Api/types';
-import { addFlightPlan, RootState, updateShip } from '../../store';
+import { OwnedShip, Location, LocationType } from '../../Api/types';
+import {
+   addFlightPlan, RootState, updateShip, updateShips,
+} from '../../store';
 import { ModalPlaceholder } from '../SkeletonLoaders';
 
 interface Props {
    handleClose: () => void,
+   shipError: (message:string) => void,
    show: boolean,
    ship: OwnedShip
 }
 
-const Travel = ({ handleClose, show, ship }: Props) => {
+const Travel = ({
+   handleClose, shipError, show, ship,
+}: Props) => {
    const { token, username } = useSelector((state:RootState) => state.account);
    const dispatch = useDispatch();
    const [locations, setLocations] = useState<Location[]>();
@@ -29,9 +34,14 @@ const Travel = ({ handleClose, show, ship }: Props) => {
       getLocations();
    }, []);
 
-   const createFlightPlan = async (location: string) => {
+   const createFlightPlan = async (type: LocationType, location: string) => {
       try {
-         const result = (await Api.createFlightPlan(token, username, ship.id, location)).flightPlan;
+         let result;
+         if (type === LocationType.Wormhole && ship.location === location) {
+            result = (await Api.warpJump(token, username, ship.id)).flightPlan;
+         } else {
+            result = (await Api.createFlightPlan(token, username, ship.id, location)).flightPlan;
+         }
          dispatch(addFlightPlan(result));
          handleClose();
          // ship fuel and cargo space change after flight plan, so update the ship
@@ -39,6 +49,12 @@ const Travel = ({ handleClose, show, ship }: Props) => {
          dispatch(updateShip(updatedShip.ship));
       } catch (err: unknown) {
          setError((err as Error).message);
+         // If the ship failed a warp jump, it's destroyed so we should update the ships
+         if (type === LocationType.Wormhole) {
+            const { ships } = await Api.ownedShips(token, username);
+            dispatch(updateShips(ships));
+            shipError((err as Error).message);
+         }
       }
    };
 
@@ -68,14 +84,14 @@ const Travel = ({ handleClose, show, ship }: Props) => {
                                     <p className="text-sm text-gray-500">{ location.symbol }</p>
                                  </div>
                                  <div>
-                                    { ship.location === location.symbol
+                                    { ship.location === location.symbol && location.type !== LocationType.Wormhole
                                        ? <p className="text-sm text-gray-600 cursor-default">Current location</p>
                                        : (
                                           <button
                                              type="button"
                                              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 disabled:opacity-50 disabled:cursor-default disabled:bg-blue-500"
-                                             onClick={() => createFlightPlan(location.symbol)}
-                                          >Travel
+                                             onClick={() => createFlightPlan(location.type, location.symbol)}
+                                          >{ location.type === LocationType.Wormhole && ship.location === location.symbol ? 'Warp' : 'Travel' }
                                           </button>
                                        )}
                                  </div>

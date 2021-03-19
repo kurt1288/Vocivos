@@ -17,9 +17,12 @@ interface Props {
    ship: OwnedShip,
    time?: number,
    compact?: boolean,
+   shipError?: (message:string) => void,
 }
 
-const ShipCard = ({ ship, time, compact }:Props) => {
+const ShipCard = ({
+   ship, time, compact, shipError,
+}:Props) => {
    const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.ship === ship.id));
    const automation = useSelector((state:RootState) => state.automations.find((x) => x.shipId === ship.id));
    const dispatch = useDispatch();
@@ -85,7 +88,7 @@ const ShipCard = ({ ship, time, compact }:Props) => {
       <React.Fragment>
          { showBuyModal ? <Buy show={showBuyModal} ship={ship} handleClose={() => setBuyModalShow(false)} /> : null }
          { showSellModal ? <Sell show={showSellModal} ship={ship} handleClose={() => setSellModalShow(false)} /> : null }
-         { showTravelModal ? <Travel show={showTravelModal} ship={ship} handleClose={() => setTravelModalShow(false)} /> : null }
+         { showTravelModal ? <Travel show={showTravelModal} ship={ship} handleClose={() => setTravelModalShow(false)} shipError={(message) => shipError && shipError(message)} /> : null }
          { showAutomateModal ? <AutomateModal show={showAutomateModal} ship={ship} handleClose={() => closeModal()} /> : null }
          { compact ? (
             <div className="w-1/4 my-2 p-3 bg-gray-900 border border-gray-700 rounded divide-y divide-gray-500 hover:border-yellow-900 hover:shadow-xl">
@@ -215,6 +218,7 @@ const ShipCard = ({ ship, time, compact }:Props) => {
 ShipCard.defaultProps = {
    compact: false,
    time: Date.now(),
+   shipError: '',
 };
 
 export default ShipCard;

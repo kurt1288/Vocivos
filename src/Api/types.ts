@@ -7,6 +7,8 @@ export enum LocationType {
    Moon = 'MOON',
    GasGiant = 'GAS_GIANT',
    Asteroid = 'ASTEROID',
+   Wormhole = 'WORMHOLE',
+   Nebula = 'NEBULA',
 }
 
 export enum CargoType {
@@ -66,6 +68,10 @@ export interface ShipsAvailable {
    ships: Ship[],
 }
 
+export interface OwnedShips {
+   ships: OwnedShip[]
+}
+
 export interface ShipInfo {
    ship: OwnedShip,
 }
@@ -123,6 +129,8 @@ export interface Location {
    name: string,
    x: number,
    y: number,
+   anomaly?: string,
+   message?: string,
 }
 
 export interface Locations {

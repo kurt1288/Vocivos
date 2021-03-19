@@ -11,6 +11,7 @@ const Owned = () => {
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('type');
    const [time, setTime] = useState<number>(Date.now());
+   const [shipError, setShipError] = useState('');
 
    useEffect(() => {
       // Update the 'time' state, in order for ship cards to update (for keeping track of flight plan time)
@@ -57,9 +58,24 @@ const Owned = () => {
       sort(sortType);
    }, [sortType, sortOrder, ships]);
 
+   const addShipError = (message:string) => {
+      setShipError(message);
+   };
+
    return (
       <React.Fragment>
          <h2 className="text-3xl mb-5">Your Ships</h2>
+         { shipError !== ''
+         && (
+            <div className="flex justify-between items-center text-sm py-3 px-2 bg-red-400 text-red-900 mb-5">
+               <p>{ shipError }</p>
+               <button className="w-4 h-4 hover:text-red-700" type="button" onClick={() => setShipError('')}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+               </button>
+            </div>
+         )}
          <div className="flex mb-5">
             <button type="button" className="cursor-pointer w-6 h-6" onClick={() => setOrder(!sortOrder)}>
                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#E5E7EB" {... (sortOrder ? { transform: 'rotate(180) scale(-1,1)' } : {})} className="origin-center"><path d="M0 0h24v24H0V0z" fill="none" /><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" /></svg>
@@ -76,7 +92,7 @@ const Owned = () => {
          </div>
          <div className="grid grid-cols-4 gap-4">
             { sortedShips?.map((ship) => (
-               <ShipCard time={time} ship={ship} key={ship.id} />
+               <ShipCard time={time} ship={ship} key={ship.id} shipError={(message) => addShipError(message)} />
             ))}
          </div>
       </React.Fragment>

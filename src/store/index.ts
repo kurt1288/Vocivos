@@ -1,6 +1,6 @@
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-   FlightPlan, Planet, OwnedLoan, OwnedShip, User,
+   FlightPlan, Planet, OwnedLoan, OwnedShip, User, Ship,
 } from '../Api/types';
 import { WorkerError } from '../App';
 import { Steps } from '../components/Automation/Models';
@@ -61,6 +61,9 @@ const spacetraders = createSlice({
       updateShip: (state, { payload }:PayloadAction<OwnedShip>) => {
          Object.assign(state.user.ships.find((x) => x.id === payload.id), payload);
       },
+      updateShips: (state, { payload }:PayloadAction<OwnedShip[]>) => {
+         state.user.ships = payload;
+      },
       addFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {
          state.flightPlans.push(payload);
          // when in transit, ship location is 'undefined'
@@ -116,7 +119,7 @@ const spacetraders = createSlice({
 });
 
 export const {
-   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData, addAutomation, setAutomationState, addAutomationError, reset,
+   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData, addAutomation, setAutomationState, addAutomationError, reset, updateShips,
 } = spacetraders.actions;
 
 const { reducer } = spacetraders;

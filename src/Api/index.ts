@@ -1,6 +1,6 @@
 import Bottleneck from 'bottleneck';
 import {
-   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo,
+   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo, OwnedShips,
 } from './types';
 
 // IMPORTANT: camelCase used because: https://github.com/pmmmwh/react-refresh-webpack-plugin/blob/main/docs/TROUBLESHOOTING.md#usage-with-indirection-like-workers-and-js-templates
@@ -112,7 +112,7 @@ export default {
 
    async ownedShips(token: string, username: string) {
       const url = `${BASE_URL}/users/${username}/ships`;
-      return authFetch<ShipsAvailable>(url, token, fetchMethod.Get);
+      return authFetch<OwnedShips>(url, token, fetchMethod.Get);
    },
 
    async buyShip(token: string, username: string, location: string, type: string) {
@@ -158,5 +158,10 @@ export default {
    async queryFlightPlan(token: string, username: string, planId: string) {
       const url = `${BASE_URL}/users/${username}/flight-plans/${planId}`;
       return authFetch<FlightPlanRes>(url, token, fetchMethod.Get);
+   },
+
+   async warpJump(token: string, username: string, shipId: string) {
+      const url = `${BASE_URL}/users/${username}/warp-jump`;
+      return authFetch<FlightPlanRes>(url, token, fetchMethod.Post, { shipId });
    },
 };
