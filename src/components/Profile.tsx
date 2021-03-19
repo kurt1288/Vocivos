@@ -2,6 +2,7 @@ import { formatDistanceToNow } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { LoanStatus } from '../Api/types';
 import { RootState } from '../store';
 import ShipCard from './Ships/ShipCard';
 import { ProfileLoader } from './SkeletonLoaders';
@@ -32,7 +33,7 @@ const Profile = () => {
                   <div className="mb-4 min-h-1/4">
                      <h3 className="text-xl mb-4">Loans</h3>
                      <div className="pl-5">
-                        { loans.length === 0
+                        { loans.filter((x) => x.status === LoanStatus.Current).length === 0
                            ? (
                               <div>
                                  <p>You have no loans!</p>
@@ -41,7 +42,7 @@ const Profile = () => {
                            )
                            : (
                               <div>
-                                 { loans.map((loan) => (
+                                 { loans.filter((x) => x.status === LoanStatus.Current).map((loan) => (
                                     <p key={loan.id}>{ loan.repaymentAmount.toLocaleString() } credits due { formatDistanceToNow(new Date(loan.due), { addSuffix: true }) }</p>
                                  ))}
                               </div>

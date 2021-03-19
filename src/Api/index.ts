@@ -8,6 +8,7 @@ import {
 enum fetchMethod {
    Get = 'get',
    Post = 'post',
+   Put = 'put',
 }
 
 const BASE_URL = 'https://api.spacetraders.io';
@@ -103,6 +104,11 @@ export default {
    async newLoan(username: string, token: string, type: string) {
       const url = `${BASE_URL}/users/${username}/loans`;
       return authFetch<User>(url, token, fetchMethod.Post, { type });
+   },
+
+   async replayLoan(username: string, token: string, loanId: string) {
+      const url = `${BASE_URL}/users/${username}/loans/${loanId}`;
+      return authFetch<User>(url, token, fetchMethod.Put);
    },
 
    async availableShips(token: string, className = '') {

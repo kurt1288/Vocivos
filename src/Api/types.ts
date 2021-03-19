@@ -27,6 +27,12 @@ export enum CargoType {
    Workers = 'WORKERS',
 }
 
+export enum LoanStatus {
+   Current = 'CURRENT',
+   Paid = 'PAID',
+   PaidLate = 'PAID_LATE',
+}
+
 export interface Status {
    status: string;
 }
@@ -60,7 +66,7 @@ export interface OwnedLoan {
    due: Date,
    id: string,
    repaymentAmount: number,
-   status: number,
+   status: LoanStatus,
    type: LoanType,
 }
 
