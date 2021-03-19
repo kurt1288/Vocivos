@@ -90,8 +90,9 @@ export interface Ship {
 export interface OwnedShip {
    cargo: Cargo[],
    class: string,
+   flightPlanId?: string,
    id: string,
-   location: string | undefined,
+   location?: string,
    manufacturer: string,
    maxCargo: number,
    plating: number,

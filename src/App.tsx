@@ -5,7 +5,8 @@ import * as Comlink from 'comlink';
 import { Automation, WorkerType } from './webworker';
 import {
    addAutomationError,
-   addFlightPlan, removeFlightPlan, RootState, setAutomationState, setCredits, setToken, setUser, StoredMarket, updateMarketData, updateShip,
+   addFlightPlan, RootState, setAutomationState, setCredits,
+   setToken, setUser, StoredMarket, updateMarketData, updateShip,
 } from './store';
 import Api from './Api/index';
 import './App.css';
@@ -15,7 +16,9 @@ import Profile from './components/Profile';
 import Ships from './components/Ships/Ships';
 import Systems from './components/Systems/Systems';
 import Loans from './components/Loans/Loans';
-import { FlightPlan, Market, OwnedShip, Purchase } from './Api/types';
+import {
+   FlightPlan, Market, OwnedShip, Purchase,
+} from './Api/types';
 import Markets from './components/Markets/Markets';
 import { AutoAction } from './components/Automation/Models';
 
@@ -54,22 +57,21 @@ function App({ Worker }:Props) {
       const FetchAccount = async () => {
          const result = await Api.getUser(apiKey.username, apiKey.token);
          dispatch(setUser(result));
-      };
 
-      // Update flight paths stored in local storage
-      const flightPlansStore = localStorage.getItem('flightPlans');
-      const flightPlans = flightPlansStore !== null ? JSON.parse(flightPlansStore) as FlightPlan[] : null;
-      if (flightPlans && flightPlans.length > 0) {
-         flightPlans.map(async (plan) => {
-            const { flightPlan } = await Api.queryFlightPlan(apiKey.token, apiKey.username, plan.id);
-            if (flightPlan.terminatedAt === null) {
-               dispatch(addFlightPlan(flightPlan));
-            } else if (flightPlan.terminatedAt) {
-               // This will remove outdated flights from the local storage
-               dispatch(removeFlightPlan(flightPlan));
-            }
-         });
-      }
+         // only needed because the ships property on the user response does not contain the 'flightPlanId' property
+         if (result.user.ships.some((x) => x.location === undefined)) {
+            const { ships } = await Api.ownedShips(apiKey.token, apiKey.username);
+
+            ships.forEach(async (ship) => {
+               if (ship.flightPlanId) {
+                  const { flightPlan } = await Api.queryFlightPlan(apiKey.token, apiKey.username, ship.flightPlanId);
+                  if (flightPlan.terminatedAt === null) {
+                     dispatch(addFlightPlan(flightPlan));
+                  }
+               }
+            });
+         }
+      };
 
       // Update market data stored in local storage
       const marketDataStore = localStorage.getItem('marketData');

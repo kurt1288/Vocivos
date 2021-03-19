@@ -73,8 +73,6 @@ const spacetraders = createSlice({
          if (ship) {
             ship.location = undefined;
          }
-
-         localStorage.setItem('flightPlans', JSON.stringify(state.flightPlans));
       },
       removeFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {
          if (state.flightPlans.findIndex((x) => x.id === payload.id) > -1) {
@@ -85,7 +83,6 @@ const spacetraders = createSlice({
             if (ship) {
                ship.location = payload.destination;
             }
-            localStorage.setItem('flightPlans', JSON.stringify(state.flightPlans));
          }
       },
       updateMarketData: (state, { payload }:PayloadAction<StoredMarket>) => {

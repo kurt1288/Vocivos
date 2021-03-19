@@ -31,7 +31,6 @@ const NavBar = () => {
    const logout = () => {
       dispatch(reset());
       localStorage.removeItem('apiKey');
-      localStorage.removeItem('flightPlans');
       // note, not removing market data from localStorage
    };
 
