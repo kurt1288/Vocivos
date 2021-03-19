@@ -1,83 +1,81 @@
-import React, { Suspense, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Canvas, useLoader } from 'react-three-fiber';
-import { TextureLoader } from 'three';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
-import { Location, LocationType, System } from '../../Api/types';
-import { RootState } from '../../store';
-import SystemInfo from './SystemInfo';
-import Asteroid from './ThreeObjects/Asteroid';
-import Moon from './ThreeObjects/Moon';
-import Planet from './ThreeObjects/Planet';
-import Sun from './ThreeObjects/Sun';
+import { Location, LocationType } from '../../Api/types';
+import { RootState, setSystems } from '../../store';
 
-interface IMoon {
-   parent: number,
-   moon: Location
+interface SortedSystem {
+   symbol: string,
+   name: string,
+   locations: SortedLocation[],
+}
+
+interface SortedLocation {
+   parent: Location,
+   satellites: Location[],
 }
 
 const SystemMap = () => {
-   const bgImageTexture = useLoader(TextureLoader, `${process.env.PUBLIC_URL}/images/stars.jpg`);
    const token = useSelector((state:RootState) => state.account.token);
-   const [system, setSystem] = useState<System>();
-   const [stars, setStars] = useState<Location[]>();
-   const [planets, setPlanets] = useState<Location[]>();
-   const [asteroids, setAsteroids] = useState<Location[]>();
-   const [moons, setMoons] = useState<IMoon[]>();
+   const systems = useSelector((state:RootState) => state.systems);
+   const dispatch = useDispatch();
+   const [sortedLocations, setSortedLocations] = useState<SortedSystem[]>([]);
 
    useEffect(() => {
       const GetSystems = async () => {
-         const systems = (await Api.systemsInfo(token)).systems[0];
-         setSystem(systems);
-         setPlanets([...systems.locations].filter((location) => location.type === LocationType.Planet));
-         setStars([...systems.locations].filter((location) => location.type === LocationType.GasGiant));
-         setAsteroids([...systems.locations].filter((location) => location.type === LocationType.Asteroid));
+         if (systems.length === 0) {
+            const temp = (await Api.systemsInfo(token)).systems;
+            dispatch((setSystems(temp)));
+         }
       };
       GetSystems();
    }, []);
 
    useEffect(() => {
-      if (!system) { return; }
-
-      const tempMoons = [...system.locations].filter((location) => location.type === LocationType.Moon);
-      const moonArray:IMoon[] = [];
-      tempMoons.map((moon) => {
-         const parent = planets?.findIndex((x) => moon.symbol.startsWith(x.symbol)) as number;
-         moonArray.push({ parent, moon });
-         return true;
+      const sorted:SortedSystem[] = [];
+      systems.forEach((system) => {
+         const sortedSystem:SortedSystem = { symbol: system.symbol, name: system.name, locations: [] };
+         sorted.push(sortedSystem);
+         system.locations.forEach((location) => {
+            if (location.type !== LocationType.Moon) {
+               sortedSystem.locations.push({ parent: location, satellites: [] });
+            } else {
+               sortedSystem.locations.find((x) => x.parent.symbol === (`${location.symbol.split('-')[0]}-${location.symbol.split('-')[1]}`))?.satellites.push(location);
+            }
+         });
       });
-      setMoons(moonArray);
-   }, [planets]);
-
-   const getMoonPosition = (moon:IMoon) => {
-      const temp = [...moons as IMoon[]].filter((x) => x.parent === moon.parent);
-      temp.findIndex((x) => x.moon.symbol === moon.moon.symbol);
-      return -1 - ((temp.findIndex((x) => x.moon.symbol === moon.moon.symbol)) * 0.5);
-   };
+      setSortedLocations(sorted);
+   }, [systems]);
 
    return (
       <React.Fragment>
          <div className="h-1/4">
-            { system && stars && planets && moons && asteroids
+            { sortedLocations
                && (
                   <React.Fragment>
-                     <Canvas camera={{ position: [4.5, 0, 10], fov: 20 }} onCreated={(state) => { state.scene.background = bgImageTexture; state.camera.lookAt(4.5, 0, 0); }}>
-                        <ambientLight intensity={0.4} />
-                        {stars?.map((star) => (
-                           <Suspense key={star.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Sun position={[0, 0, 0]} /></Suspense>
+                     <div className="grid gap-3 grid-cols-4 mt-4">
+                        { sortedLocations.map((system) => (
+                           <div key={system.symbol}>
+                              <h2 className="text-3xl">{ system.name }</h2>
+                              <ul className="mt-3 pl-5">
+                                 {system.locations.map((location) => (
+                                    <React.Fragment key={location.parent.symbol}>
+                                       <li className="py-1">{ location.parent.name }</li>
+                                       { location.satellites.length > 0
+                                       && (
+                                          <ul className="pl-5">
+                                             {
+                                                location.satellites.map((satellite) => (
+                                                   <li key={satellite.symbol} className="py-1">{ satellite.name }</li>
+                                                ))
+                                             }
+                                          </ul>
+                                       )}
+                                    </React.Fragment>
+                                 ))}
+                              </ul>
+                           </div>
                         ))}
-                        {planets?.map((planet, index) => (
-                           <Suspense key={planet.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Planet position={[(index + 3) + index, 0, 0]} /></Suspense>
-                        ))}
-                        {asteroids?.map((asteroid) => (
-                           <Suspense key={asteroid.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Asteroid position={[planets ? planets.length + 7 : 0, 0, 0]} /></Suspense>
-                        ))}
-                        {moons?.map((moon) => (
-                           <Suspense key={moon.moon.symbol} fallback={<sphereBufferGeometry args={[2, 15, 15]} attach="geometry" />}><Moon position={[(moon.parent + 3) + moon.parent, getMoonPosition(moon), 0]} /></Suspense>
-                        ))}
-                     </Canvas>
-                     <div className="mt-4">
-                        <SystemInfo system={system} stars={stars} planets={planets} moons={moons} asteroids={asteroids} />
                      </div>
                   </React.Fragment>
                )}

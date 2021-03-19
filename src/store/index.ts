@@ -1,6 +1,6 @@
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-   FlightPlan, Planet, OwnedLoan, OwnedShip, User, Ship,
+   FlightPlan, Planet, OwnedLoan, OwnedShip, User, System,
 } from '../Api/types';
 import { WorkerError } from '../App';
 import { Steps } from '../components/Automation/Models';
@@ -24,6 +24,7 @@ interface InitialState {
    flightPlans: FlightPlan[],
    marketData: StoredMarket[],
    automations: Steps[],
+   systems: System[],
 }
 
 const initialState: InitialState = {
@@ -40,6 +41,7 @@ const initialState: InitialState = {
    flightPlans: [],
    marketData: [],
    automations: [],
+   systems: [],
 };
 
 const spacetraders = createSlice({
@@ -115,11 +117,14 @@ const spacetraders = createSlice({
             ship.error = payload.error;
          }
       },
+      setSystems: (state, { payload }:PayloadAction<System[]>) => {
+         state.systems = payload;
+      },
    },
 });
 
 export const {
-   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData, addAutomation, setAutomationState, addAutomationError, reset, updateShips,
+   setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan, updateMarketData, addAutomation, setAutomationState, addAutomationError, reset, updateShips, setSystems,
 } = spacetraders.actions;
 
 const { reducer } = spacetraders;
