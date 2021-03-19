@@ -68,3 +68,34 @@ export const AutoStepLoader = () => (
       <rect x="0" y="50" rx="5" ry="5" width="398" height="48" />
    </ContentLoader>
 );
+
+export const MarketCardLoader = () => (
+   <div className="p-3 bg-gray-900 border border-gray-700 rounded">
+      <div className="flex justify-between items-center pb-2 border-b border-gray-700">
+         <ContentLoader
+            speed={2}
+            width={100}
+            height={20}
+            viewBox="0 0 100 20"
+            backgroundColor="#9CA3AF"
+            foregroundColor="#D1D5DB"
+         >
+            <rect x="0" y="0" rx="10" ry="10" width="100" height="20" />
+         </ContentLoader>
+      </div>
+      <div className="text-sm my-3">
+         <ContentLoader
+            speed={2}
+            width={175}
+            height={70}
+            viewBox="0 0 175 70"
+            backgroundColor="#9CA3AF"
+            foregroundColor="#D1D5DB"
+         >
+            <rect x="0" y="0" rx="7.5" ry="7.5" width="125" height="15" />
+            <rect x="15" y="25" rx="7.5" ry="7.5" width="150" height="15" />
+            <rect x="15" y="50" rx="7.5" ry="7.5" width="150" height="15" />
+         </ContentLoader>
+      </div>
+   </div>
+);

@@ -3,28 +3,45 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
 import { Location } from '../../Api/types';
-import { RootState, updateMarketData } from '../../store';
+import { RootState, setSystems, updateMarketData } from '../../store';
+import { MarketCardLoader } from '../SkeletonLoaders';
 
 const Markets = () => {
    const { token } = useSelector((state:RootState) => state.account);
    const { ships } = useSelector((state:RootState) => state.user);
    const marketData = useSelector((state:RootState) => state.marketData);
+   const systems = useSelector((state:RootState) => state.systems);
    const dispatch = useDispatch();
    const [locations, setLocations] = useState<Location[]>();
    const [time, setTime] = useState<number>(Date.now());
+   const [activeSystem, setActiveSystem] = useState<string>();
+
+   const changeSystem = async (system:string) => {
+      setActiveSystem(system);
+      setLocations(undefined);
+      const data = (await Api.getLocations(token, system)).locations;
+      setLocations(data);
+   };
 
    useEffect(() => {
-      const getData = async () => {
-         const system = (await Api.getLocations(token, 'OE')).locations;
-         setLocations(system);
+      const GetSystems = async () => {
+         if (systems.length === 0) {
+            const temp = (await Api.systemsInfo(token)).systems;
+            dispatch((setSystems(temp)));
+         }
       };
-      getData();
+      GetSystems();
 
       // Update the 'time' state, to refresh "last updated" times
       const interval = setInterval(() => setTime(Date.now()), 60000);
 
       return () => clearInterval(interval);
    }, []);
+
+   useEffect(() => {
+      if (systems.length === 0) { return; }
+      changeSystem(systems[0].symbol);
+   }, [systems]);
 
    useEffect(() => {
       const getMarketData = async () => {
@@ -70,16 +87,25 @@ const Markets = () => {
    return (
       <React.Fragment>
          <h2 className="text-3xl mb-5">Markets</h2>
-         <div className="grid grid-cols-3 gap-4">
-            { locations?.sort((a, b) => ((a.name > b.name) ? 1 : (b.name > a.name) ? -1 : 0)).map((location) => (
-               <div className="p-3 bg-gray-900 border border-gray-700 rounded" key={location.symbol}>
-                  <div className="flex justify-between items-center pb-2 border-b border-gray-700">
-                     <h3 className="text-xl">{ location.name }</h3>
-                     <p className="text-xs text-gray-400">{ time !== Date.now() && getUpdatedTime(location) }</p>
-                  </div>
-                  { getDataForLocation(location) }
-               </div>
-            ))}
+         <p className="text-xs text-gray-400 mb-1">System</p>
+         { systems.map((system) => (
+            <button key={system.symbol} type="button" className={`text-sm mr-4 pb-1 mb-5 ${activeSystem === system.symbol ? 'subMenuActive' : ''}`} value={system.symbol} onClick={(e) => changeSystem(e.currentTarget.value)}>{ system.name }</button>
+         ))}
+         <div className="grid grid-cols-4 gap-4">
+            { !locations
+               ? (
+                  <MarketCardLoader />
+               )
+               : (
+                  locations.sort((a, b) => ((a.name > b.name) ? 1 : (b.name > a.name) ? -1 : 0)).map((location) => (
+                     <div className="p-3 bg-gray-900 border border-gray-700 rounded" key={location.symbol}>
+                        <div className="flex justify-between items-center pb-2 border-b border-gray-700">
+                           <h3 className="text-xl">{ location.name }</h3>
+                           <p className="text-xs text-gray-400">{ time && getUpdatedTime(location) }</p>
+                        </div>
+                        { getDataForLocation(location) }
+                     </div>
+                  )))}
          </div>
       </React.Fragment>
    );
