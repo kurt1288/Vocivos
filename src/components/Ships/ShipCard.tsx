@@ -91,7 +91,7 @@ const ShipCard = ({
          { showTravelModal ? <Travel show={showTravelModal} ship={ship} handleClose={() => setTravelModalShow(false)} shipError={(message) => shipError && shipError(message)} /> : null }
          { showAutomateModal ? <AutomateModal show={showAutomateModal} ship={ship} handleClose={() => closeModal()} /> : null }
          { compact ? (
-            <div className="w-1/4 my-2 p-3 bg-gray-900 border border-gray-700 rounded divide-y divide-gray-500 hover:border-yellow-900 hover:shadow-xl">
+            <div className="p-3 bg-gray-900 border border-gray-700 rounded divide-y divide-gray-500 hover:border-yellow-900 hover:shadow-xl">
                <div className="flex justify-between items-center ">
                   <div className="text-left">
                      <h3>{ ship.type }</h3>
