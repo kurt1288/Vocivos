@@ -6,6 +6,7 @@ import { Automation, WorkerType } from './webworker';
 import {
    addAutomationError,
    addFlightPlan, RootState, setAutomationState, setCredits,
+   setSystems,
    setToken, setUser, StoredMarket, updateMarketData, updateShip,
 } from './store';
 import Api from './Api/index';
@@ -72,6 +73,13 @@ function App({ Worker }:Props) {
             });
          }
       };
+      FetchAccount();
+
+      const getSystems = async () => {
+         const temp = (await Api.systemsInfo(apiKey.token)).systems;
+         dispatch((setSystems(temp)));
+      };
+      getSystems();
 
       // Update market data stored in local storage
       const marketDataStore = localStorage.getItem('marketData');
@@ -79,8 +87,6 @@ function App({ Worker }:Props) {
       marketData?.map((data) => (
          dispatch(updateMarketData(data))
       ));
-
-      FetchAccount();
    }, []);
 
    const webworkerError = (data:WorkerError) => {

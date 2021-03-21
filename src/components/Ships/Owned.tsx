@@ -11,7 +11,7 @@ interface shipGroups {
 
 const Owned = () => {
    const { ships } = useSelector((state:RootState) => state.user);
-   const flightPlans = useSelector((state:RootState) => state.flightPlans);
+   const { flightPlans, systems } = useSelector((state:RootState) => state);
    const [shipGroups, setShipGroups] = useState<shipGroups>();
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('type');
@@ -98,7 +98,7 @@ const Owned = () => {
          <div>
             { shipGroups && Object.keys(shipGroups).map((group) => (
                <div className="mb-10" key={group}>
-                  <h3 className="text-xl pb-2 mb-4 border-b border-gray-600">{ group }</h3>
+                  <h3 className="text-xl pb-2 mb-4 border-b border-gray-600">{ systems.find((x) => x.symbol === group)?.name }</h3>
                   <div className="grid grid-cols-4 gap-4">
                      { sortShips(shipGroups[group]).map((ship) => (
                         <ShipCard ship={ship} key={ship.id} shipError={(message) => addShipError(message)} />
