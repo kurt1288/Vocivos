@@ -65,7 +65,7 @@ const Travel = ({
             <div className="modal-content py-4 text-left px-6">
                <h3 className="text-xl font-semibold mb-6">Set Destination</h3>
                { error
-               && <p className="py-4 px-2 bg-red-500 text-gray-100 text-center">{ error }</p>}
+               && <p className="py-4 px-2 bg-red-500 text-sm text-gray-100 text-center">{ error }</p>}
                <div className="relative">
                   {!locations
                      ? (

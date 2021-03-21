@@ -20,6 +20,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
    const [selectedMarket, setSelectedMarket] = useState<Cargo>();
    const [sellQuantity, setSellQuantity] = useState<number>(0);
    const [working, setWorking] = useState<boolean>(false);
+   const [error, setError] = useState<string>('');
    const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900 z-10' : 'hidden';
 
    useEffect(() => {
@@ -32,13 +33,17 @@ const Sell = ({ handleClose, show, ship }:Props) => {
    }, []);
 
    const sellMarket = async () => {
-      if (!selectedMarket) { return; }
-      setWorking(true);
-      const result = await Api.sellOrder(token, username, ship.id, selectedMarket.good, sellQuantity);
-      dispatch(setCredits(result.credits));
-      dispatch(updateShip(result.ship));
-      setSelectedMarket(undefined);
-      handleClose();
+      try {
+         if (!selectedMarket) { return; }
+         setWorking(true);
+         const result = await Api.sellOrder(token, username, ship.id, selectedMarket.good, sellQuantity);
+         dispatch(setCredits(result.credits));
+         dispatch(updateShip(result.ship));
+         setSelectedMarket(undefined);
+         handleClose();
+      } catch (err) {
+         setError((err as Error).message);
+      }
    };
 
    // Symbols come from the API as all caps with underscore seperate. Format it to be more readable.
@@ -51,6 +56,8 @@ const Sell = ({ handleClose, show, ship }:Props) => {
          <div className={`modal-container bg-gray-100 w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto ${selectedMarket ? 'min-h-1/3' : ''}`}>
             <div className="modal-content py-4 text-left px-6">
                <h3 className="text-xl font-semibold mb-6">Sell Cargo</h3>
+               { error
+                  && <p className="py-4 px-2 bg-red-500 text-sm text-gray-100 text-center">{ error }</p>}
                <div className="relative">
                   {!marketData
                      ? (
@@ -101,7 +108,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
                                  <span className={working ? 'hidden' : 'inline'}>Sell for { (sellQuantity * (marketData?.find((x) => x.symbol === selectedMarket.good) as Marketplace).pricePerUnit).toLocaleString() } credits</span>
                                  <span className={!working ? 'hidden' : 'inline'}>Please wait...</span>
                               </button>
-                              <button type="button" className="text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setSellQuantity(0); }}>Back</button>
+                              <button type="button" className="text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setError(''); setSellQuantity(0); }}>Back</button>
                            </div>
                         )}
                </div>

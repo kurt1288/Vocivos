@@ -21,6 +21,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
    const [selectedMarket, setSelectedMarket] = useState<Marketplace>();
    const [purchaseQuantity, setPurchaseQuantity] = useState<number>(0);
    const [working, setWorking] = useState<boolean>(false);
+   const [error, setError] = useState<string>('');
    const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900 z-10' : 'hidden';
 
    useEffect(() => {
@@ -53,12 +54,16 @@ const Buy = ({ handleClose, show, ship }:Props) => {
 
    const purchaseMarket = async () => {
       if (!selectedMarket) { return; }
-      setWorking(true);
-      const result = await Api.purchaseOrder(token, username, ship.id, selectedMarket.symbol, purchaseQuantity);
-      dispatch(setCredits(result.credits));
-      dispatch(updateShip(result.ship));
-      setSelectedMarket(undefined);
-      handleClose();
+      try {
+         setWorking(true);
+         const result = await Api.purchaseOrder(token, username, ship.id, selectedMarket.symbol, purchaseQuantity);
+         dispatch(setCredits(result.credits));
+         dispatch(updateShip(result.ship));
+         setSelectedMarket(undefined);
+         handleClose();
+      } catch (err:unknown) {
+         setError((err as Error).message);
+      }
    };
 
    return (
@@ -67,6 +72,8 @@ const Buy = ({ handleClose, show, ship }:Props) => {
          <div className="modal-container bg-gray-100 w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto min-h-1/3">
             <div className="modal-content py-4 text-left px-6">
                <h3 className="text-xl font-semibold mb-6">Market Buy</h3>
+               { error
+                  && <p className="py-4 px-2 bg-red-500 text-sm text-gray-100 text-center">{ error }</p>}
                <div className="relative">
                   {!marketData
                      ? (
@@ -104,7 +111,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
                         && (
                            <div className="absolute top-20 w-full text-center">
                               <div className="flex">
-                                 <input type="number" min={0} value={purchaseQuantity} placeholder="Quantity" className="flex-grow px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none" onChange={(e) => setPurchaseQuantity(parseInt(e.target.value, 10))} />
+                                 <input type="number" min={0} max={maxQuantity()} value={purchaseQuantity} placeholder="Quantity" className="flex-grow px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none" onChange={(e) => setPurchaseQuantity(parseInt(e.target.value, 10))} />
                                  <button type="button" className="ml-2 bg-blue-400 text-gray-100 px-3 py-2 rounded hover:bg-blue-500" onClick={() => setPurchaseQuantity(maxQuantity)}>Max</button>
                               </div>
                               <button
@@ -116,7 +123,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
                                  <span className={working ? 'hidden' : 'inline'}>Purchase for { (purchaseQuantity * selectedMarket.pricePerUnit).toLocaleString() } credit{ purchaseQuantity * selectedMarket.pricePerUnit > 1 ? 's' : ''}</span>
                                  <span className={!working ? 'hidden' : 'inline'}>Please wait...</span>
                               </button>
-                              <button type="button" className="text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setPurchaseQuantity(0); }}>Back</button>
+                              <button type="button" className="text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setError(''); setPurchaseQuantity(0); }}>Back</button>
                            </div>
                         )}
                </div>
