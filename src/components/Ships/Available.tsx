@@ -34,6 +34,9 @@ const Available = () => {
          let sorted;
 
          switch (value) {
+            case 'cost':
+               sortOrder ? sorted = [...ships].sort((a, b) => ((a.purchaseLocations[0].price > b.purchaseLocations[0].price) ? 1 : (b.purchaseLocations[0].price > a.purchaseLocations[0].price) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.purchaseLocations[0].price < b.purchaseLocations[0].price) ? 1 : (b.purchaseLocations[0].price < a.purchaseLocations[0].price) ? -1 : 0));
+               break;
             case 'type':
                sortOrder ? sorted = [...ships].sort((a, b) => ((a.type < b.type) ? 1 : (b.type < a.type) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.type > b.type) ? 1 : (b.type > a.type) ? -1 : 0));
                break;
