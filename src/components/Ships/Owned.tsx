@@ -5,58 +5,63 @@ import { OwnedShip } from '../../Api/types';
 import { RootState } from '../../store';
 import ShipCard from './ShipCard';
 
+interface shipGroups {
+   [index:string]: OwnedShip[];
+}
+
 const Owned = () => {
    const { ships } = useSelector((state:RootState) => state.user);
-   const [sortedShips, setShips] = useState<OwnedShip[]>();
+   const flightPlans = useSelector((state:RootState) => state.flightPlans);
+   const [shipGroups, setShipGroups] = useState<shipGroups>();
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('type');
-   const [time, setTime] = useState<number>(Date.now());
    const [shipError, setShipError] = useState('');
 
    useEffect(() => {
-      // Update the 'time' state, in order for ship cards to update (for keeping track of flight plan time)
-      const interval = setInterval(() => setTime(Date.now()), 1000);
-
-      return () => clearInterval(interval);
-   }, []);
-
-   useEffect(() => {
-      const sort = (value:string) => {
-         if (!ships) {
-            return;
+      const result:shipGroups = {};
+      ships.forEach((ship) => {
+         if (!ship.location) {
+            if (ship.flightPlanId || flightPlans.some((x) => x.ship === ship.id)) {
+               const destinationSystem = flightPlans.find((x) => x.ship === ship.id)?.destination.split('-')[0] as string;
+               (result[destinationSystem] = result[destinationSystem] || []).push(ship);
+            } else {
+               (result.UNKNOWN = result.UNKNOWN || []).push(ship);
+            }
+         } else if (result[ship.location.split('-')[0]]) {
+            result[ship.location.split('-')[0]].push(ship);
+         } else {
+            result[ship.location.split('-')[0]] = [];
+            result[ship.location.split('-')[0]].push(ship);
          }
+      });
+      const ordered = Object.keys(result).sort().reduce((obj:shipGroups, key) => {
+         // eslint-disable-next-line no-param-reassign
+         obj[key] = result[key];
+         return obj;
+      }, {});
+      setShipGroups(ordered);
+   }, [ships, flightPlans]);
 
-         let sorted;
-
-         switch (value) {
-            case 'type':
-               sortOrder ? sorted = [...ships].sort((a, b) => ((a.type < b.type) ? 1 : (b.type < a.type) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.type > b.type) ? 1 : (b.type > a.type) ? -1 : 0));
-               break;
-            case 'manufacturer':
-               sortOrder ? sorted = [...ships].sort((a, b) => ((a.manufacturer > b.manufacturer) ? 1 : (b.manufacturer > a.manufacturer) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.manufacturer < b.manufacturer) ? 1 : (b.manufacturer < a.manufacturer) ? -1 : 0));
-               break;
-            case 'maxCargo':
-               sortOrder ? sorted = [...ships].sort((a, b) => ((a.maxCargo > b.maxCargo) ? 1 : (b.maxCargo > a.maxCargo) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.maxCargo < b.maxCargo) ? 1 : (b.maxCargo < a.maxCargo) ? -1 : 0));
-               break;
-            case 'speed':
-               sortOrder ? sorted = [...ships].sort((a, b) => ((a.speed > b.speed) ? 1 : (b.speed > a.speed) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.speed < b.speed) ? 1 : (b.speed < a.speed) ? -1 : 0));
-               break;
-            case 'plating':
-               sortOrder ? sorted = [...ships].sort((a, b) => ((a.plating > b.plating) ? 1 : (b.plating > a.plating) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.plating < b.plating) ? 1 : (b.plating < a.plating) ? -1 : 0));
-               break;
-            case 'weapons':
-               sortOrder ? sorted = [...ships].sort((a, b) => ((a.weapons > b.weapons) ? 1 : (b.weapons > a.weapons) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.weapons < b.weapons) ? 1 : (b.weapons < a.weapons) ? -1 : 0));
-               break;
-            default:
-               sortOrder ? sorted = [...ships].sort((a, b) => ((a.class > b.class) ? 1 : (b.class > a.class) ? -1 : 0)) : sorted = [...ships].sort((a, b) => ((a.class < b.class) ? 1 : (b.class < a.class) ? -1 : 0));
-               break;
-         }
-
-         setShips(sorted);
-      };
-
-      sort(sortType);
-   }, [sortType, sortOrder, ships]);
+   const sortShips = (group:OwnedShip[]) => {
+      switch (sortType) {
+         case 'class':
+            return [...group].sort((a, b) => (sortOrder ? b.class.localeCompare(a.class) : a.class.localeCompare(b.class)));
+         case 'type':
+            return [...group].sort((a, b) => (sortOrder ? b.type.localeCompare(a.type) : a.type.localeCompare(b.type)));
+         case 'manufacturer':
+            return [...group].sort((a, b) => (sortOrder ? a.manufacturer.localeCompare(b.manufacturer) : b.manufacturer.localeCompare(a.manufacturer)));
+         case 'maxCargo':
+            return sortOrder ? [...group].sort((a, b) => ((a.maxCargo > b.maxCargo) ? 1 : (b.maxCargo > a.maxCargo) ? -1 : 0)) : [...group].sort((a, b) => ((a.maxCargo < b.maxCargo) ? 1 : (b.maxCargo < a.maxCargo) ? -1 : 0));
+         case 'speed':
+            return sortOrder ? [...group].sort((a, b) => ((a.speed > b.speed) ? 1 : (b.speed > a.speed) ? -1 : 0)) : [...group].sort((a, b) => ((a.speed < b.speed) ? 1 : (b.speed < a.speed) ? -1 : 0));
+         case 'plating':
+            return sortOrder ? [...group].sort((a, b) => ((a.plating > b.plating) ? 1 : (b.plating > a.plating) ? -1 : 0)) : [...group].sort((a, b) => ((a.plating < b.plating) ? 1 : (b.plating < a.plating) ? -1 : 0));
+         case 'weaponse':
+            return sortOrder ? [...group].sort((a, b) => ((a.weapons > b.weapons) ? 1 : (b.weapons > a.weapons) ? -1 : 0)) : [...group].sort((a, b) => ((a.weapons < b.weapons) ? 1 : (b.weapons < a.weapons) ? -1 : 0));
+         default:
+            return group;
+      }
+   };
 
    const addShipError = (message:string) => {
       setShipError(message);
@@ -90,9 +95,16 @@ const Owned = () => {
                <option value="weapons">Weapons</option>
             </select>
          </div>
-         <div className="grid grid-cols-4 gap-4">
-            { sortedShips?.map((ship) => (
-               <ShipCard time={time} ship={ship} key={ship.id} shipError={(message) => addShipError(message)} />
+         <div>
+            { shipGroups && Object.keys(shipGroups).map((group) => (
+               <div className="mb-10" key={group}>
+                  <h3 className="text-xl pb-2 mb-4 border-b border-gray-600">{ group }</h3>
+                  <div className="grid grid-cols-4 gap-4">
+                     { sortShips(shipGroups[group]).map((ship) => (
+                        <ShipCard ship={ship} key={ship.id} shipError={(message) => addShipError(message)} />
+                     ))}
+                  </div>
+               </div>
             ))}
          </div>
       </React.Fragment>

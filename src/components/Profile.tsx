@@ -61,7 +61,7 @@ const Profile = () => {
                            )
                            : (
                               [...ships].sort((a, b) => ((a.type > b.type) ? 1 : (b.type > a.type) ? -1 : 0)).map((ship) => (
-                                 <ShipCard time={time} ship={ship} compact key={ship.id} />
+                                 <ShipCard ship={ship} compact key={ship.id} />
                               ))
                            )}
                      </div>

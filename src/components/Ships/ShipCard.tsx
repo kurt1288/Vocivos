@@ -15,13 +15,12 @@ import AutomateModal from '../Automation/AutomateModal';
 
 interface Props {
    ship: OwnedShip,
-   time?: number,
    compact?: boolean,
    shipError?: (message:string) => void,
 }
 
 const ShipCard = ({
-   ship, time, compact, shipError,
+   ship, compact, shipError,
 }:Props) => {
    const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.ship === ship.id));
    const automation = useSelector((state:RootState) => state.automations.find((x) => x.shipId === ship.id));
@@ -31,6 +30,13 @@ const ShipCard = ({
    const [showTravelModal, setTravelModalShow] = useState(false);
    const [showAutomateModal, setAutomateModalShow] = useState(false);
    const [remainingTime, setRemainingTime] = useState<string>();
+   const [time, setTime] = useState<number>(Date.now());
+
+   useEffect(() => {
+      const interval = setInterval(() => setTime(Date.now()), 1000);
+
+      return () => clearInterval(interval);
+   });
 
    useEffect(() => {
       if (!flightPlan) { return; }
@@ -217,7 +223,6 @@ const ShipCard = ({
 
 ShipCard.defaultProps = {
    compact: false,
-   time: Date.now(),
    shipError: '',
 };
 
