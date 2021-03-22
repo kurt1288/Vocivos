@@ -3,15 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { OwnedShip } from '../../Api/types';
 import { RootState } from '../../store';
-import ShipCard from './ShipCard';
+import ShipsGroup from './ShipsGroup';
 
-interface shipGroups {
+export interface shipGroups {
    [index:string]: OwnedShip[];
 }
 
 const Owned = () => {
    const { ships } = useSelector((state:RootState) => state.user);
-   const { flightPlans, systems } = useSelector((state:RootState) => state);
+   const { flightPlans } = useSelector((state:RootState) => state);
    const [shipGroups, setShipGroups] = useState<shipGroups>();
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('type');
@@ -41,31 +41,6 @@ const Owned = () => {
       }, {});
       setShipGroups(ordered);
    }, [ships, flightPlans]);
-
-   const sortShips = (group:OwnedShip[]) => {
-      switch (sortType) {
-         case 'class':
-            return [...group].sort((a, b) => (sortOrder ? b.class.localeCompare(a.class) : a.class.localeCompare(b.class)));
-         case 'type':
-            return [...group].sort((a, b) => (sortOrder ? b.type.localeCompare(a.type) : a.type.localeCompare(b.type)));
-         case 'manufacturer':
-            return [...group].sort((a, b) => (sortOrder ? a.manufacturer.localeCompare(b.manufacturer) : b.manufacturer.localeCompare(a.manufacturer)));
-         case 'maxCargo':
-            return sortOrder ? [...group].sort((a, b) => ((a.maxCargo > b.maxCargo) ? 1 : (b.maxCargo > a.maxCargo) ? -1 : 0)) : [...group].sort((a, b) => ((a.maxCargo < b.maxCargo) ? 1 : (b.maxCargo < a.maxCargo) ? -1 : 0));
-         case 'speed':
-            return sortOrder ? [...group].sort((a, b) => ((a.speed > b.speed) ? 1 : (b.speed > a.speed) ? -1 : 0)) : [...group].sort((a, b) => ((a.speed < b.speed) ? 1 : (b.speed < a.speed) ? -1 : 0));
-         case 'plating':
-            return sortOrder ? [...group].sort((a, b) => ((a.plating > b.plating) ? 1 : (b.plating > a.plating) ? -1 : 0)) : [...group].sort((a, b) => ((a.plating < b.plating) ? 1 : (b.plating < a.plating) ? -1 : 0));
-         case 'weaponse':
-            return sortOrder ? [...group].sort((a, b) => ((a.weapons > b.weapons) ? 1 : (b.weapons > a.weapons) ? -1 : 0)) : [...group].sort((a, b) => ((a.weapons < b.weapons) ? 1 : (b.weapons < a.weapons) ? -1 : 0));
-         default:
-            return group;
-      }
-   };
-
-   const addShipError = (message:string) => {
-      setShipError(message);
-   };
 
    return (
       <React.Fragment>
@@ -97,14 +72,7 @@ const Owned = () => {
          </div>
          <div>
             { shipGroups && Object.keys(shipGroups).map((group) => (
-               <div className="mb-10" key={group}>
-                  <h3 className="text-xl pb-2 mb-4 border-b border-gray-600">{ systems.find((x) => x.symbol === group)?.name }</h3>
-                  <div className="grid grid-cols-4 gap-4">
-                     { sortShips(shipGroups[group]).map((ship) => (
-                        <ShipCard ship={ship} key={ship.id} shipError={(message) => addShipError(message)} />
-                     ))}
-                  </div>
-               </div>
+               <ShipsGroup key={group} system={group} ships={shipGroups[group]} sortOrder={sortOrder} sortType={sortType} setShipError={setShipError} />
             ))}
          </div>
       </React.Fragment>
