@@ -22,6 +22,7 @@ interface Props {
 const ShipCard = ({
    ship, compact, shipError,
 }:Props) => {
+   const systems = useSelector((state:RootState) => state.systems);
    const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.ship === ship.id));
    const automation = useSelector((state:RootState) => state.automations.find((x) => x.shipId === ship.id));
    const dispatch = useDispatch();
@@ -199,7 +200,12 @@ const ShipCard = ({
                      ? (
                         <p>In Transit <span className="text-sm text-gray-400">({ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' })</span></p>
                      )
-                     : <p className="">{ ship.location }</p>}
+                     : (
+                        <React.Fragment>
+                           <p className="">{ systems.find((x) => x.symbol === ship.location?.split('-')[0])?.locations.find((x) => x.symbol === ship.location)?.name }</p>
+                           <span className="ml-1 text-sm text-gray-400">({ ship.location })</span>
+                        </React.Fragment>
+                     )}
                </div>
                {((flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location)
                   && (
