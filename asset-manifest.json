@@ -1,22 +1,22 @@
 {
   "files": {
-    "main.css": "/Vocivos/static/css/main.645bcdc2.chunk.css",
-    "main.js": "/Vocivos/static/js/main.cb6865b4.chunk.js",
-    "main.js.map": "/Vocivos/static/js/main.cb6865b4.chunk.js.map",
+    "main.css": "/Vocivos/static/css/main.f4d6b2be.chunk.css",
+    "main.js": "/Vocivos/static/js/main.09476fc3.chunk.js",
+    "main.js.map": "/Vocivos/static/js/main.09476fc3.chunk.js.map",
     "runtime-main.js": "/Vocivos/static/js/runtime-main.335d6e9c.js",
     "runtime-main.js.map": "/Vocivos/static/js/runtime-main.335d6e9c.js.map",
-    "static/js/2.62688c15.chunk.js": "/Vocivos/static/js/2.62688c15.chunk.js",
-    "static/js/2.62688c15.chunk.js.map": "/Vocivos/static/js/2.62688c15.chunk.js.map",
+    "static/js/2.55980bf1.chunk.js": "/Vocivos/static/js/2.55980bf1.chunk.js",
+    "static/js/2.55980bf1.chunk.js.map": "/Vocivos/static/js/2.55980bf1.chunk.js.map",
     "index.html": "/Vocivos/index.html",
-    "static/css/main.645bcdc2.chunk.css.map": "/Vocivos/static/css/main.645bcdc2.chunk.css.map",
-    "static/js/2.62688c15.chunk.js.LICENSE.txt": "/Vocivos/static/js/2.62688c15.chunk.js.LICENSE.txt",
+    "static/css/main.f4d6b2be.chunk.css.map": "/Vocivos/static/css/main.f4d6b2be.chunk.css.map",
+    "static/js/2.55980bf1.chunk.js.LICENSE.txt": "/Vocivos/static/js/2.55980bf1.chunk.js.LICENSE.txt",
     "static/js/webworker.67a84119.worker.js": "/Vocivos/static/js/webworker.67a84119.worker.js",
     "static/js/webworker.67a84119.worker.js.map": "/Vocivos/static/js/webworker.67a84119.worker.js.map"
   },
   "entrypoints": [
     "static/js/runtime-main.335d6e9c.js",
-    "static/js/2.62688c15.chunk.js",
-    "static/css/main.645bcdc2.chunk.css",
-    "static/js/main.cb6865b4.chunk.js"
+    "static/js/2.55980bf1.chunk.js",
+    "static/css/main.f4d6b2be.chunk.css",
+    "static/js/main.09476fc3.chunk.js"
   ]
 }
