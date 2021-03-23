@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { LoanStatus } from '../Api/types';
@@ -9,14 +9,6 @@ import { ProfileLoader } from './SkeletonLoaders';
 
 const Profile = () => {
    const { username, loans, ships } = useSelector((state:RootState) => state.user);
-   const [time, setTime] = useState<number>(Date.now());
-
-   useEffect(() => {
-      // Update the 'time' state, in order for ship cards to update (for keeping track of flight plan time)
-      const interval = setInterval(() => setTime(Date.now()), 1000);
-
-      return () => clearInterval(interval);
-   }, []);
 
    return (
       <React.Fragment>
