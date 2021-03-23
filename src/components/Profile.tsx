@@ -9,6 +9,7 @@ import { ProfileLoader } from './SkeletonLoaders';
 
 const Profile = () => {
    const { username, loans, ships } = useSelector((state:RootState) => state.user);
+   const { systems } = useSelector((state:RootState) => state);
 
    return (
       <React.Fragment>
@@ -21,8 +22,15 @@ const Profile = () => {
             : (
                <React.Fragment>
                   <p className="text-gray-400">Welcome</p>
-                  <h2 className="text-3xl mb-10">{ username }</h2>
-                  <div className="mb-4 min-h-1/4">
+                  <h2 className="text-3xl mb-4">{ username }</h2>
+                  <div>
+                     { systems.map((system) => system.locations.map((location) => (location.messages && location.messages.length > 0
+                        ? (
+                           <p className="text-sm p-4 bg-blue-800 text-blue-200 rounded-sm">{ [...location.messages].slice(0, -1).join(' ') }</p>
+                        )
+                        : null)))}
+                  </div>
+                  <div className="my-4 min-h-1/4">
                      <h3 className="text-xl mb-4">Loans</h3>
                      <div className="pl-5">
                         { loans.filter((x) => x.status === LoanStatus.Current).length === 0

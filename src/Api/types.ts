@@ -137,7 +137,7 @@ export interface Location {
    x: number,
    y: number,
    anomaly?: string,
-   message?: string,
+   messages?: string[],
 }
 
 export interface Locations {
