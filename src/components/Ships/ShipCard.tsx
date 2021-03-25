@@ -70,27 +70,6 @@ const ShipCard = ({
       }
    };
 
-   const shipActions = () => {
-      if ((flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location) {
-         return null;
-      }
-
-      return (
-         <div className="mt-4 grid grid-cols-4 gap-x-4">
-            <button
-               type="button"
-               className="px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default"
-               onClick={() => setTravelModalShow(true)}
-               disabled={fuelIsEmpty(ship.cargo)}
-            >{ fuelIsEmpty(ship.cargo) ? 'No fuel' : 'Travel' }
-            </button>
-            <button type="button" className="px-2 py-1 bg-green-500 rounded hover:bg-green-600" onClick={() => setBuyModalShow(true)}>Buy</button>
-            <button type="button" className="px-2 py-1 bg-red-500 rounded hover:bg-red-600" onClick={() => setSellModalShow(true)}>Sell</button>
-            <button type="button" className="text-xs px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Automate</button>
-         </div>
-      );
-   };
-
    return (
       <React.Fragment>
          { showBuyModal ? <Buy show={showBuyModal} ship={ship} handleClose={() => setBuyModalShow(false)} /> : null }
@@ -134,8 +113,8 @@ const ShipCard = ({
                   ? <div className="mt-2"><TravelProgressBar completed={calcProgress()} /></div> : null}
             </div>
          ) : (
-            <div className="p-3 focus:outline-none bg-gray-900 border border-gray-700 rounded">
-               <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-600">
+            <div className="focus:outline-none bg-gray-900 border border-gray-700 rounded">
+               <div className="flex justify-between items-center p-3 bg-gray-700 border-b border-gray-600">
                   <div>
                      <h3 className="text-xl">{ ship.type }</h3>
                      <p className="text-xs text-gray-400">{ ship.manufacturer }</p>
@@ -188,33 +167,66 @@ const ShipCard = ({
                         <p className="text-xs">Automating</p>
                         <button type="button" className="text-xs ml-2 px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Tasks</button>
                      </div>
-                  ) : shipActions()}
-               <div className="flex items-center mt-4 mb-3">
-                  <div className="w-6 h-6 mr-1">
-                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                     </svg>
-                  </div>
+                  ) : null}
+               <div className="py-3 px-3 pl-2 border-b border-gray-700 relative">
                   {(flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
                      ? (
-                        <p>In Transit <span className="text-sm text-gray-400">({ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' })</span></p>
+                        <React.Fragment>
+                           <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                 <svg className="w-6 h-6 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                 </svg>
+                                 <p className="flex items-center mt-0.5">
+                                    { systems.find((x) => x.symbol === flightPlan?.departure.split('-')[0])?.locations.find((x) => x.symbol === flightPlan?.departure)?.name }
+                                    <svg className="h-4 w-4 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                       <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                    { systems.find((x) => x.symbol === flightPlan?.destination.split('-')[0])?.locations.find((x) => x.symbol === flightPlan?.destination)?.name }
+                                 </p>
+                              </div>
+                              <span className="text-sm text-gray-400 mt-1">({ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' })</span>
+                           </div>
+                           <div className="absolute inset-0">
+                              <div><TravelProgressBar completed={calcProgress()} /></div>
+                           </div>
+                        </React.Fragment>
                      )
                      : (
-                        <React.Fragment>
-                           <p className="">{ systems.find((x) => x.symbol === ship.location?.split('-')[0])?.locations.find((x) => x.symbol === ship.location)?.name }</p>
-                           <span className="ml-1 text-sm text-gray-400">({ ship.location })</span>
-                        </React.Fragment>
+                        <div className="w-full flex justify-between items-center">
+                           <div className="flex items-center">
+                              <svg className="h-6 w-6 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <p className="pt-0.5">{ systems.find((x) => x.symbol === ship.location?.split('-')[0])?.locations.find((x) => x.symbol === ship.location)?.name }</p>
+                              <span className="ml-1 pt-1 text-sm text-gray-400">({ ship.location })</span>
+                           </div>
+                           <div>
+                              <button
+                                 type="button"
+                                 className="text-xs mr-2 px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default"
+                                 onClick={() => setTravelModalShow(true)}
+                                 disabled={fuelIsEmpty(ship.cargo)}
+                              >{ fuelIsEmpty(ship.cargo) ? 'No fuel' : 'Travel' }
+                              </button>
+                              <button type="button" className="text-xs px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Automate</button>
+                           </div>
+                        </div>
                      )}
                </div>
-               {((flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location)
-                  && (
-                     <div className="mb-3">
-                        <div className="mt-2"><TravelProgressBar completed={calcProgress()} /></div>
-                     </div>
-                  )}
-               <div>
-                  <p className="mb-2">Cargo <span className="ml-2 text-sm text-gray-400">{ ship.maxCargo - ship.spaceAvailable } of { ship.maxCargo }</span></p>
+               <div className="p-3">
+                  <div className="flex items-center mb-2">
+                     <p className="mr-3">Cargo <span className="ml-2 text-sm text-gray-400">{ ship.maxCargo - ship.spaceAvailable } of { ship.maxCargo }</span></p>
+                     { ship.location
+                     && (
+                        <React.Fragment>
+                           <button type="button" className="text-xs mr-2 px-2 py-1 bg-green-500 rounded hover:bg-green-600" onClick={() => setBuyModalShow(true)}>Buy</button>
+                           <button type="button" className="text-xs px-2 py-1 bg-red-500 rounded hover:bg-red-600" onClick={() => setSellModalShow(true)}>Sell</button>
+                        </React.Fragment>
+                     )}
+                  </div>
                   <div className="pl-3">
                      { ship.cargo.slice().sort((a, b) => ((a.good > b.good) ? 1 : (b.good > a.good) ? -1 : 0)).map((cargo) => (
                         <p className="text-sm py-0.5" key={cargo.good + cargo.quantity + cargo.totalVolume + ship.id}>{ formatString(cargo.good) } ({ cargo.quantity } units)</p>
