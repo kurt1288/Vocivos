@@ -3,7 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
-import { Cargo, Marketplace, OwnedShip } from '../../Api/types';
+import {
+   Cargo, LocationType, Marketplace, OwnedShip,
+} from '../../Api/types';
 import { RootState, setCredits, updateShip } from '../../store';
 import { ModalPlaceholder } from '../SkeletonLoaders';
 
@@ -15,6 +17,7 @@ interface Props {
 
 const Sell = ({ handleClose, show, ship }:Props) => {
    const { token, username } = useSelector((state:RootState) => state.account);
+   const { systems } = useSelector((state:RootState) => state);
    const dispatch = useDispatch();
    const [marketData, setMarketData] = useState<Marketplace[]>();
    const [selectedMarket, setSelectedMarket] = useState<Cargo>();
@@ -43,7 +46,45 @@ const Sell = ({ handleClose, show, ship }:Props) => {
          handleClose();
       } catch (err) {
          setError((err as Error).message);
+         setWorking(false);
       }
+   };
+
+   const deleteMarket = async () => {
+      try {
+         if (!selectedMarket) { return; }
+         setWorking(true);
+         const result = await Api.deleteOrder(token, username, ship.id, selectedMarket.good, sellQuantity);
+         const shipInfo = await Api.shipInfo(token, username, ship.id);
+         dispatch(updateShip(shipInfo.ship));
+         setSelectedMarket(undefined);
+         handleClose();
+      } catch (err: unknown) {
+         setError((err as Error).message);
+         setWorking(false);
+      }
+   };
+
+   const depositGoods = async () => {
+      try {
+         if (!selectedMarket || !ship.location) { return; }
+         setWorking(true);
+         const result = await Api.depositGoods(token, ship.location, ship.id, selectedMarket.good, sellQuantity);
+         const shipInfo = await Api.shipInfo(token, username, ship.id);
+         dispatch(updateShip(shipInfo.ship));
+         setSelectedMarket(undefined);
+         handleClose();
+      } catch (err: unknown) {
+         setError((err as Error).message);
+         setWorking(false);
+      }
+   };
+
+   const sellPrice = () => {
+      if (selectedMarket && (marketData?.find((x) => x.symbol === selectedMarket.good))) {
+         return (sellQuantity * (marketData?.find((x) => x.symbol === selectedMarket.good) as Marketplace).pricePerUnit).toLocaleString();
+      }
+      return null;
    };
 
    // Symbols come from the API as all caps with underscore seperate. Format it to be more readable.
@@ -55,7 +96,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
          <div className="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onClick={() => { setSelectedMarket(undefined); handleClose(); }} />
          <div className={`modal-container bg-gray-100 w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto ${selectedMarket ? 'min-h-1/3' : ''}`}>
             <div className="modal-content py-4 text-left px-6">
-               <h3 className="text-xl font-semibold mb-6">Sell Cargo</h3>
+               <h3 className="text-xl font-semibold mb-6">Your Cargo</h3>
                { error
                   && <p className="py-4 px-2 bg-red-500 text-sm text-gray-100 text-center">{ error }</p>}
                <div className="relative">
@@ -81,10 +122,10 @@ const Sell = ({ handleClose, show, ship }:Props) => {
                                        <div>
                                           <button
                                              type="button"
-                                             className="text-sm bg-blue-500 text-white px-4 py-1 rounded mr-3 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-default disabled:bg-blue-500"
-                                             disabled={!marketData?.some((x) => x.symbol === cargo.good)}
+                                             className="text-sm bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-default disabled:bg-blue-500"
+                                             // disabled={!marketData?.some((x) => x.symbol === cargo.good)}
                                              onClick={() => setSelectedMarket(cargo)}
-                                          >Sell
+                                          >Manage
                                           </button>
                                        </div>
                                     )}
@@ -95,20 +136,53 @@ const Sell = ({ handleClose, show, ship }:Props) => {
                   { selectedMarket
                         && (
                            <div className="absolute top-20 w-full text-center">
-                              <div className="flex">
-                                 <input type="number" min={0} max={selectedMarket.quantity} value={sellQuantity} placeholder="Quantity" className="flex-grow px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none" onChange={(e) => setSellQuantity(parseInt(e.target.value, 10))} />
-                                 <button type="button" className="ml-2 bg-blue-400 text-gray-100 px-3 py-2 rounded hover:bg-blue-500" onClick={() => setSellQuantity(selectedMarket.quantity)}>Max</button>
+                              <input type="number" min={0} max={selectedMarket.quantity} value={sellQuantity} placeholder="Quantity" className="w-full flex-grow px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none" onChange={(e) => setSellQuantity(parseInt(e.target.value, 10))} />
+                              <button type="button" className="text-sm block text-blue-500 hover:text-blue-600" onClick={() => setSellQuantity(selectedMarket.quantity)}>Set Max Available</button>
+                              <div>
+                                 { !working
+                                    ? (
+                                       <React.Fragment>
+                                          <button
+                                             type="button"
+                                             className="text-sm mt-2 mr-3 px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:bg-red-500 disabled:cursor-default"
+                                             disabled={(sellQuantity <= 0) || working}
+                                             onClick={deleteMarket}
+                                          >
+                                             Delete { sellQuantity } units
+                                          </button>
+                                          { systems.find((system) => system.symbol === ship.location?.split('-')[0])?.locations.some((location) => ship.location === location.symbol && location.type === LocationType.Wormhole)
+                                             ? (
+                                                <button
+                                                   type="button"
+                                                   className="text-sm mt-2 mr-3 px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50 disabled:bg-purple-500 disabled:cursor-default"
+                                                   disabled={(sellQuantity <= 0) || working}
+                                                   onClick={depositGoods}
+                                                >
+                                                   Donate { sellQuantity } units
+                                                </button>
+                                             ) : null}
+                                          <button
+                                             type="button"
+                                             className="text-sm mt-2 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:bg-green-500 disabled:cursor-default"
+                                             disabled={(sellQuantity <= 0) || working || (!sellPrice())}
+                                             onClick={sellMarket}
+                                          >
+                                             { sellPrice() !== null
+                                                ? <span className={working ? 'hidden' : 'inline'}>Sell for { sellPrice() } credits</span>
+                                                : <span>Unable to sell</span>}
+                                          </button>
+                                       </React.Fragment>
+                                    )
+                                    : (
+                                       <p>Please wait...</p>
+                                    )}
                               </div>
-                              <button
-                                 type="button"
-                                 className="mt-2 w-full px-3 py-2 bg-green-400 text-white rounded hover:bg-green-500 disabled:opacity-50 disabled:bg-green-400 disabled:cursor-default"
-                                 disabled={(sellQuantity <= 0) || working}
-                                 onClick={sellMarket}
-                              >
-                                 <span className={working ? 'hidden' : 'inline'}>Sell for { (sellQuantity * (marketData?.find((x) => x.symbol === selectedMarket.good) as Marketplace).pricePerUnit).toLocaleString() } credits</span>
-                                 <span className={!working ? 'hidden' : 'inline'}>Please wait...</span>
+                              <button type="button" className="flex items-center text-sm text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setError(''); setSellQuantity(0); }}>
+                                 <svg className="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                                 </svg>
+                                 Back
                               </button>
-                              <button type="button" className="text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setError(''); setSellQuantity(0); }}>Back</button>
                            </div>
                         )}
                </div>

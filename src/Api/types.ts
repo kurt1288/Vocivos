@@ -187,6 +187,31 @@ export interface Order {
    total: number,
 }
 
+export interface StructureMaterials {
+   good: CargoType,
+   quantity: number,
+   targetQuantity: number,
+}
+
+export interface DepositResponse {
+   deposit: {
+      good: CargoType,
+      quantity: number,
+   },
+   structure: {
+      id: string,
+      name: string,
+      completed: boolean,
+      materials: StructureMaterials[],
+   },
+}
+
+export interface Jettison {
+   good: CargoType,
+   quantityRemaining: number,
+   shipId: string,
+}
+
 export interface FlightPlanRes {
    flightPlan: FlightPlan,
 }

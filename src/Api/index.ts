@@ -1,6 +1,6 @@
 import Bottleneck from 'bottleneck';
 import {
-   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo, OwnedShips,
+   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo, OwnedShips, Jettison, CargoType, DepositResponse,
 } from './types';
 
 // IMPORTANT: camelCase used because: https://github.com/pmmmwh/react-refresh-webpack-plugin/blob/main/docs/TROUBLESHOOTING.md#usage-with-indirection-like-workers-and-js-templates
@@ -151,9 +151,19 @@ export default {
       return authFetch<Purchase>(url, token, fetchMethod.Post, { shipId, good, quantity });
    },
 
-   async sellOrder(token: string, username: string, shipId: string, good: string, quantity: number) {
+   async sellOrder(token: string, username: string, shipId: string, good: CargoType, quantity: number) {
       const url = `${BASE_URL}/users/${username}/sell-orders`;
       return authFetch<Purchase>(url, token, fetchMethod.Post, { shipId, good, quantity });
+   },
+
+   async depositGoods(token: string, structureId: string, shipId: string, good: CargoType, quantity: number) {
+      const url = `${BASE_URL}/game/structures/${structureId}/deposit`;
+      return authFetch<DepositResponse>(url, token, fetchMethod.Post, { shipId, good, quantity });
+   },
+
+   async deleteOrder(token: string, username: string, shipId: string, good: string, quantity: number) {
+      const url = `${BASE_URL}/users/${username}/ships/${shipId}/jettison`;
+      return authFetch<Jettison>(url, token, fetchMethod.Put, { good, quantity });
    },
 
    async createFlightPlan(token: string, username: string, shipId: string, destination: string) {
