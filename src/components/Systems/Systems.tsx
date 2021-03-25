@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import Api from '../../Api';
 import { Location, LocationType } from '../../Api/types';
 import { RootState, setSystems } from '../../store';
@@ -60,13 +61,13 @@ const SystemMap = () => {
                               <ul className="mt-3 pl-5">
                                  {system.locations.map((location) => (
                                     <React.Fragment key={location.parent.symbol}>
-                                       <li className="py-1">{ location.parent.name }</li>
+                                       <li className="py-1 underline hover:text-yellow-600 w-max"><Link to={`systems/${location.parent.symbol}`}>{ location.parent.name }</Link></li>
                                        { location.satellites.length > 0
                                        && (
                                           <ul className="pl-5">
                                              {
                                                 location.satellites.map((satellite) => (
-                                                   <li key={satellite.symbol} className="py-1">{ satellite.name }</li>
+                                                   <li key={satellite.symbol} className="py-1 underline hover:text-yellow-600 w-max"><Link to={`systems/${satellite.symbol}`}>{ satellite.name }</Link></li>
                                                 ))
                                              }
                                           </ul>

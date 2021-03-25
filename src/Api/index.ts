@@ -1,6 +1,6 @@
 import Bottleneck from 'bottleneck';
 import {
-   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo, OwnedShips, Jettison, CargoType, DepositResponse,
+   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo, OwnedShips, Jettison, CargoType, DepositResponse, Location, LocationResponse,
 } from './types';
 
 // IMPORTANT: camelCase used because: https://github.com/pmmmwh/react-refresh-webpack-plugin/blob/main/docs/TROUBLESHOOTING.md#usage-with-indirection-like-workers-and-js-templates
@@ -139,6 +139,11 @@ export default {
    async getLocations(token: string, location: string) {
       const url = `${BASE_URL}/game/systems/${location}/locations`;
       return authFetch<Locations>(url, token, fetchMethod.Get);
+   },
+
+   async getLocation(token: string, location: string) {
+      const url = `${BASE_URL}/game/locations/${location}`;
+      return authFetch<LocationResponse>(url, token, fetchMethod.Get);
    },
 
    async getMarket(token: string, symbol: string) {

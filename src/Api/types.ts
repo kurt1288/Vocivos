@@ -138,10 +138,23 @@ export interface Location {
    y: number,
    anomaly?: string,
    messages?: string[],
+   structures?: Structure[]
 }
 
 export interface Locations {
    locations: Location[],
+}
+
+export interface Structure {
+   id: string,
+   name: string,
+   completed: boolean,
+   materials: StructureMaterials[],
+}
+
+export interface LocationResponse {
+   location: Location,
+   dockedShips: number,
 }
 
 export interface System {
@@ -198,12 +211,7 @@ export interface DepositResponse {
       good: CargoType,
       quantity: number,
    },
-   structure: {
-      id: string,
-      name: string,
-      completed: boolean,
-      materials: StructureMaterials[],
-   },
+   structure: Structure,
 }
 
 export interface Jettison {

@@ -16,6 +16,7 @@ import SignIn from './components/SignIn';
 import Profile from './components/Profile';
 import Ships from './components/Ships/Ships';
 import Systems from './components/Systems/Systems';
+import Location from './components/Systems/Location';
 import Loans from './components/Loans/Loans';
 import {
    FlightPlan, Market, OwnedShip, Purchase,
@@ -154,8 +155,9 @@ function App({ Worker }:Props) {
                               <Route path="/ships" component={Ships} />
                               <Route path="/loans" component={Loans} />
                               <Route path="/markets" component={Markets} />
+                              <Route path="/systems/:location" component={Location} />
                               <Suspense fallback={<div />}>
-                                 <Route path="/systems" component={Systems} />
+                                 <Route exact path="/systems" component={Systems} />
                               </Suspense>
                            </Switch>
                         )}

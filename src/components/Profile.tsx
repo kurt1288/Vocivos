@@ -26,7 +26,10 @@ const Profile = () => {
                   <div>
                      { systems.map((system) => system.locations.map((location) => (location.messages && location.messages.length > 0
                         ? (
-                           <p className="text-sm p-4 bg-blue-800 text-blue-200 rounded-sm">{ [...location.messages].slice(0, -1).join(' ') }</p>
+                           <div className="text-sm p-4 bg-blue-800 text-blue-200 rounded-sm">
+                              <p>{ [...location.messages].slice(0, -1).join(' ') }</p>
+                              <Link to={`/systems/${location.symbol}`} className="underline text-xs mt-1 block">View</Link>
+                           </div>
                         )
                         : null)))}
                   </div>
