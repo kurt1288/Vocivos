@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
 import {
-   OwnedShip, Location, LocationType, CargoType,
+   OwnedShip, Location, LocationType, CargoType, FlightPlan,
 } from '../../Api/types';
 import {
    addFlightPlan, RootState, setCredits, updateShip, updateShips,
@@ -37,9 +37,9 @@ const Travel = ({
       getLocations();
    }, []);
 
-   const createFlightPlan = async (type: LocationType, location: string) => {
+   const createFlightPlan = async (type: LocationType, location: string, retry = true) => {
       try {
-         let result;
+         let result: FlightPlan;
          if (type === LocationType.Wormhole && ship.location === location) {
             result = (await Api.warpJump(token, username, ship.id)).flightPlan;
          } else {
@@ -53,23 +53,27 @@ const Travel = ({
       } catch (err: unknown) {
          const { message } = err as Error;
          // Try to automatically buy the required fuel if ship has insufficient fuel
-         if (autoBuyFuel && message && message.startsWith('Ship has insufficient fuel for flight plan')) {
+         if (retry && autoBuyFuel && message && message.startsWith('Ship has insufficient fuel for flight plan')) {
             const requiredFuelString = message.match(/\d+/);
             if (requiredFuelString) {
-               const fuel = parseInt(requiredFuelString[0], 10);
-               const result = await Api.purchaseOrder(token, username, ship.id, CargoType.Fuel, fuel);
-               dispatch(setCredits(result.credits));
-               dispatch(updateShip(result.ship));
-               createFlightPlan(type, location);
-               return;
+               try {
+                  const fuel = parseInt(requiredFuelString[0], 10);
+                  const result = await Api.purchaseOrder(token, username, ship.id, CargoType.Fuel, fuel);
+                  dispatch(setCredits(result.credits));
+                  dispatch(updateShip(result.ship));
+                  createFlightPlan(type, location, false);
+               } catch (e: unknown) {
+                  setError((e as Error).message);
+               }
             }
-         }
-         setError(message);
-         // If the ship failed a warp jump, it's destroyed so we should update the ships
-         if (type === LocationType.Wormhole) {
-            const { ships } = await Api.ownedShips(token, username);
-            dispatch(updateShips(ships));
-            shipError(message);
+         } else {
+            setError(message);
+            // If the ship failed a warp jump, it's destroyed so we should update the ships
+            if (type === LocationType.Wormhole) {
+               const { ships } = await Api.ownedShips(token, username);
+               dispatch(updateShips(ships));
+               shipError(message);
+            }
          }
       }
    };
