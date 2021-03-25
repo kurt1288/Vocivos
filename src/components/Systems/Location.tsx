@@ -44,12 +44,12 @@ const LocationInfo = () => {
             <React.Fragment>
                <p className="mb-2 text-lg border-b border-gray-500 w-max">Structures</p>
                {locInfo?.structures?.map((structure) => (
-                  <div>
+                  <div key={structure.id}>
                      <p className="font-bold">{ structure.name }</p>
                      <p className="text-sm mb-2 text-gray-400">{ structure.completed ? 'Completed' : 'Not completed' }</p>
                      <ul className="pl-3">
                         { structure.materials.slice().sort((a, b) => a.good.localeCompare(b.good)).map((material) => (
-                           <li className="py-1">
+                           <li className="py-1" key={material.good}>
                               <p>{ formatString(material.good) } - {`${(Math.round(((material.quantity / material.targetQuantity) * 100) * 10) / 10).toFixed(1)}%`}</p>
                               <p className="text-sm text-gray-400">{`${material.quantity.toLocaleString()} of ${material.targetQuantity.toLocaleString()}`}</p>
                            </li>
