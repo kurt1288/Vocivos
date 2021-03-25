@@ -208,8 +208,7 @@ const ShipCard = ({
                                  type="button"
                                  className="text-xs mr-2 px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default"
                                  onClick={() => setTravelModalShow(true)}
-                                 disabled={fuelIsEmpty(ship.cargo)}
-                              >{ fuelIsEmpty(ship.cargo) ? 'No fuel' : 'Travel' }
+                              >Travel
                               </button>
                               <button type="button" className="text-xs px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Automate</button>
                            </div>
