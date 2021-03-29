@@ -5,7 +5,7 @@ import * as Comlink from 'comlink';
 import { Automation, WorkerType } from './webworker';
 import {
    addAutomationError,
-   addFlightPlan, RootState, setAutomationState, setCredits,
+   addFlightPlan, reset, RootState, setAutomationState, setCredits,
    setSystems,
    setToken, setUser, StoredMarket, updateMarketData, updateShip,
 } from './store';
@@ -57,37 +57,44 @@ function App({ Worker }:Props) {
       dispatch(setToken(apiKey));
 
       const FetchAccount = async () => {
-         const result = await Api.getUser(apiKey.username, apiKey.token);
-         dispatch(setUser(result));
+         try {
+            const result = await Api.getUser(apiKey.username, apiKey.token);
+            dispatch(setUser(result));
 
-         // only needed because the ships property on the user response does not contain the 'flightPlanId' property
-         if (result.user.ships.some((x) => x.location === undefined)) {
-            const { ships } = await Api.ownedShips(apiKey.token, apiKey.username);
+            // only needed because the ships property on the user response does not contain the 'flightPlanId' property
+            if (result.user.ships.some((x) => x.location === undefined)) {
+               const { ships } = await Api.ownedShips(apiKey.token, apiKey.username);
 
-            ships.forEach(async (ship) => {
-               if (ship.flightPlanId) {
-                  const { flightPlan } = await Api.queryFlightPlan(apiKey.token, apiKey.username, ship.flightPlanId);
-                  if (flightPlan.terminatedAt === null) {
-                     dispatch(addFlightPlan(flightPlan));
+               ships.forEach(async (ship) => {
+                  if (ship.flightPlanId) {
+                     const { flightPlan } = await Api.queryFlightPlan(apiKey.token, apiKey.username, ship.flightPlanId);
+                     if (flightPlan.terminatedAt === null) {
+                        dispatch(addFlightPlan(flightPlan));
+                     }
                   }
-               }
-            });
+               });
+            }
+
+            const getSystems = async () => {
+               const temp = (await Api.systemsInfo(apiKey.token)).systems;
+               dispatch((setSystems(temp)));
+            };
+            getSystems();
+
+            // Update market data stored in local storage
+            const marketDataStore = localStorage.getItem('marketData');
+            const marketData = marketDataStore !== null ? JSON.parse(marketDataStore) as StoredMarket[] : null;
+            marketData?.map((data) => (
+               dispatch(updateMarketData(data))
+            ));
+         } catch (err: unknown) {
+            if ((err as Error).message === 'Invalid username or token.') {
+               dispatch(reset());
+               localStorage.removeItem('apiKey');
+            }
          }
       };
       FetchAccount();
-
-      const getSystems = async () => {
-         const temp = (await Api.systemsInfo(apiKey.token)).systems;
-         dispatch((setSystems(temp)));
-      };
-      getSystems();
-
-      // Update market data stored in local storage
-      const marketDataStore = localStorage.getItem('marketData');
-      const marketData = marketDataStore !== null ? JSON.parse(marketDataStore) as StoredMarket[] : null;
-      marketData?.map((data) => (
-         dispatch(updateMarketData(data))
-      ));
    }, []);
 
    const webworkerError = (data:WorkerError) => {
@@ -143,28 +150,29 @@ function App({ Worker }:Props) {
 
    return (
       <React.Fragment>
-         { (key === undefined || key === null) ? <SignIn /> : (
-            <React.Fragment>
-               <NavBar />
-               <div className="bg-gray-800 py-4 flex-grow text-gray-200">
-                  <div className="container min-h-full mx-auto">
-                     { account.token.length !== 0
-                        && (
-                           <Switch>
-                              <Route exact path="/" component={Profile} />
-                              <Route path="/ships" component={Ships} />
-                              <Route path="/loans" component={Loans} />
-                              <Route path="/markets" component={Markets} />
-                              <Route path="/systems/:location" component={Location} />
-                              <Suspense fallback={<div />}>
-                                 <Route exact path="/systems" component={Systems} />
-                              </Suspense>
-                           </Switch>
-                        )}
+         { (account.token === undefined || account.token === null || account.token.length === 0
+            || account.username === undefined || account.username === null || account.username.length === 0) ? <SignIn /> : (
+               <React.Fragment>
+                  <NavBar />
+                  <div className="bg-gray-800 py-4 flex-grow text-gray-200">
+                     <div className="container min-h-full mx-auto">
+                        { account.token.length !== 0
+                           && (
+                              <Switch>
+                                 <Route exact path="/" component={Profile} />
+                                 <Route path="/ships" component={Ships} />
+                                 <Route path="/loans" component={Loans} />
+                                 <Route path="/markets" component={Markets} />
+                                 <Route path="/systems/:location" component={Location} />
+                                 <Suspense fallback={<div />}>
+                                    <Route exact path="/systems" component={Systems} />
+                                 </Suspense>
+                              </Switch>
+                           )}
+                     </div>
                   </div>
-               </div>
-            </React.Fragment>
-         )}
+               </React.Fragment>
+            )}
       </React.Fragment>
    );
 }
