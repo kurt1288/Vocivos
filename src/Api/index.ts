@@ -28,21 +28,27 @@ async function authFetch<T>(
    let response;
 
    if (type === fetchMethod.Get) {
-      response = await limiter.schedule(() => fetch(url, {
-         method: type,
-         headers: {
-            Authorization: `Bearer ${token}`,
-         },
-      }));
+      response = await limiter.schedule(async () => {
+         const data = await fetch(url, {
+            method: type,
+            headers: {
+               Authorization: `Bearer ${token}`,
+            },
+         });
+         return data;
+      });
    } else {
-      response = await limiter.schedule(() => fetch(url, {
-         method: type,
-         headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-         },
-         body: JSON.stringify(payload),
-      }));
+      response = await limiter.schedule(async () => {
+         const data = await fetch(url, {
+            method: type,
+            headers: {
+               Authorization: `Bearer ${token}`,
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+         });
+         return data;
+      });
    }
 
    // Retry 3 times if rate limit error
