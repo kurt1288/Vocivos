@@ -75,6 +75,7 @@ const spacetraders = createSlice({
          const ship = state.user.ships.find((x) => x.id === payload.shipId);
          if (ship) {
             ship.location = undefined;
+            ship.flightPlanId = payload.id;
          }
       },
       removeFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {
@@ -85,6 +86,7 @@ const spacetraders = createSlice({
             const ship = state.user.ships.find((x) => x.id === payload.shipId);
             if (ship) {
                ship.location = payload.destination;
+               ship.flightPlanId = undefined;
             }
          }
       },
