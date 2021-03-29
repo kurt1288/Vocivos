@@ -53,7 +53,7 @@ const PurchaseShipModal = ({ handleClose, show, ship }:Props) => {
                <p className="text-sm mb-5">This ship is available in { ship?.purchaseLocations.length } { ship?.purchaseLocations && ship.purchaseLocations.length > 1 ? 'locations' : 'location' }:</p>
                <ul>
                   {ship?.purchaseLocations.map((location) => (
-                     <li className="flex justify-between items-center my-3">
+                     <li className="flex justify-between items-center my-3" key={location.location + location.price}>
                         <span>{ location.location } for { location.price.toLocaleString() } credits </span>
                         { renderButtons(location) }
                      </li>

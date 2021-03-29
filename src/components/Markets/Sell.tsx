@@ -35,6 +35,16 @@ const Sell = ({ handleClose, show, ship }:Props) => {
       getMarket();
    }, []);
 
+   const maxQuantity = (): number => {
+      if (!selectedMarket) { return 0; }
+
+      if (selectedMarket.quantity <= 300) {
+         return selectedMarket.quantity;
+      }
+
+      return 300;
+   };
+
    const sellMarket = async () => {
       try {
          if (!selectedMarket) { return; }
@@ -137,7 +147,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
                         && (
                            <div className="absolute top-20 w-full text-center">
                               <input type="number" min={0} max={selectedMarket.quantity} value={sellQuantity} placeholder="Quantity" className="w-full flex-grow px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none" onChange={(e) => setSellQuantity(parseInt(e.target.value, 10))} />
-                              <button type="button" className="text-sm block text-blue-500 hover:text-blue-600" onClick={() => setSellQuantity(selectedMarket.quantity)}>Set Max Available</button>
+                              <button type="button" className="text-sm block text-blue-500 hover:text-blue-600" onClick={() => setSellQuantity(maxQuantity)}>Set Max Available</button>
                               <div>
                                  { !working
                                     ? (

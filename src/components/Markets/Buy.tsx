@@ -43,10 +43,12 @@ const Buy = ({ handleClose, show, ship }:Props) => {
 
       const maxCargo = Math.floor(ship.spaceAvailable / selectedMarket.volumePerUnit);
 
-      if (maxCargo * selectedMarket.pricePerUnit < credits && maxCargo <= selectedMarket.quantityAvailable) {
+      if (maxCargo * selectedMarket.pricePerUnit < credits && maxCargo <= selectedMarket.quantityAvailable && maxCargo <= 300) {
          return maxCargo;
-      } if (maxCargo > selectedMarket.quantityAvailable) {
+      } if (maxCargo > selectedMarket.quantityAvailable && selectedMarket.quantityAvailable <= 300) {
          return selectedMarket.quantityAvailable;
+      } if (Math.floor(credits / selectedMarket.pricePerUnit) > 300) {
+         return 300;
       }
 
       return Math.floor(credits / selectedMarket.pricePerUnit);

@@ -23,7 +23,7 @@ const ShipCard = ({
    ship, compact, shipError,
 }:Props) => {
    const systems = useSelector((state:RootState) => state.systems);
-   const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.ship === ship.id));
+   const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.shipId === ship.id));
    const automation = useSelector((state:RootState) => state.automations.find((x) => x.shipId === ship.id));
    const dispatch = useDispatch();
    const [showBuyModal, setBuyModalShow] = useState(false);

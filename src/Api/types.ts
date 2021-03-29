@@ -175,6 +175,7 @@ export interface Marketplace {
    symbol: string,
    volumePerUnit: number,
    pricePerUnit: number,
+   spread: number,
    quantityAvailable: number,
 }
 
@@ -232,7 +233,7 @@ export interface FlightPlan {
    fuelConsumed: number,
    fuelRemaining: number,
    id: string,
-   ship: string,
+   shipId: string,
    terminatedAt: Date | null,
    timeRemainingInSeconds: number,
 }

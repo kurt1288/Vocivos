@@ -21,8 +21,8 @@ const Owned = () => {
       const result:shipGroups = {};
       ships.forEach((ship) => {
          if (!ship.location) {
-            if (ship.flightPlanId || flightPlans.some((x) => x.ship === ship.id)) {
-               const destinationSystem = flightPlans.find((x) => x.ship === ship.id)?.destination.split('-')[0] as string;
+            if (ship.flightPlanId || flightPlans.some((x) => x.shipId === ship.id)) {
+               const destinationSystem = flightPlans.find((x) => x.shipId === ship.id)?.destination.split('-')[0] as string;
                (result[destinationSystem] = result[destinationSystem] || []).push(ship);
             } else {
                (result.UNKNOWN = result.UNKNOWN || []).push(ship);

@@ -72,7 +72,7 @@ const spacetraders = createSlice({
       addFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {
          state.flightPlans.push(payload);
          // when in transit, ship location is 'undefined'
-         const ship = state.user.ships.find((x) => x.id === payload.ship);
+         const ship = state.user.ships.find((x) => x.id === payload.shipId);
          if (ship) {
             ship.location = undefined;
          }
@@ -82,7 +82,7 @@ const spacetraders = createSlice({
             state.flightPlans.splice(state.flightPlans.findIndex((x) => x.id === payload.id), 1);
 
             // update ship with new location
-            const ship = state.user.ships.find((x) => x.id === payload.ship);
+            const ship = state.user.ships.find((x) => x.id === payload.shipId);
             if (ship) {
                ship.location = payload.destination;
             }

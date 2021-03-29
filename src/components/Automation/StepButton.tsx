@@ -83,6 +83,7 @@ const StepButton = ({
          <input
             type="number"
             min={-1}
+            max={300}
             value={(step.type as MarketStep).quantity}
             className="text-sm w-1/4 ml-2 border border-gray-200 focus:outline-none focus:border-blue-300"
             onChange={(e) => editSubAction(e.target.value)}
@@ -107,6 +108,7 @@ const StepButton = ({
          <input
             type="number"
             min={-1}
+            max={300}
             value={(step.type as MarketStep).quantity}
             className="text-sm w-1/4 ml-2 border border-gray-200 focus:outline-none focus:border-blue-300"
             onChange={(e) => editSubAction(e.target.value)}

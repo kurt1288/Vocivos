@@ -148,10 +148,12 @@ export class Automation {
    private getMaxQuantity(good:Marketplace) {
       const maxCargo = Math.floor(this.ship.spaceAvailable / good.volumePerUnit);
 
-      if (maxCargo * good.pricePerUnit < this.credits && maxCargo <= good.quantityAvailable) {
+      if (maxCargo * good.pricePerUnit < this.credits && maxCargo <= good.quantityAvailable && maxCargo <= 300) {
          return maxCargo;
-      } if (maxCargo > good.quantityAvailable) {
+      } if (maxCargo > good.quantityAvailable && good.quantityAvailable <= 300) {
          return good.quantityAvailable;
+      } if (Math.floor(this.credits / good.pricePerUnit) > 300) {
+         return 300;
       }
 
       return Math.floor(this.credits / good.pricePerUnit);
