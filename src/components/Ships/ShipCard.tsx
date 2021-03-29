@@ -190,7 +190,7 @@ const ShipCard = ({
                            </div>
                            { automation?.enabled
                               && (
-                                 <div className="w-full flex items-center justify-end pr-0.5 mt-2">
+                                 <div className="relative z-10 w-full flex items-center justify-end pr-0.5 mt-2">
                                     <p className="text-xs">Automating</p>
                                     <button type="button" className="text-xs ml-2 px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Tasks</button>
                                  </div>
