@@ -36,7 +36,7 @@ const LocationInfo = () => {
          { locInfo?.messages
          && (
             <div className="text-sm mb-4 p-4 bg-blue-800 text-blue-200 rounded-sm">
-               <p>{ [...locInfo.messages].slice(0, -1).join(' ') }</p>
+               <p>{ [...locInfo.messages].slice(0, -2).join(' ') }</p>
             </div>
          )}
          { locInfo?.structures
