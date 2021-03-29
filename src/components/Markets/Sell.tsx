@@ -92,7 +92,8 @@ const Sell = ({ handleClose, show, ship }:Props) => {
 
    const sellPrice = () => {
       if (selectedMarket && (marketData?.find((x) => x.symbol === selectedMarket.good))) {
-         return (sellQuantity * (marketData?.find((x) => x.symbol === selectedMarket.good) as Marketplace).pricePerUnit).toLocaleString();
+         const good = marketData?.find((x) => x.symbol === selectedMarket.good) as Marketplace;
+         return (sellQuantity * (good.pricePerUnit - good.spread)).toLocaleString();
       }
       return null;
    };
@@ -125,7 +126,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
                                  <div>
                                     <p className="font-semibold">{ formatString(cargo.good) } <span className="ml-3 text-sm text-gray-500 font-normal">{ cargo.quantity.toLocaleString() } units available</span></p>
                                     { marketData?.some((x) => x.symbol === cargo.good)
-                                       && <p className="text-sm">{ marketData.find((x) => x.symbol === cargo.good)?.pricePerUnit.toLocaleString() } credits per unit</p>}
+                                       && <p className="text-sm">{ sellPrice() } credits per unit</p>}
                                  </div>
                                  { !selectedMarket
                                     && (
