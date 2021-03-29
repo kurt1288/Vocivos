@@ -153,7 +153,7 @@ const ShipCard = ({
                      </div>
                   </div>
                </div>
-               {automation?.enabled
+               {/* {automation?.enabled
                   ? (
                      <div className="flex items-center justify-end">
                         {automation.error
@@ -167,7 +167,7 @@ const ShipCard = ({
                         <p className="text-xs">Automating</p>
                         <button type="button" className="text-xs ml-2 px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Tasks</button>
                      </div>
-                  ) : null}
+                  ) : null} */}
                <div className="py-3 px-3 pl-2 border-b border-gray-700 relative">
                   {(flightPlan && isFuture(new Date(flightPlan.arrivesAt))) || !ship.location
                      ? (
@@ -188,6 +188,13 @@ const ShipCard = ({
                               </div>
                               <span className="text-sm text-gray-400 mt-1">({ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' })</span>
                            </div>
+                           { automation?.enabled
+                              && (
+                                 <div className="w-full flex items-center justify-end pr-0.5 mt-2">
+                                    <p className="text-xs">Automating</p>
+                                    <button type="button" className="text-xs ml-2 px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Tasks</button>
+                                 </div>
+                              )}
                            <div className="absolute inset-0">
                               <div><TravelProgressBar completed={calcProgress()} /></div>
                            </div>
@@ -204,13 +211,18 @@ const ShipCard = ({
                               <span className="ml-1 pt-1 text-sm text-gray-400">({ ship.location })</span>
                            </div>
                            <div>
-                              <button
-                                 type="button"
-                                 className="text-xs mr-2 px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default"
-                                 onClick={() => setTravelModalShow(true)}
-                              >Travel
-                              </button>
-                              <button type="button" className="text-xs px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Automate</button>
+                              { automation?.enabled
+                                 ? null : (
+                                    <React.Fragment>
+                                       <button
+                                          type="button"
+                                          className="text-xs mr-2 px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 disabled:opacity-50 disabled:bg-blue-500 disabled:cursor-default"
+                                          onClick={() => setTravelModalShow(true)}
+                                       >Travel
+                                       </button>
+                                       <button type="button" className="text-xs px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Automate</button>
+                                    </React.Fragment>
+                                 )}
                            </div>
                         </div>
                      )}
@@ -218,7 +230,7 @@ const ShipCard = ({
                <div className="p-3">
                   <div className="flex items-center mb-2">
                      <p className="mr-3">Cargo <span className="ml-2 text-sm text-gray-400">{ ship.maxCargo - ship.spaceAvailable } of { ship.maxCargo }</span></p>
-                     { ship.location
+                     { ship.location && !automation?.enabled
                      && (
                         <React.Fragment>
                            <button type="button" className="text-xs mr-2 px-2 py-1 bg-green-500 rounded hover:bg-green-600" onClick={() => setBuyModalShow(true)}>Buy</button>
