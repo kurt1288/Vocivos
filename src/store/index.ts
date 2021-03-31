@@ -1,6 +1,6 @@
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-   FlightPlan, Planet, OwnedLoan, OwnedShip, User, System, Jettison,
+   FlightPlan, Planet, OwnedLoan, OwnedShip, User, System,
 } from '../Api/types';
 import { WorkerError } from '../App';
 import { Steps } from '../components/Automation/Models';

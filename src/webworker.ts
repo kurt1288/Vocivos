@@ -14,7 +14,7 @@ import {
 import { StoredMarket } from './store';
 
 export interface WorkerType {
-   new(token:string, username:string, steps:Steps, ship:OwnedShip, credits:number, errorCallback: (error: WorkerError) => void, stateUpdateCallback: (data: WorkerDataUpdate) => void, webworkerGetLocalStorage: (worker: Automation) => void, webworkerUpdateMarketData: (data: Market) => void): Automation,
+   new(token:string, username:string, steps:Steps, ship:OwnedShip, credits:number, marketData:string | null, errorCallback: (error: WorkerError) => void, stateUpdateCallback: (data: WorkerDataUpdate) => void, webworkerGetLocalStorage: (worker: Automation) => void, webworkerUpdateMarketData: (data: Market) => void): Automation,
 }
 
 export class Automation {
@@ -33,12 +33,13 @@ export class Automation {
    webworkerUpdateMarketData: (data: Market) => void;
    enabled = false;
 
-   constructor(token:string, username:string, steps:Steps, ship:OwnedShip, credits:number, errorCallback: (error: WorkerError) => void, stateUpdateCallback: (data: WorkerDataUpdate) => void, webworkerGetLocalStorage: (worker: Automation) => void, webworkerUpdateMarketData: (data: Market) => void) {
+   constructor(token:string, username:string, steps:Steps, ship:OwnedShip, credits:number, marketData:string | null, errorCallback: (error: WorkerError) => void, stateUpdateCallback: (data: WorkerDataUpdate) => void, webworkerGetLocalStorage: (worker: Automation) => void, webworkerUpdateMarketData: (data: Market) => void) {
       this.token = token;
       this.username = username;
       this.steps = steps;
       this.ship = ship;
       this.credits = credits;
+      this.marketData = marketData ? JSON.parse(marketData) : null;
       this.errorCallback = errorCallback;
       this.stateUpdateCallback = stateUpdateCallback;
       this.webworkerGetLocalStorage = webworkerGetLocalStorage;
@@ -55,11 +56,7 @@ export class Automation {
    }
 
    setMarketData(data:string | null) {
-      if (!data) {
-         this.marketData = null;
-      } else {
-         this.marketData = JSON.parse(data);
-      }
+      this.marketData = data ? JSON.parse(data) : null;
    }
 
    private nextStep() {
@@ -85,9 +82,12 @@ export class Automation {
    private async doStep() {
       if (this.steps === null) { this.enabled = false; return; }
 
-      this.ship = (await Api.shipInfo(this.token, this.username, this.ship.id)).ship;
+      this.webworkerGetLocalStorage(this);
 
       try {
+         this.ship = (await Api.shipInfo(this.token, this.username, this.ship.id)).ship;
+         await this.updateMarketData();
+
          if (this.steps.steps[this.stepIndex].type.action === AutoAction.Travel) {
             const flightPlan = await Api.createFlightPlan(this.token, this.username, this.steps.shipId, (this.steps.steps[this.stepIndex].type as TravelStep).destination);
             this.stateUpdateCallback({ type: AutoAction.Travel, data: flightPlan.flightPlan });
@@ -109,7 +109,6 @@ export class Automation {
                   marketOrder = await Api.purchaseOrder(this.token, this.username, this.steps.shipId, (this.steps.steps[this.stepIndex].type as MarketStep).good, (this.steps.steps[this.stepIndex].type as MarketStep).quantity);
                }
                this.credits = marketOrder.credits;
-               // this.ship.spaceAvailable = marketOrder.ship.spaceAvailable;
                this.stateUpdateCallback({ type: AutoAction.Buy, data: marketOrder });
             } else {
                let { quantity } = this.steps.steps[this.stepIndex].type as MarketStep;
@@ -118,7 +117,6 @@ export class Automation {
                }
                const marketOrder = await Api.sellOrder(this.token, this.username, this.steps.shipId, (this.steps.steps[this.stepIndex].type as MarketStep).good, quantity);
                this.credits = marketOrder.credits;
-               // this.ship.spaceAvailable = marketOrder.ship.spaceAvailable;
                this.stateUpdateCallback({ type: AutoAction.Sell, data: marketOrder });
             }
 
@@ -130,18 +128,18 @@ export class Automation {
       }
    }
 
-   private async getMarketData(good:CargoType) {
-      this.webworkerGetLocalStorage(this);
-      // const localData = localStorage.getItem('marketData') as StoredMarket[] | null;
+   private async updateMarketData() {
       const planet = this.marketData?.find((x) => x.planet.symbol === this.ship.location);
 
       // if there's no cached data, or if the cached data is older than 10 minutes, update
       if (!this.marketData || !planet || (Date.now() - planet.updatedAt > 600000)) {
-         const data = (await Api.getMarket(this.token, this.ship.location as string));
+         const data = await Api.getMarket(this.token, this.ship.location as string);
          this.webworkerUpdateMarketData(data);
-         return data.location.marketplace.find((x) => x.symbol === good);
       }
+   }
 
+   private async getMarketData(good:CargoType) {
+      const planet = this.marketData?.find((x) => x.planet.symbol === this.ship.location) as StoredMarket;
       return planet.planet.marketplace.find((x) => x.symbol === good);
    }
 

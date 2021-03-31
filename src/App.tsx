@@ -132,6 +132,7 @@ function App({ Worker }:Props) {
             const ship = user.ships.find((x) => x.id === item.shipId) as OwnedShip;
             const instance = await new Worker(account.token,
                account.username, item, ship, user.credits,
+               localStorage.getItem('marketData'),
                Comlink.proxy(webworkerError),
                Comlink.proxy(webworkerUpdateState),
                Comlink.proxy(webworkerGetLocalStorage),
