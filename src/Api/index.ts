@@ -56,7 +56,7 @@ async function authFetch<T>(
       const header = response.headers.get('retry-after');
       const retryAfter = header ? parseInt(header, 10) * 1000 : 1000;
       await wait(retryAfter);
-      authFetch(url, token, type, payload, retry + 1);
+      return authFetch(url, token, type, payload, retry + 1);
    }
 
    if (response.status === 401) {
