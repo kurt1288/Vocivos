@@ -9,7 +9,7 @@ const TravelProgressBar = (props: Props) => {
 
    return (
       <div className="h-0.5 w-full text-right bg-gray-600">
-         <div className="h-full text-right bg-green-500" style={{ width: `${completed}%`, transition: 'width 0.5s ease' }}>
+         <div className="h-full text-right bg-green-500 max-w-full" style={{ width: `${completed}%`, transition: 'width 0.5s ease' }}>
             <span />
          </div>
       </div>
