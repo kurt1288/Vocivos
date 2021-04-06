@@ -70,8 +70,8 @@ const Markets = () => {
             <div className="text-sm my-3" key={market.symbol + market.pricePerUnit + market.volumePerUnit}>
                <p className="font-bold">{ formatString(market.symbol) }</p>
                <p className="pl-2">Quantity: { market.quantityAvailable.toLocaleString() }</p>
-               <p className="pl-2">Buy: { (market.pricePerUnit + market.spread).toLocaleString() } credits</p>
-               <p className="pl-2">Sell: { (market.pricePerUnit - market.spread).toLocaleString() } credits</p>
+               <p className="pl-2">Buy: { (market.purchasePricePerUnit).toLocaleString() } credits</p>
+               <p className="pl-2">Sell: { (market.sellPricePerUnit).toLocaleString() } credits</p>
             </div>
          ))
       );

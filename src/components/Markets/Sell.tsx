@@ -93,7 +93,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
    const sellPrice = () => {
       if (selectedMarket && (marketData?.find((x) => x.symbol === selectedMarket.good))) {
          const good = marketData?.find((x) => x.symbol === selectedMarket.good) as Marketplace;
-         return (sellQuantity * (good.pricePerUnit - good.spread)).toLocaleString();
+         return (sellQuantity * good.sellPricePerUnit).toLocaleString();
       }
       return null;
    };

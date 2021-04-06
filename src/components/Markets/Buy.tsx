@@ -43,15 +43,15 @@ const Buy = ({ handleClose, show, ship }:Props) => {
 
       const maxCargo = Math.floor(ship.spaceAvailable / selectedMarket.volumePerUnit);
 
-      if (maxCargo * (selectedMarket.pricePerUnit + selectedMarket.spread) < credits && maxCargo <= selectedMarket.quantityAvailable && maxCargo <= 300) {
+      if (maxCargo * selectedMarket.purchasePricePerUnit < credits && maxCargo <= selectedMarket.quantityAvailable && maxCargo <= 300) {
          return maxCargo;
       } if (maxCargo > selectedMarket.quantityAvailable && selectedMarket.quantityAvailable <= 300) {
          return selectedMarket.quantityAvailable;
-      } if (Math.floor(credits / (selectedMarket.pricePerUnit + selectedMarket.spread)) > 300) {
+      } if (Math.floor(credits / selectedMarket.purchasePricePerUnit) > 300) {
          return 300;
       }
 
-      return Math.floor(credits / (selectedMarket.pricePerUnit + selectedMarket.spread));
+      return Math.floor(credits / selectedMarket.purchasePricePerUnit);
    };
 
    const purchaseMarket = async () => {
@@ -91,7 +91,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
                               <div className={`py-3 flex justify-between items-center bg-gray-100 w-full ${selectedMarket ? 'absolute' : ''} ${selectedMarket?.symbol === market.symbol ? 'z-10' : ''}`} key={market.symbol + market.quantityAvailable + market.pricePerUnit + market.volumePerUnit}>
                                  <div>
                                     <p className="font-semibold">{ formatString(market.symbol) } <span className="ml-3 text-sm text-gray-500 font-normal">{ market.quantityAvailable.toLocaleString() } units available</span></p>
-                                    <p className="text-sm">{ (market.pricePerUnit + market.spread).toLocaleString() } credit{ (market.pricePerUnit + market.spread) > 1 ? 's' : ''} per unit</p>
+                                    <p className="text-sm">{ (market.purchasePricePerUnit).toLocaleString() } credit{ (market.purchasePricePerUnit) > 1 ? 's' : ''} per unit</p>
                                  </div>
                                  { !selectedMarket
                                     && (
@@ -119,10 +119,10 @@ const Buy = ({ handleClose, show, ship }:Props) => {
                               <button
                                  type="button"
                                  className="mt-2 w-full px-3 py-2 bg-green-400 text-white rounded hover:bg-green-500 disabled:opacity-50 disabled:bg-green-400 disabled:cursor-default"
-                                 disabled={(purchaseQuantity * (selectedMarket.pricePerUnit + selectedMarket.spread) <= 0) || ((purchaseQuantity * (selectedMarket.pricePerUnit + selectedMarket.spread) > credits) || (working))}
+                                 disabled={(purchaseQuantity * selectedMarket.purchasePricePerUnit <= 0) || ((purchaseQuantity * selectedMarket.purchasePricePerUnit > credits) || (working))}
                                  onClick={purchaseMarket}
                               >
-                                 <span className={working ? 'hidden' : 'inline'}>Purchase for { (purchaseQuantity * (selectedMarket.pricePerUnit + selectedMarket.spread)).toLocaleString() } credit{ purchaseQuantity * (selectedMarket.pricePerUnit + selectedMarket.spread) > 1 ? 's' : ''}</span>
+                                 <span className={working ? 'hidden' : 'inline'}>Purchase for { (purchaseQuantity * selectedMarket.purchasePricePerUnit).toLocaleString() } credit{ purchaseQuantity * selectedMarket.purchasePricePerUnit > 1 ? 's' : ''}</span>
                                  <span className={!working ? 'hidden' : 'inline'}>Please wait...</span>
                               </button>
                               <button type="button" className="text-red-400 mt-3 hover:text-red-500" onClick={() => { setSelectedMarket(undefined); setError(''); setPurchaseQuantity(0); }}>Back</button>
