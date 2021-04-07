@@ -106,9 +106,6 @@ function App({ Worker }:Props) {
    const webworkerUpdateState = async (data:WorkerDataUpdate) => {
       if (data.type === AutoAction.Travel) {
          dispatch(addFlightPlan(data.data as FlightPlan));
-         // ship fuel and cargo space change after flight plan, so update the ship
-         const updatedShip = await Api.shipInfo(account.token, account.username, (data.data as FlightPlan).shipId);
-         dispatch(updateShip(updatedShip.ship));
       } else {
          dispatch(setCredits((data.data as Purchase).credits));
          dispatch(updateShip((data.data as Purchase).ship));

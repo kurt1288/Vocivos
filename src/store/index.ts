@@ -1,6 +1,6 @@
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-   FlightPlan, Planet, OwnedLoan, OwnedShip, User, System,
+   FlightPlan, Planet, OwnedLoan, OwnedShip, User, System, CargoType,
 } from '../Api/types';
 import { WorkerError } from '../App';
 import { Steps } from '../components/Automation/Models';
@@ -71,11 +71,19 @@ const spacetraders = createSlice({
       },
       addFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {
          state.flightPlans.push(payload);
-         // when in transit, ship location is 'undefined'
+
+         // update ship with new flightplan Id
          const ship = state.user.ships.find((x) => x.id === payload.shipId);
          if (ship) {
             ship.location = undefined;
             ship.flightPlanId = payload.id;
+            ship.spaceAvailable += payload.fuelConsumed;
+            const fuel = ship.cargo.find((x) => x.good === CargoType.Fuel);
+            if (fuel && payload.fuelRemaining > 0) {
+               fuel.quantity = payload.fuelRemaining;
+            } else if (fuel && payload.fuelRemaining === 0) {
+               ship.cargo.splice(ship.cargo.findIndex((x) => x.good === CargoType.Fuel), 1);
+            }
          }
       },
       removeFlightPlan: (state, { payload }:PayloadAction<FlightPlan>) => {

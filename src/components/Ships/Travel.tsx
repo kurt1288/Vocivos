@@ -47,9 +47,6 @@ const Travel = ({
          }
          dispatch(addFlightPlan(result));
          handleClose();
-         // ship fuel and cargo space change after flight plan, so update the ship
-         const updatedShip = await Api.shipInfo(token, username, ship.id);
-         dispatch(updateShip(updatedShip.ship));
       } catch (err: unknown) {
          const { message } = err as Error;
          // Try to automatically buy the required fuel if ship has insufficient fuel
