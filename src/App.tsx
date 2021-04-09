@@ -1,11 +1,13 @@
+/* eslint-disable import/no-unresolved */
+/* eslint-disable import/no-webpack-loader-syntax */
 import React, { Suspense, useEffect, useState } from 'react';
 import { Route, Switch } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Comlink from 'comlink';
-import { Automation, WorkerType } from './webworker';
+import AutomationWorker from 'worker-loader!./automation';
+import { AutomationType, Automation } from './automation';
 import {
-   addAutomationError,
-   addFlightPlan, reset, RootState, setAutomationState, setCredits,
+   addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setCredits,
    setSystems,
    setToken, setUser, StoredMarket, updateMarketData, updateShip,
 } from './store';
@@ -19,14 +21,10 @@ import Systems from './components/Systems/Systems';
 import Location from './components/Systems/Location';
 import Loans from './components/Loans/Loans';
 import {
-   FlightPlan, Market, OwnedShip, Purchase,
+   FlightPlan, Market, Purchase,
 } from './Api/types';
 import Markets from './components/Markets/Markets';
 import { AutoAction } from './components/Automation/Models';
-
-interface Props {
-   Worker: Comlink.Remote<WorkerType>
-}
 
 interface Token {
    username: string,
@@ -34,7 +32,7 @@ interface Token {
 }
 
 export interface WorkerDataUpdate {
-   type: AutoAction.Travel | AutoAction.Buy | AutoAction.Sell,
+   type: AutoAction.Travel | AutoAction.AddFlightPlan | AutoAction.RemoveFlightPlan | AutoAction.Buy | AutoAction.Sell,
    data: FlightPlan | Purchase,
 }
 
@@ -43,9 +41,12 @@ export interface WorkerError {
    error: string | null,
 }
 
-function App({ Worker }:Props) {
-   const [automationsList, setAutomationsList] = useState<{ shipId:string, instance: Comlink.Remote<Automation>}[]>([]);
-   const { account, automations, user } = useSelector((state:RootState) => state);
+function App() {
+   const store = useSelector((state:RootState) => state);
+   const {
+      account, user, automateAll, marketData, flightPlans, systems,
+   } = useSelector((state:RootState) => state);
+   const [autoWorker, setAutoWorker] = useState<[Comlink.Remote<Automation>]>();
    const dispatch = useDispatch();
    const key = localStorage.getItem('apiKey');
 
@@ -83,8 +84,8 @@ function App({ Worker }:Props) {
 
             // Update market data stored in local storage
             const marketDataStore = localStorage.getItem('marketData');
-            const marketData = marketDataStore !== null ? JSON.parse(marketDataStore) as StoredMarket[] : null;
-            marketData?.map((data) => (
+            const loadedMarketData = marketDataStore !== null ? JSON.parse(marketDataStore) as StoredMarket[] : null;
+            loadedMarketData?.map((data) => (
                dispatch(updateMarketData(data))
             ));
          } catch (err: unknown) {
@@ -97,23 +98,20 @@ function App({ Worker }:Props) {
       FetchAccount();
    }, []);
 
-   const webworkerError = (data:WorkerError) => {
+   const webworkerError = (data:string) => {
       console.log(data);
-      dispatch(setAutomationState({ shipId: data.shipId, enabled: false }));
-      dispatch(addAutomationError(data));
+      dispatch(setAllAutomationState(false));
    };
 
    const webworkerUpdateState = async (data:WorkerDataUpdate) => {
-      if (data.type === AutoAction.Travel) {
+      if (data.type === AutoAction.AddFlightPlan) {
          dispatch(addFlightPlan(data.data as FlightPlan));
+      } else if (data.type === AutoAction.RemoveFlightPlan) {
+         dispatch(removeFlightPlan(data.data as FlightPlan));
       } else {
          dispatch(setCredits((data.data as Purchase).credits));
          dispatch(updateShip((data.data as Purchase).ship));
       }
-   };
-
-   const webworkerGetLocalStorage = (worker: Automation) => {
-      worker.setMarketData(localStorage.getItem('marketData'));
    };
 
    const webworkerUpdateMarketData = (data: Market) => {
@@ -121,30 +119,31 @@ function App({ Worker }:Props) {
    };
 
    useEffect(() => {
-      automations.forEach(async (item) => {
-         const automation = automationsList.find((x) => x.shipId === item.shipId);
+      if (autoWorker) {
+         autoWorker[0].updateState(store);
+      }
+   }, [user.ships, marketData, flightPlans, systems]);
 
-         // If the automation in the store is not enabled and there's no running automation, then we should create a new one and start it.
-         if (item.enabled && !automation) {
-            const ship = user.ships.find((x) => x.id === item.shipId) as OwnedShip;
-            const instance = await new Worker(account.token,
-               account.username, item, ship, user.credits,
-               localStorage.getItem('marketData'),
-               Comlink.proxy(webworkerError),
-               Comlink.proxy(webworkerUpdateState),
-               Comlink.proxy(webworkerGetLocalStorage),
-               Comlink.proxy(webworkerUpdateMarketData));
-            await instance.run();
-            setAutomationsList([...automationsList, { shipId: item.shipId, instance }]);
-         }
+   useEffect(() => {
+      const createWorker = async () => {
+         const AutoWorker = Comlink.wrap<AutomationType>(new AutomationWorker());
+         const instance = await new AutoWorker(Comlink.proxy(webworkerUpdateState), Comlink.proxy(webworkerUpdateMarketData), Comlink.proxy(webworkerError));
+         // set state doesn't work here with just a comlink object. needs to be in an array.
+         setAutoWorker([instance]);
+      };
 
-         // If the automation in the store is not enabled and there's an automation worker, we should stop it.
-         if (!item.enabled && automation) {
-            await automation.instance.stop();
-            setAutomationsList(automationsList.filter((x) => x.shipId !== automation.shipId));
-         }
-      });
-   }, [automations]);
+      if (!autoWorker) {
+         createWorker();
+      }
+
+      if (!autoWorker) { return; }
+
+      if (automateAll) {
+         autoWorker[0].start();
+      } else {
+         autoWorker[0]?.stop();
+      }
+   }, [automateAll]);
 
    return (
       <React.Fragment>

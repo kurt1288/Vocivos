@@ -1,8 +1,8 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { OwnedShip } from '../../Api/types';
-import { RootState } from '../../store';
+import { useDispatch, useSelector } from 'react-redux';
+import { LocationType, OwnedShip } from '../../Api/types';
+import { RootState, setAllAutomationState } from '../../store';
 import ShipsGroup from './ShipsGroup';
 
 export interface shipGroups {
@@ -11,11 +11,12 @@ export interface shipGroups {
 
 const Owned = () => {
    const { ships } = useSelector((state:RootState) => state.user);
-   const { flightPlans } = useSelector((state:RootState) => state);
+   const { flightPlans, automateAll, systems } = useSelector((state:RootState) => state);
    const [shipGroups, setShipGroups] = useState<shipGroups>();
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('type');
    const [shipError, setShipError] = useState('');
+   const dispatch = useDispatch();
 
    useEffect(() => {
       const result:shipGroups = {};
@@ -42,6 +43,14 @@ const Owned = () => {
       setShipGroups(ordered);
    }, [ships, flightPlans]);
 
+   async function setAutomation(state: boolean) {
+      dispatch(setAllAutomationState(state));
+   }
+
+   const automateDisabled = () => (
+      !automateAll && ships.some((x) => systems.find((y) => y.symbol === x.location?.split('-')[0])?.locations.find((z) => z.symbol === x.location)?.type !== LocationType.Wormhole && x.spaceAvailable !== x.maxCargo)
+   );
+
    return (
       <React.Fragment>
          <h2 className="text-3xl mb-5">Your Ships</h2>
@@ -56,6 +65,16 @@ const Owned = () => {
                </button>
             </div>
          )}
+         <div className="mb-5 flex items-center">
+            <button
+               type="button"
+               className={`text-sm cursor-pointer mr-2 p-2 rounded ${automateAll ? 'bg-red-500 hover:bg-red-600 disabled:bg-red-500' : 'bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500'} disabled:opacity-50 disabled:cursor-default`}
+               onClick={() => setAutomation(!automateAll)}
+               disabled={automateDisabled()}
+            >
+               { automateAll ? 'Stop Automation' : 'Automate All' }
+            </button>
+         </div>
          <div className="flex mb-5">
             <button type="button" className="cursor-pointer w-6 h-6" onClick={() => setOrder(!sortOrder)}>
                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#E5E7EB" {... (sortOrder ? { transform: 'rotate(180) scale(-1,1)' } : {})} className="origin-center"><path d="M0 0h24v24H0V0z" fill="none" /><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" /></svg>

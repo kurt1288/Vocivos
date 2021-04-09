@@ -2,8 +2,6 @@ import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
    FlightPlan, Planet, OwnedLoan, OwnedShip, User, System, CargoType,
 } from '../Api/types';
-import { WorkerError } from '../App';
-import { Steps } from '../components/Automation/Models';
 
 export interface StoredMarket {
    updatedAt: number,
@@ -23,7 +21,7 @@ interface InitialState {
    },
    flightPlans: FlightPlan[],
    marketData: StoredMarket[],
-   automations: Steps[],
+   automateAll: boolean,
    systems: System[],
 }
 
@@ -40,7 +38,7 @@ const initialState: InitialState = {
    },
    flightPlans: [],
    marketData: [],
-   automations: [],
+   automateAll: false,
    systems: [],
 };
 
@@ -107,36 +105,19 @@ const spacetraders = createSlice({
          }
          localStorage.setItem('marketData', JSON.stringify(state.marketData));
       },
-      addAutomation: (state, { payload }:PayloadAction<Steps>) => {
-         // check for existing automation for given ship and replace if it exists
-         if (state.automations.findIndex((x) => x.shipId === payload.shipId) !== -1) {
-            state.automations.splice(state.automations.findIndex((x) => x.shipId === payload.shipId), 1);
-         }
-
-         state.automations.push(payload);
-      },
-      setAutomationState: (state, { payload }:PayloadAction<{ shipId: string, enabled: boolean}>) => {
-         const ship = state.automations.find((x) => x.shipId === payload.shipId);
-         if (ship) {
-            ship.enabled = payload.enabled;
-         }
-      },
-      addAutomationError: (state, { payload }:PayloadAction<WorkerError>) => {
-         const ship = state.automations.find((x) => x.shipId === payload.shipId);
-         if (ship) {
-            ship.error = payload.error;
-         }
-      },
       setSystems: (state, { payload }:PayloadAction<System[]>) => {
          state.systems = payload;
+      },
+      setAllAutomationState: (state, { payload }:PayloadAction<boolean>) => {
+         state.automateAll = payload;
       },
    },
 });
 
 export const {
    setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan,
-   updateMarketData, addAutomation, setAutomationState, addAutomationError, reset,
-   updateShips, setSystems, updateLoans,
+   updateMarketData, reset,
+   updateShips, setSystems, updateLoans, setAllAutomationState,
 } = spacetraders.actions;
 
 const { reducer } = spacetraders;

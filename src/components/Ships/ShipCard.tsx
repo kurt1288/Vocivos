@@ -6,12 +6,11 @@ import {
 import {
    Cargo, CargoType, OwnedShip,
 } from '../../Api/types';
-import { addAutomationError, removeFlightPlan, RootState } from '../../store';
+import { removeFlightPlan, RootState } from '../../store';
 import Buy from '../Markets/Buy';
 import Sell from '../Markets/Sell';
 import Travel from './Travel';
 import TravelProgressBar from './TravelProgress';
-import AutomateModal from '../Automation/AutomateModal';
 
 interface Props {
    ship: OwnedShip,
@@ -19,17 +18,14 @@ interface Props {
    shipError?: (message:string) => void,
 }
 
-const ShipCard = ({
-   ship, compact, shipError,
-}:Props) => {
+const ShipCard = ({ ship, compact, shipError }:Props) => {
    const systems = useSelector((state:RootState) => state.systems);
    const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.shipId === ship.id));
-   const automation = useSelector((state:RootState) => state.automations.find((x) => x.shipId === ship.id));
+   const automation = useSelector((state:RootState) => state.automateAll);
    const dispatch = useDispatch();
    const [showBuyModal, setBuyModalShow] = useState(false);
    const [showSellModal, setSellModalShow] = useState(false);
    const [showTravelModal, setTravelModalShow] = useState(false);
-   const [showAutomateModal, setAutomateModalShow] = useState(false);
    const [remainingTime, setRemainingTime] = useState<string>();
    const [time, setTime] = useState<number>(Date.now());
 
@@ -42,7 +38,7 @@ const ShipCard = ({
    useEffect(() => {
       if (!flightPlan) { return; }
 
-      if (isPast(new Date(flightPlan.arrivesAt))) {
+      if (!automation && isPast(new Date(flightPlan.arrivesAt))) {
          dispatch(removeFlightPlan(flightPlan));
       }
 
@@ -63,19 +59,11 @@ const ShipCard = ({
       return (((Date.now() / 1000) - (getUnixTime(new Date(flightPlan.arrivesAt)) - flightPlan.timeRemainingInSeconds)) / flightPlan.timeRemainingInSeconds) * 100;
    };
 
-   const closeModal = () => {
-      setAutomateModalShow(false);
-      if (automation?.error) {
-         dispatch(addAutomationError({ shipId: ship.id, error: null }));
-      }
-   };
-
    return (
       <React.Fragment>
          { showBuyModal ? <Buy show={showBuyModal} ship={ship} handleClose={() => setBuyModalShow(false)} /> : null }
          { showSellModal ? <Sell show={showSellModal} ship={ship} handleClose={() => setSellModalShow(false)} /> : null }
          { showTravelModal ? <Travel show={showTravelModal} ship={ship} handleClose={() => setTravelModalShow(false)} shipError={(message) => shipError && shipError(message)} /> : null }
-         { showAutomateModal ? <AutomateModal show={showAutomateModal} ship={ship} handleClose={() => closeModal()} /> : null }
          { compact ? (
             <div className="p-3 bg-gray-900 border border-gray-700 rounded divide-y divide-gray-500 hover:border-yellow-900 hover:shadow-xl">
                <div className="flex justify-between items-center ">
@@ -91,7 +79,7 @@ const ShipCard = ({
                         </div>
                      ) : (
                         <div>
-                           { automation?.enabled
+                           { automation
                               ? <p className="text-sm">Automating</p>
                               : (
                                  <React.Fragment>
@@ -173,11 +161,10 @@ const ShipCard = ({
                               </div>
                               <span className="text-sm text-gray-400 mt-1">({ remainingTime ? `Arrives in ${remainingTime}` : 'ETA Unknown' })</span>
                            </div>
-                           { automation?.enabled
+                           { automation
                               && (
                                  <div className="relative z-10 w-full flex items-center justify-end pr-0.5 mt-2">
                                     <p className="text-xs">Automating</p>
-                                    <button type="button" className="text-xs ml-2 px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Tasks</button>
                                  </div>
                               )}
                            <div className="absolute inset-0">
@@ -196,7 +183,7 @@ const ShipCard = ({
                               <span className="ml-1 pt-1 text-sm text-gray-400">({ ship.location })</span>
                            </div>
                            <div>
-                              { automation?.enabled
+                              { automation
                                  ? null : (
                                     <React.Fragment>
                                        <button
@@ -205,7 +192,6 @@ const ShipCard = ({
                                           onClick={() => setTravelModalShow(true)}
                                        >Travel
                                        </button>
-                                       <button type="button" className="text-xs px-2 py-1 bg-purple-500 rounded hover:bg-purple-600" onClick={() => setAutomateModalShow(true)}>Automate</button>
                                     </React.Fragment>
                                  )}
                            </div>
@@ -215,7 +201,7 @@ const ShipCard = ({
                <div className="p-3">
                   <div className="flex items-center mb-2">
                      <p className="mr-3">Cargo <span className="ml-2 text-sm text-gray-400">{ ship.maxCargo - ship.spaceAvailable } of { ship.maxCargo }</span></p>
-                     { ship.location && !automation?.enabled
+                     { ship.location && !automation
                      && (
                         <React.Fragment>
                            <button type="button" className="text-xs mr-2 px-2 py-1 bg-green-500 rounded hover:bg-green-600" onClick={() => setBuyModalShow(true)}>Buy</button>

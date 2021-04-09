@@ -2,6 +2,8 @@ import { CargoType } from '../../Api/types';
 
 export enum AutoAction {
    Travel,
+   AddFlightPlan,
+   RemoveFlightPlan,
    Buy,
    Sell,
 }
