@@ -59,13 +59,6 @@ async function authFetch<T>(
       return authFetch(url, token, type, payload, retry + 1);
    }
 
-   if (response.status === 500 && retry < 5) {
-      const header = response.headers.get('retry-after');
-      const retryAfter = header ? parseInt(header, 10) * 1000 : 1000;
-      await wait(retryAfter);
-      return authFetch(url, token, type, payload, retry + 1);
-   }
-
    if (response.status === 401) {
       throw new Error('Invalid username or token.');
    }

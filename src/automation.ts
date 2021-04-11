@@ -93,7 +93,6 @@ export class Automation {
       switch (ship.type) {
          case 'ZA-MK-II':
          case 'EM-MK-II':
-         case 'HM-MK-II':
             return 1;
          case 'GR-MK-I':
          case 'EM-MK-I':
@@ -161,7 +160,9 @@ export class Automation {
       return bestRoutes.sort((a, b) => ((a.cpdv < b.cpdv) ? 1 : (b.cpdv < a.cpdv) ? -1 : 0));
    }
 
-   private static async getBestRoute(tradeRoutes: TradeRoute[]): Promise<TradeRoute | null> {
+   private async getBestRoute(): Promise<TradeRoute | null> {
+      const tradeRoutes = await this.BestTradeRoutes();
+
       if (!tradeRoutes || tradeRoutes.length === 0) {
          return null;
       }
@@ -187,20 +188,9 @@ export class Automation {
       return tradeRoutes[0];
    }
 
-   private static async getBestRouteFromLocation(from: string, routes: TradeRoute[]) {
-      const route = [...routes].filter((x) => x.from === from);
-
-      // if the current location doesn't have any profitable routes...
-      if (route === undefined || route.length === 0) {
-         return null;
-      }
-
-      // Get most profitable route from current location
-      return route.reduce((max, obj) => (obj.cpdv > max.cpdv ? obj : max));
-   }
-
-   private static async getBestRouteFromLocationToLocation(from: string, to: string, routes: TradeRoute[]) {
-      const route = [...routes].filter((x) => x.from === from && x.to === to);
+   private async getBestRouteFromLocationToLocation(from: string, to: string) {
+      const tradeRoutes = await this.BestTradeRoutes();
+      const route = [...tradeRoutes].filter((x) => x.from === from && x.to === to);
 
       // if the current location doesn't have any profitable routes...
       if (route === undefined || route.length === 0) {
@@ -226,32 +216,10 @@ export class Automation {
       }
    }
 
-   private async buyFuel(ship: OwnedShip, route: TradeRoute | ScoutRoute) {
-      const from = this.state.systems.find((x) => x.symbol === route.from.split('-')[0])?.locations.find((x) => x.symbol === route.from) as Location;
-      const to = this.state.systems.find((x) => x.symbol === route.to.split('-')[0])?.locations.find((x) => x.symbol === route.to) as Location;
-      let fuelRequired = Automation.fuelRequired(from, to) + this.fuelPenalty(ship);
-
-      // Because the calculation of fuel isn't perfect, sometimes excess fuel is purchased. So check the existing cargo for any fuel.
-      const existingFuel = ship.cargo.find((x) => x.good === CargoType.Fuel)?.quantity;
-
-      if (existingFuel && existingFuel > 0) {
-         fuelRequired -= existingFuel;
-      }
-
-      if (fuelRequired <= 0) {
-         return 0;
-      }
-
-      const order = await Api.purchaseOrder(this.state.account.token, this.state.account.username, ship.id, CargoType.Fuel, fuelRequired);
-      this.stateUpdateCallback({ type: AutoAction.Buy, data: order });
-      this.state.user.credits = order.credits;
-      return fuelRequired;
-   }
-
-   private async createFlightPlan(ship: OwnedShip, route: TradeRoute | ScoutRoute, action: DispatchAction.Trade | DispatchAction.Scout) {
-      const flightplan = await Api.createFlightPlan(this.state.account.token, this.state.account.username, ship.id, route.to);
+   private async createFlightPlan(shipId: string, route: TradeRoute | ScoutRoute, action: DispatchAction.Trade | DispatchAction.Scout) {
+      const flightplan = await Api.createFlightPlan(this.state.account.token, this.state.account.username, shipId, route.to);
       this.stateUpdateCallback({ type: AutoAction.AddFlightPlan, data: flightplan.flightPlan });
-      this.dispatched.push({ ship: ship.id, action, route });
+      this.dispatched.push({ ship: shipId, action, route });
 
       const timer = new Timer();
       timer.start({ precision: 'seconds', target: { seconds: flightplan.flightPlan.timeRemainingInSeconds } });
@@ -292,94 +260,74 @@ export class Automation {
                return true;
             })].sort((a, b) => ((a.speed < b.speed) ? 1 : (b.speed < a.speed) ? -1 : 0));
 
-            const routes = await this.BestTradeRoutes();
-            const route = await Automation.getBestRoute(routes);
+            for (let i = 0; i < idleShips.length; i += 1) {
+               if (!idleShips[i]) { continue; }
 
-            // If there are no profitable routes, that probably means there's only market data for a single location. So we need to scout.
-            if (!route) {
-               for (const ship of idleShips) {
-                  if (!ship.location) { continue; }
-                  // Get the closest locations
-                  const closestBodies = this.getClosestBodies(ship.location);
-                  if (!closestBodies || closestBodies.length === 0) { throw new Error('There are no profitable routes and unable to find any additional locations to scout.'); }
+               // if the current ship has not been dispatched and has a location (we don't want to try and dispatch a ship that is current travelling)
+               if (idleShips[i].location) {
+                  const currentLocation = this.state.systems.find((x) => x.symbol === idleShips[i].location?.split('-')[0])?.locations.find((x) => x.symbol === idleShips[i].location);
+                  if (!currentLocation) { continue; }
 
-                  // Filter out routes that are already being scouted
-                  const remaining = closestBodies.filter((x) => x.body.symbol !== this.dispatched.find((y) => y.route.to === x.body.symbol)?.route.to);
+                  const route = await this.getBestRoute();
 
-                  // If there are any remaining routes to a close location, send the ship there
-                  if (remaining.length > 0) {
-                     const scoutRoute = { from: ship.location as string, to: remaining[0].body.symbol };
-                     await this.buyFuel(ship, scoutRoute);
-                     await this.createFlightPlan(ship, scoutRoute, DispatchAction.Scout);
-                  }
-                  continue;
-               }
-            } else {
-               for (const ship of idleShips) {
-                  if (!ship.location) { continue; }
+                  // If there are no profitable routes, that probably means there's only market data for a single location. So we need to scout.
+                  if (!route) {
+                     // Scout to closest body
+                     const closestBodies = this.getClosestBodies(idleShips[i].location as string);
+                     if (!closestBodies || closestBodies.length === 0) { throw new Error('There are no profitable routes and unable to find any additional locations to scout.'); }
 
-                  const location = this.state.systems.find((x) => x.symbol === ship.location?.split('-')[0])?.locations.find((x) => x.symbol === ship.location);
-                  if (!location) { continue; }
+                     // Filter out routes that are already being scouted
+                     const remaining = closestBodies.filter((x) => x.body.symbol !== this.dispatched.find((y) => y.route.to === x.body.symbol)?.route.to);
 
-                  /**
-                   * If the best route is to a location that has old data, we only send 1 scout ship there.
-                   * Other ships will get the best trade route from their current location, if one is available.
-                   */
-                  const lastUpdated = this.markets.find((x) => x.planet.symbol === route.from)?.updatedAt;
-                  if (lastUpdated && (Date.now() - lastUpdated) > this.marketUpdateTime) {
-                     if (!this.dispatched.some((x) => x.route.to === route.from)) {
-                        const scoutRoute = { from: ship.location as string, to: route.from };
-                        await this.buyFuel(ship, scoutRoute);
-                        await this.createFlightPlan(ship, scoutRoute, DispatchAction.Scout);
-                     } else {
-                        const possibleTrade = await Automation.getBestRouteFromLocation(ship.location as string, routes);
-
-                        if (!possibleTrade) { continue; }
-
-                        const fuel = await this.buyFuel(ship, possibleTrade);
-
-                        const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === ship.location)?.planet.marketplace.find((x) => x.symbol === possibleTrade.good) as Marketplace, ship) - fuel;
-                        if (maxQuantity !== 0) {
-                           const goodOrder = await Api.purchaseOrder(this.state.account.token, this.state.account.username, ship.id, possibleTrade.good, maxQuantity);
-                           this.stateUpdateCallback({ type: AutoAction.Buy, data: goodOrder });
-                           this.state.user.credits = goodOrder.credits;
-                           await this.createFlightPlan(ship, possibleTrade, DispatchAction.Trade);
-                        }
+                     // If there are any remaining routes to a close location, send the ship there
+                     if (remaining.length > 0) {
+                        const fuelRequired = Automation.fuelRequired(currentLocation, remaining[0].body) + this.fuelPenalty(idleShips[i]);
+                        const order = await Api.purchaseOrder(this.state.account.token, this.state.account.username, idleShips[i].id, CargoType.Fuel, fuelRequired);
+                        this.stateUpdateCallback({ type: AutoAction.Buy, data: order });
+                        this.state.user.credits = order.credits;
+                        const scoutRoute = { from: idleShips[i].location as string, to: remaining[0].body.symbol };
+                        await this.createFlightPlan(idleShips[i].id, scoutRoute, DispatchAction.Scout);
                      }
                      continue;
                   }
 
-                  // At this point the ship should only be going to a location with up-to-date data...
-
-                  // If the ship's current location isn't at the starting point for the best route, we need to send it there first.
-                  if (ship.location !== route.from) {
-                     // If there's a profitable trade, even though it might not be the best, from the current location to the location with the best trade
-                     const possibleTrade = await Automation.getBestRouteFromLocationToLocation(ship.location, route.from, routes);
-                     if (possibleTrade) {
-                        const fuel = await this.buyFuel(ship, possibleTrade);
-                        const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === ship.location)?.planet.marketplace.find((x) => x.symbol === possibleTrade.good) as Marketplace, ship) - fuel;
-                        if (maxQuantity > 0) {
-                           const goodOrder = await Api.purchaseOrder(this.state.account.token, this.state.account.username, ship.id, possibleTrade.good, maxQuantity);
-                           this.stateUpdateCallback({ type: AutoAction.Buy, data: goodOrder });
-                           this.state.user.credits = goodOrder.credits;
-                           await this.createFlightPlan(ship, possibleTrade, DispatchAction.Trade);
-                        }
-                     } else {
-                        await this.buyFuel(ship, { from: ship.location, to: route.from });
-                        await this.createFlightPlan(ship, { from: ship.location, to: route.from }, DispatchAction.Scout);
-                     }
-                     continue;
-                  }
-
-                  // Lastly, the ship is at the location with the most profitable trade
-                  const fuel = await this.buyFuel(ship, route);
-                  const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === route.from)?.planet.marketplace.find((x) => x.symbol === route.good) as Marketplace, ship) - fuel;
-                  if (maxQuantity > 0) {
-                     const order = await Api.purchaseOrder(this.state.account.token, this.state.account.username, ship.id, route?.good, maxQuantity);
+                  // If the ship's location isn't at the starting point for the best route, we need to send it there first.
+                  if (idleShips[i].location !== route.from) {
+                     const scoutRoute = { from: idleShips[i].location as string, to: route.from };
+                     const destination = this.state.systems.find((x) => x.symbol === route.from.split('-')[0])?.locations.find((x) => x.symbol === route.from);
+                     const fuelRequired = Automation.fuelRequired(currentLocation, destination as Location) + this.fuelPenalty(idleShips[i]);
+                     const order = await Api.purchaseOrder(this.state.account.token, this.state.account.username, idleShips[i].id, CargoType.Fuel, fuelRequired);
                      this.stateUpdateCallback({ type: AutoAction.Buy, data: order });
                      this.state.user.credits = order.credits;
-                     await this.createFlightPlan(ship, route, DispatchAction.Trade);
+
+                     const possibleTrade = await this.getBestRouteFromLocationToLocation(scoutRoute.from, scoutRoute.to);
+
+                     if (possibleTrade) {
+                        const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === idleShips[i].location)?.planet.marketplace.find((x) => x.symbol === possibleTrade.good) as Marketplace, idleShips[i]) - fuelRequired;
+                        if (maxQuantity !== 0) {
+                           const goodOrder = await Api.purchaseOrder(this.state.account.token, this.state.account.username, idleShips[i].id, possibleTrade.good, maxQuantity);
+                           this.stateUpdateCallback({ type: AutoAction.Buy, data: goodOrder });
+                           this.state.user.credits = order.credits;
+                           await this.createFlightPlan(idleShips[i].id, possibleTrade, DispatchAction.Trade);
+                        }
+                     } else {
+                        await this.createFlightPlan(idleShips[i].id, scoutRoute, DispatchAction.Scout);
+                     }
+
+                     continue;
                   }
+
+                  const fuelRequired = route.fuelRequired + this.fuelPenalty(idleShips[i]);
+                  const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === route.from)?.planet.marketplace.find((x) => x.symbol === route.good) as Marketplace, idleShips[i]) - fuelRequired;
+                  if (maxQuantity === 0) { continue; }
+
+                  const fuel = await Api.purchaseOrder(this.state.account.token, this.state.account.username, idleShips[i].id, CargoType.Fuel, fuelRequired);
+                  this.stateUpdateCallback({ type: AutoAction.Buy, data: fuel });
+
+                  const order = await Api.purchaseOrder(this.state.account.token, this.state.account.username, idleShips[i].id, route?.good, maxQuantity);
+                  this.stateUpdateCallback({ type: AutoAction.Buy, data: order });
+                  this.state.user.credits = order.credits;
+                  await this.createFlightPlan(idleShips[i].id, route, DispatchAction.Trade);
                }
             }
 
