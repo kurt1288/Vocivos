@@ -81,7 +81,7 @@ const Owned = () => {
          <div className="mb-5 flex items-center">
             <button
                type="button"
-               className={`text-sm cursor-pointer mr-2 p-2 rounded ${automateAll ? 'bg-red-500 hover:bg-red-600 disabled:bg-red-500' : 'bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500'} disabled:opacity-50 disabled:cursor-default`}
+               className={`text-sm cursor-pointer mr-2 p-2 rounded ${automateAll ? 'bg-red-500 hover:bg-red-600 disabled:bg-red-500' : 'bg-green-600 hover:bg-green-700 disabled:bg-green-600'} disabled:opacity-50 disabled:cursor-default`}
                title={automateDisabled() ? 'All ships must have no cargo to begin automation' : ''}
                onClick={() => setAutomation(!automateAll)}
                disabled={automateDisabled()}
@@ -90,9 +90,9 @@ const Owned = () => {
             </button>
             <button
                type="button"
-               className="text-sm cursor-pointer mr-2 p-2 rounded bg-red-500"
+               className="text-sm cursor-pointer mr-2 p-2 rounded bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500 disabled:opacity-50 disabled:cursor-default"
                onClick={() => sellAllCargo()}
-               disabled={automateAll}
+               disabled={automateAll && !ships.some((x) => x.flightPlanId)}
             >
                Sell All Cargo
             </button>
