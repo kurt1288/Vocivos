@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Api from '../../Api';
 import { LocationType, OwnedShip } from '../../Api/types';
-import { RootState, setAllAutomationState, setCredits, updateShip } from '../../store';
+import {
+   RootState, setAllAutomationState, setCredits, updateShip,
+} from '../../store';
 import ShipsGroup from './ShipsGroup';
 
 export interface shipGroups {
@@ -12,7 +14,9 @@ export interface shipGroups {
 
 const Owned = () => {
    const { ships } = useSelector((state:RootState) => state.user);
-   const { flightPlans, automateAll, systems, account } = useSelector((state:RootState) => state);
+   const {
+      flightPlans, automateAll, systems, account,
+   } = useSelector((state:RootState) => state);
    const [shipGroups, setShipGroups] = useState<shipGroups>();
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('type');
@@ -92,7 +96,7 @@ const Owned = () => {
                type="button"
                className="text-sm cursor-pointer mr-2 p-2 rounded bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500 disabled:opacity-50 disabled:cursor-default"
                onClick={() => sellAllCargo()}
-               disabled={automateAll || !ships.some((x) => x.flightPlanId)}
+               disabled={automateAll || (!automateAll && ships.some((x) => x.flightPlanId))}
             >
                Sell All Cargo
             </button>
