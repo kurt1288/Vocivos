@@ -1,8 +1,9 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import Api from '../../Api';
 import { LocationType, OwnedShip } from '../../Api/types';
-import { RootState, setAllAutomationState } from '../../store';
+import { RootState, setAllAutomationState, setCredits, updateShip } from '../../store';
 import ShipsGroup from './ShipsGroup';
 
 export interface shipGroups {
@@ -11,7 +12,7 @@ export interface shipGroups {
 
 const Owned = () => {
    const { ships } = useSelector((state:RootState) => state.user);
-   const { flightPlans, automateAll, systems } = useSelector((state:RootState) => state);
+   const { flightPlans, automateAll, systems, account } = useSelector((state:RootState) => state);
    const [shipGroups, setShipGroups] = useState<shipGroups>();
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('type');
@@ -48,8 +49,20 @@ const Owned = () => {
    }
 
    const automateDisabled = () => (
-      !automateAll && ships.some((x) => systems.find((y) => y.symbol === x.location?.split('-')[0])?.locations.find((z) => z.symbol === x.location)?.type !== LocationType.Wormhole && x.spaceAvailable !== x.maxCargo)
+      !automateAll
+      && ships.some((x) => systems.find((y) => y.symbol === x.location?.split('-')[0])?.locations.find((z) => z.symbol === x.location)?.type !== LocationType.Wormhole
+      && x.spaceAvailable !== x.maxCargo)
    );
+
+   const sellAllCargo = () => {
+      ships.forEach((ship) => {
+         ship.cargo.forEach(async (cargo) => {
+            const result = await Api.sellOrder(account.token, account.username, ship.id, cargo.good, cargo.quantity);
+            dispatch(setCredits(result.credits));
+            dispatch(updateShip(result.ship));
+         });
+      });
+   };
 
    return (
       <React.Fragment>
@@ -69,10 +82,19 @@ const Owned = () => {
             <button
                type="button"
                className={`text-sm cursor-pointer mr-2 p-2 rounded ${automateAll ? 'bg-red-500 hover:bg-red-600 disabled:bg-red-500' : 'bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500'} disabled:opacity-50 disabled:cursor-default`}
+               title={automateDisabled() ? 'All ships must have no cargo to begin automation' : ''}
                onClick={() => setAutomation(!automateAll)}
                disabled={automateDisabled()}
             >
                { automateAll ? 'Stop Automation' : 'Automate All' }
+            </button>
+            <button
+               type="button"
+               className="text-sm cursor-pointer mr-2 p-2 rounded bg-red-500"
+               onClick={() => sellAllCargo()}
+               disabled={automateAll}
+            >
+               Sell All Cargo
             </button>
          </div>
          <div className="flex mb-5">
