@@ -25,7 +25,7 @@ const wait = (time:number) => (
 async function authFetch<T>(
    url: string, token: string, type: fetchMethod, payload: Record<string, any> = {}, retry = 0,
 ): Promise<T> {
-   let response;
+   let response:Response;
 
    if (type === fetchMethod.Get) {
       response = await limiter.schedule(async () => {
@@ -51,6 +51,14 @@ async function authFetch<T>(
       });
    }
 
+   if (response.status === 500 && retry < 5) {
+      console.log(`${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })}: API error 500`);
+      const header = response.headers.get('retry-after');
+      const retryAfter = header ? parseInt(header, 10) * 1000 : 1000;
+      await wait(retryAfter);
+      return authFetch(url, token, type, payload, retry + 1);
+   }
+
    // Retry 3 times if rate limit error
    if (response.status === 429 && retry < 3) {
       const header = response.headers.get('retry-after');
@@ -66,6 +74,7 @@ async function authFetch<T>(
    const result = await response.json();
 
    if (response.status >= 400) {
+      console.log(`Error! URL: ${url}, Payload: ${JSON.stringify(payload)}, Response: ${JSON.stringify(result.error)}`);
       throw new Error(result.error.message);
    }
 
