@@ -98,6 +98,7 @@ export class Automation {
             return 1;
          case 'GR-MK-I':
          case 'EM-MK-I':
+         case 'HM-MK-III':
             return 2;
          case 'GR-MK-II':
             return 3;
@@ -247,9 +248,7 @@ export class Automation {
          return 0;
       }
 
-      const order = await Api.purchaseOrder(this.state.account.token, this.state.account.username, ship.id, CargoType.Fuel, fuelRequired);
-      this.stateUpdateCallback({ type: AutoAction.Buy, data: order });
-      this.state.user.credits = order.credits;
+      this.buyMarketGood(ship.id, CargoType.Fuel, fuelRequired);
       return fuelRequired;
    }
 
@@ -263,6 +262,13 @@ export class Automation {
       timer.addEventListener('targetAchieved', () => {
          this.stateUpdateCallback({ type: AutoAction.RemoveFlightPlan, data: flightplan.flightPlan });
       });
+   }
+
+   private async buyMarketGood(shipId: string, good: CargoType, quantity: number) {
+      if (!quantity || quantity <= 0) { return; }
+      const goodOrder = await Api.purchaseOrder(this.state.account.token, this.state.account.username, shipId, good, quantity);
+      this.stateUpdateCallback({ type: AutoAction.Buy, data: goodOrder });
+      this.state.user.credits = goodOrder.credits;
    }
 
    private getClosestBodies(location: string) {
@@ -359,9 +365,7 @@ export class Automation {
 
                         const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === ship.location)?.planet.marketplace.find((x) => x.symbol === possibleTrade.good) as Marketplace, ship) - fuel;
                         if (maxQuantity !== 0) {
-                           const goodOrder = await Api.purchaseOrder(this.state.account.token, this.state.account.username, ship.id, possibleTrade.good, maxQuantity);
-                           this.stateUpdateCallback({ type: AutoAction.Buy, data: goodOrder });
-                           this.state.user.credits = goodOrder.credits;
+                           await this.buyMarketGood(ship.id, possibleTrade.good, maxQuantity);
                            await this.createFlightPlan(ship, possibleTrade, DispatchAction.Trade);
                         }
                      }
@@ -378,9 +382,7 @@ export class Automation {
                         const fuel = await this.buyFuel(ship, possibleTrade);
                         const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === ship.location)?.planet.marketplace.find((x) => x.symbol === possibleTrade.good) as Marketplace, ship) - fuel;
                         if (maxQuantity > 0) {
-                           const goodOrder = await Api.purchaseOrder(this.state.account.token, this.state.account.username, ship.id, possibleTrade.good, maxQuantity);
-                           this.stateUpdateCallback({ type: AutoAction.Buy, data: goodOrder });
-                           this.state.user.credits = goodOrder.credits;
+                           await this.buyMarketGood(ship.id, possibleTrade.good, maxQuantity);
                            await this.createFlightPlan(ship, possibleTrade, DispatchAction.Trade);
                         }
                      } else {
@@ -394,9 +396,7 @@ export class Automation {
                   const fuel = await this.buyFuel(ship, route);
                   const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === route.from)?.planet.marketplace.find((x) => x.symbol === route.good) as Marketplace, ship) - fuel;
                   if (maxQuantity > 0) {
-                     const order = await Api.purchaseOrder(this.state.account.token, this.state.account.username, ship.id, route?.good, maxQuantity);
-                     this.stateUpdateCallback({ type: AutoAction.Buy, data: order });
-                     this.state.user.credits = order.credits;
+                     await this.buyMarketGood(ship.id, route?.good, maxQuantity);
                      await this.createFlightPlan(ship, route, DispatchAction.Trade);
                   }
                }
