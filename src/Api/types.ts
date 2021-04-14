@@ -24,7 +24,7 @@ export enum CargoType {
    ShipParts = 'SHIP_PARTS',
    ShipPlating = 'SHIP_PLATING',
    Textiles = 'TEXTILES',
-   Workers = 'WORKERS',
+   Drones = 'DRONES',
 }
 
 export enum LoanStatus {
