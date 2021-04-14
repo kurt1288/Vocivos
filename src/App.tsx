@@ -19,7 +19,7 @@ import Profile from './components/Profile';
 import Ships from './components/Ships/Ships';
 import Systems from './components/Systems/Systems';
 import Location from './components/Systems/Location';
-import Loans from './components/Loans/Loans';
+import Loans from './components/Money/Money';
 import {
    FlightPlan, Market, Purchase,
 } from './Api/types';
@@ -158,7 +158,7 @@ function App() {
                               <Switch>
                                  <Route exact path="/" component={Profile} />
                                  <Route path="/ships" component={Ships} />
-                                 <Route path="/loans" component={Loans} />
+                                 <Route path="/money" component={Loans} />
                                  <Route path="/markets" component={Markets} />
                                  <Route path="/systems/:location" component={Location} />
                                  <Suspense fallback={<div />}>
