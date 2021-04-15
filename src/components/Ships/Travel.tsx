@@ -1,14 +1,14 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Api from '../../Api';
 import {
    OwnedShip, Location, LocationType, CargoType, FlightPlan,
 } from '../../Api/types';
 import {
    addFlightPlan, RootState, setCredits, updateShip, updateShips,
 } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 import { ModalPlaceholder } from '../SkeletonLoaders';
 
 interface Props {
@@ -21,6 +21,7 @@ interface Props {
 const Travel = ({
    handleClose, shipError, show, ship,
 }: Props) => {
+   const [apiWorker] = useContext(WorkerContext);
    const { token, username } = useSelector((state:RootState) => state.account);
    const dispatch = useDispatch();
    const [locations, setLocations] = useState<Location[]>();
@@ -31,7 +32,7 @@ const Travel = ({
    useEffect(() => {
       const getLocations = async () => {
          if (!ship.location) { return; }
-         const loc = (await Api.getLocations(token, ship.location.split('-')[0])).locations;
+         const loc = (await apiWorker.getLocations(ship.location.split('-')[0])).locations;
          setLocations(loc);
       };
       getLocations();
@@ -41,9 +42,9 @@ const Travel = ({
       try {
          let result: FlightPlan;
          if (type === LocationType.Wormhole && ship.location === location) {
-            result = (await Api.warpJump(token, username, ship.id)).flightPlan;
+            result = (await apiWorker.warpJump(ship.id)).flightPlan;
          } else {
-            result = (await Api.createFlightPlan(token, username, ship.id, location)).flightPlan;
+            result = (await apiWorker.createFlightPlan(ship.id, location)).flightPlan;
          }
          dispatch(addFlightPlan(result));
          handleClose();
@@ -55,7 +56,7 @@ const Travel = ({
             if (requiredFuelString) {
                try {
                   const fuel = parseInt(requiredFuelString[0], 10);
-                  const result = await Api.purchaseOrder(token, username, ship.id, CargoType.Fuel, fuel);
+                  const result = await apiWorker.purchaseOrder(ship.id, CargoType.Fuel, fuel);
                   dispatch(setCredits(result.credits));
                   dispatch(updateShip(result.ship));
                   createFlightPlan(type, location, false);
@@ -67,7 +68,7 @@ const Travel = ({
             setError(message);
             // If the ship failed a warp jump, it's destroyed so we should update the ships
             if (type === LocationType.Wormhole) {
-               const { ships } = await Api.ownedShips(token, username);
+               const { ships } = await apiWorker.ownedShips();
                dispatch(updateShips(ships));
                shipError(message);
             }

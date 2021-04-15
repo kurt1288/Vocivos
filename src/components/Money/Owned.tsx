@@ -1,9 +1,9 @@
 import { formatDistanceToNow } from 'date-fns';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Api from '../../Api';
 import { LoanStatus } from '../../Api/types';
 import { RootState, updateLoans } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 
 interface LoanRepaymentResponse {
    type: 'Success' | 'Error',
@@ -11,6 +11,7 @@ interface LoanRepaymentResponse {
 }
 
 const Owned = () => {
+   const [apiWorker] = useContext(WorkerContext);
    const { username, token } = useSelector((state:RootState) => state.account);
    const { loans, credits } = useSelector((state:RootState) => state.user);
    const dispatch = useDispatch();
@@ -18,7 +19,7 @@ const Owned = () => {
 
    const repayLoan = async (loanId:string) => {
       try {
-         const result = await Api.replayLoan(username, token, loanId);
+         const result = await apiWorker.replayLoan(loanId);
          dispatch(updateLoans(result.user.loans));
          setResponse({ type: 'Success', message: 'Loan repayed successfully!' });
       } catch (err: unknown) {

@@ -1,11 +1,11 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import Api from '../../Api';
 import { PurchaseLocation, Ship } from '../../Api/types';
 import { RootState, setUser } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 
 interface Props {
    handleClose: () => void,
@@ -14,6 +14,7 @@ interface Props {
 }
 
 const PurchaseShipModal = ({ handleClose, show, ship }:Props) => {
+   const [apiWorker] = useContext(WorkerContext);
    const { credits } = useSelector((state:RootState) => state.user);
    const { username, token } = useSelector((state:RootState) => state.account);
    const dispatch = useDispatch();
@@ -26,7 +27,7 @@ const PurchaseShipModal = ({ handleClose, show, ship }:Props) => {
       if (!ship) { return; }
 
       setLoading(true);
-      const result = await Api.buyShip(token, username, location, ship?.type);
+      const result = await apiWorker.buyShip(location, ship?.type);
       dispatch(setUser(result));
       handleClose;
       history.push('/ships');

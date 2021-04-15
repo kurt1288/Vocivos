@@ -1,12 +1,13 @@
 import { formatDistanceToNow } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Api from '../../Api';
 import { Location } from '../../Api/types';
 import { RootState, setSystems, updateMarketData } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 import { MarketCardLoader } from '../SkeletonLoaders';
 
 const Markets = () => {
+   const [apiWorker] = useContext(WorkerContext);
    const { token } = useSelector((state:RootState) => state.account);
    const { ships } = useSelector((state:RootState) => state.user);
    const marketData = useSelector((state:RootState) => state.marketData);
@@ -19,14 +20,14 @@ const Markets = () => {
    const changeSystem = async (system:string) => {
       setActiveSystem(system);
       setLocations(undefined);
-      const data = (await Api.getLocations(token, system)).locations;
+      const data = (await apiWorker.getLocations(system)).locations;
       setLocations(data);
    };
 
    useEffect(() => {
       const GetSystems = async () => {
          if (systems.length === 0) {
-            const temp = (await Api.systemsInfo(token)).systems;
+            const temp = (await apiWorker.systemsInfo()).systems;
             dispatch((setSystems(temp)));
          }
       };
@@ -47,7 +48,7 @@ const Markets = () => {
       const getMarketData = async () => {
          locations?.forEach(async (location) => {
             if (ships.some((x) => x.location === location.symbol)) {
-               const data = await Api.getMarket(token, location.symbol);
+               const data = await apiWorker.getMarket(location.symbol);
                dispatch(updateMarketData({ updatedAt: Date.now(), planet: data.location }));
             }
          });

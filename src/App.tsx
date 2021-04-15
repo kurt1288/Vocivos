@@ -1,17 +1,18 @@
 /* eslint-disable import/no-unresolved */
 /* eslint-disable import/no-webpack-loader-syntax */
-import React, { Suspense, useEffect, useState } from 'react';
+import React, {
+   Suspense, useContext, useEffect, useState,
+} from 'react';
 import { Route, Switch } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Comlink from 'comlink';
-import AutomationWorker from 'worker-loader!./automation';
+import AutomationWorker from 'worker-loader?filename=automation.worker.js!./automation';
 import { AutomationType, Automation } from './automation';
 import {
    addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setCredits,
    setSystems,
-   setToken, setUser, StoredMarket, updateMarketData, updateShip,
+   setUser, StoredMarket, updateMarketData, updateShip,
 } from './store';
-import Api from './Api/index';
 import './App.css';
 import NavBar from './components/NavBar';
 import SignIn from './components/SignIn';
@@ -25,11 +26,7 @@ import {
 } from './Api/types';
 import Markets from './components/Markets/Markets';
 import { AutoAction } from './components/Automation/Models';
-
-interface Token {
-   username: string,
-   token: string
-}
+import { WorkerContext } from './WorkerContext';
 
 export interface WorkerDataUpdate {
    type: AutoAction.Travel | AutoAction.AddFlightPlan | AutoAction.RemoveFlightPlan | AutoAction.Buy | AutoAction.Sell,
@@ -46,29 +43,25 @@ function App() {
    const {
       account, user, automateAll, marketData, flightPlans, systems,
    } = useSelector((state:RootState) => state);
-   const [autoWorker, setAutoWorker] = useState<[Comlink.Remote<Automation>]>();
+   const [automationWorker, setAutomationWorker] = useState<[Comlink.Remote<Automation>]>();
    const dispatch = useDispatch();
-   const key = localStorage.getItem('apiKey');
+   const [apiWorker] = useContext(WorkerContext);
 
    useEffect(() => {
-      if (key === undefined || key === null) { return; }
-
-      const apiKey = JSON.parse(key) as Token;
-
-      dispatch(setToken(apiKey));
+      apiWorker.getStatus().then((status) => console.log(status));
 
       const FetchAccount = async () => {
          try {
-            const result = await Api.getUser(apiKey.username, apiKey.token);
+            const result = await apiWorker.getUser();
             dispatch(setUser(result));
 
             // only needed because the ships property on the user response does not contain the 'flightPlanId' property
             if (result.user.ships.some((x) => x.location === undefined)) {
-               const { ships } = await Api.ownedShips(apiKey.token, apiKey.username);
+               const { ships } = await apiWorker.ownedShips();
 
                ships.forEach(async (ship) => {
                   if (ship.flightPlanId) {
-                     const { flightPlan } = await Api.queryFlightPlan(apiKey.token, apiKey.username, ship.flightPlanId);
+                     const { flightPlan } = await apiWorker.queryFlightPlan(ship.flightPlanId);
                      if (flightPlan.terminatedAt === null) {
                         dispatch(addFlightPlan(flightPlan));
                      }
@@ -77,7 +70,7 @@ function App() {
             }
 
             const getSystems = async () => {
-               const temp = (await Api.systemsInfo(apiKey.token)).systems;
+               const temp = (await apiWorker.systemsInfo()).systems;
                dispatch((setSystems(temp)));
             };
             getSystems();
@@ -119,8 +112,8 @@ function App() {
    };
 
    useEffect(() => {
-      if (autoWorker) {
-         autoWorker[0].updateState(store);
+      if (automationWorker) {
+         automationWorker[0].updateState(store);
       }
    }, [user.ships, marketData, flightPlans, systems]);
 
@@ -129,19 +122,19 @@ function App() {
          const AutoWorker = Comlink.wrap<AutomationType>(new AutomationWorker());
          const instance = await new AutoWorker(Comlink.proxy(webworkerUpdateState), Comlink.proxy(webworkerUpdateMarketData), Comlink.proxy(webworkerError));
          // set state doesn't work here with just a comlink object. needs to be in an array.
-         setAutoWorker([instance]);
+         setAutomationWorker([instance]);
       };
 
-      if (!autoWorker) {
+      if (!automationWorker) {
          createWorker();
       }
 
-      if (!autoWorker) { return; }
+      if (!automationWorker) { return; }
 
       if (automateAll) {
-         autoWorker[0].start();
+         automationWorker[0].start();
       } else {
-         autoWorker[0]?.stop();
+         automationWorker[0]?.stop();
       }
    }, [automateAll]);
 

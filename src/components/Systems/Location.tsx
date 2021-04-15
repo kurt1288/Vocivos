@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import Api from '../../Api';
 import { RootState } from '../../store';
 import { Location } from '../../Api/types';
+import { WorkerContext } from '../../WorkerContext';
 
 const LocationInfo = () => {
+   const [apiWorker] = useContext(WorkerContext);
    const { token } = useSelector((state:RootState) => state.account);
    const { location } = useParams<{ location: string }>();
    const [locInfo, setLocInfo] = useState<Location>();
@@ -14,7 +15,7 @@ const LocationInfo = () => {
    useEffect(() => {
       const getLocation = async () => {
          try {
-            const result = await Api.getLocation(token, location);
+            const result = await apiWorker.getLocation(location);
             setLocInfo(result.location);
          } catch (err: unknown) {
             setError((err as Error).message);

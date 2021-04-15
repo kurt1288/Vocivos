@@ -1,13 +1,14 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import Api from '../../Api';
 import { Ship } from '../../Api/types';
 import { RootState } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 import { CardLoader } from '../SkeletonLoaders';
 import PurchaseShipModal from './PurchaseShipModal';
 
 const Available = () => {
+   const [apiWorker] = useContext(WorkerContext);
    const user = useSelector((state:RootState) => state);
    const [ships, setShips] = useState<Ship[]>();
    const [sortOrder, setOrder] = useState(false);
@@ -16,7 +17,7 @@ const Available = () => {
    const [selectedShip, setSelectedShip] = useState<Ship>();
 
    const GetShips = async () => {
-      const getShips = await Api.availableShips(user.account.token, user.user.username);
+      const getShips = await apiWorker.availableShips();
       getShips.ships.sort((a, b) => ((a.type > b.type) ? 1 : (b.type > a.type) ? -1 : 0));
       setShips(getShips.ships);
    };

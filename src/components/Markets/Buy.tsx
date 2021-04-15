@@ -1,10 +1,10 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Api from '../../Api';
 import { Marketplace, OwnedShip } from '../../Api/types';
 import { RootState, setCredits, updateShip } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 import { ModalPlaceholder } from '../SkeletonLoaders';
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
 }
 
 const Buy = ({ handleClose, show, ship }:Props) => {
+   const [apiWorker] = useContext(WorkerContext);
    const { token, username } = useSelector((state:RootState) => state.account);
    const { credits } = useSelector((state:RootState) => state.user);
    const dispatch = useDispatch();
@@ -27,7 +28,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
    useEffect(() => {
       const getMarket = async () => {
          if (!ship.location) { return; }
-         const data = (await Api.getMarket(token, ship.location)).location.marketplace;
+         const data = (await apiWorker.getMarket(ship.location)).location.marketplace;
          // sort market data alphabetically by symbol
          setMarketData([...data].sort(((a, b) => ((a.symbol > b.symbol) ? 1 : (b.symbol > a.symbol) ? -1 : 0))));
       };
@@ -58,7 +59,7 @@ const Buy = ({ handleClose, show, ship }:Props) => {
       if (!selectedMarket) { return; }
       try {
          setWorking(true);
-         const result = await Api.purchaseOrder(token, username, ship.id, selectedMarket.symbol, purchaseQuantity);
+         const result = await apiWorker.purchaseOrder(ship.id, selectedMarket.symbol, purchaseQuantity);
          dispatch(setCredits(result.credits));
          dispatch(updateShip(result.ship));
          setSelectedMarket(undefined);

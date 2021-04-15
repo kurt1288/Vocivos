@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import Api from '../Api';
 import { setToken, setUser } from '../store';
+import { WorkerContext } from '../WorkerContext';
 
 const GetApiKey = () => {
+   const [apiWorker] = useContext(WorkerContext);
    const [userName, setUserName] = useState('');
    const [userToken, setUserToken] = useState('');
    const [formValid, setFormValid] = useState(false);
@@ -17,10 +18,10 @@ const GetApiKey = () => {
       e.preventDefault();
       if (formValid) {
          try {
-            const token = await Api.getToken(userName);
+            const token = await apiWorker.getToken();
             localStorage.setItem('apiKey', JSON.stringify({ username: token.user.username, token: token.token }));
             dispatch(setToken({ username: token.user.username, token: token.token }));
-            const user = await Api.getUser(token.user.username, token.token);
+            const user = await apiWorker.getUser();
             dispatch(setUser(user));
          } catch (err:unknown) {
             setDisabled(false);
@@ -35,7 +36,7 @@ const GetApiKey = () => {
       if (formValid) {
          try {
             // Validate the user/token
-            const user = await Api.getUser(userName, userToken);
+            const user = await apiWorker.getUser();
 
             localStorage.setItem('apiKey', JSON.stringify({ username: userName, token: userToken }));
             dispatch(setToken({ username: userName, token: userToken }));

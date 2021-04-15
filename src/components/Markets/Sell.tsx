@@ -1,12 +1,12 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Api from '../../Api';
 import {
    Cargo, LocationType, Marketplace, OwnedShip,
 } from '../../Api/types';
 import { RootState, setCredits, updateShip } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 import { ModalPlaceholder } from '../SkeletonLoaders';
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
 }
 
 const Sell = ({ handleClose, show, ship }:Props) => {
+   const [apiWorker] = useContext(WorkerContext);
    const { token, username } = useSelector((state:RootState) => state.account);
    const { systems } = useSelector((state:RootState) => state);
    const dispatch = useDispatch();
@@ -29,7 +30,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
    useEffect(() => {
       const getMarket = async () => {
          if (!ship.location) { return; }
-         const data = (await Api.getMarket(token, ship.location)).location.marketplace;
+         const data = (await apiWorker.getMarket(ship.location)).location.marketplace;
          setMarketData(data);
       };
       getMarket();
@@ -49,7 +50,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
       try {
          if (!selectedMarket) { return; }
          setWorking(true);
-         const result = await Api.sellOrder(token, username, ship.id, selectedMarket.good, sellQuantity);
+         const result = await apiWorker.sellOrder(ship.id, selectedMarket.good, sellQuantity);
          dispatch(setCredits(result.credits));
          dispatch(updateShip(result.ship));
          setSelectedMarket(undefined);
@@ -64,8 +65,8 @@ const Sell = ({ handleClose, show, ship }:Props) => {
       try {
          if (!selectedMarket) { return; }
          setWorking(true);
-         const result = await Api.deleteOrder(token, username, ship.id, selectedMarket.good, sellQuantity);
-         const shipInfo = await Api.shipInfo(token, username, ship.id);
+         const result = await apiWorker.deleteOrder(ship.id, selectedMarket.good, sellQuantity);
+         const shipInfo = await apiWorker.shipInfo(ship.id);
          dispatch(updateShip(shipInfo.ship));
          setSelectedMarket(undefined);
          handleClose();
@@ -79,8 +80,8 @@ const Sell = ({ handleClose, show, ship }:Props) => {
       try {
          if (!selectedMarket || !ship.location) { return; }
          setWorking(true);
-         const result = await Api.depositGoods(token, ship.location, ship.id, selectedMarket.good, sellQuantity);
-         const shipInfo = await Api.shipInfo(token, username, ship.id);
+         const result = await apiWorker.depositGoods(ship.location, ship.id, selectedMarket.good, sellQuantity);
+         const shipInfo = await apiWorker.shipInfo(ship.id);
          dispatch(updateShip(shipInfo.ship));
          setSelectedMarket(undefined);
          handleClose();

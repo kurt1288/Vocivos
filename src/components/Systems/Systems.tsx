@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import Api from '../../Api';
 import { Location, LocationType } from '../../Api/types';
 import { RootState, setSystems } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 
 interface SortedSystem {
    symbol: string,
@@ -17,6 +17,7 @@ interface SortedLocation {
 }
 
 const SystemMap = () => {
+   const [apiWorker] = useContext(WorkerContext);
    const token = useSelector((state:RootState) => state.account.token);
    const systems = useSelector((state:RootState) => state.systems);
    const dispatch = useDispatch();
@@ -25,7 +26,7 @@ const SystemMap = () => {
    useEffect(() => {
       const GetSystems = async () => {
          if (systems.length === 0) {
-            const temp = (await Api.systemsInfo(token)).systems;
+            const temp = (await apiWorker.systemsInfo()).systems;
             dispatch((setSystems(temp)));
          }
       };

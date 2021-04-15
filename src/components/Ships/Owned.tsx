@@ -1,11 +1,11 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Api from '../../Api';
 import { LocationType, OwnedShip } from '../../Api/types';
 import {
    RootState, setAllAutomationState, setCredits, updateShip,
 } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 import ShipsGroup from './ShipsGroup';
 
 export interface shipGroups {
@@ -13,6 +13,7 @@ export interface shipGroups {
 }
 
 const Owned = () => {
+   const [apiWorker] = useContext(WorkerContext);
    const { ships } = useSelector((state:RootState) => state.user);
    const {
       flightPlans, automateAll, systems, account,
@@ -61,7 +62,7 @@ const Owned = () => {
    const sellAllCargo = () => {
       ships.forEach((ship) => {
          ship.cargo.forEach(async (cargo) => {
-            const result = await Api.sellOrder(account.token, account.username, ship.id, cargo.good, cargo.quantity);
+            const result = await apiWorker.sellOrder(ship.id, cargo.good, cargo.quantity);
             dispatch(setCredits(result.credits));
             dispatch(updateShip(result.ship));
          });

@@ -1,11 +1,11 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import Api from '../../Api';
 import { Loan, LoanType } from '../../Api/types';
 import { RootState, setUser } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 
 interface Props {
    handleClose: () => void,
@@ -14,6 +14,7 @@ interface Props {
 }
 
 const GetLoan = ({ handleClose, show, loan }:Props) => {
+   const [apiWorker] = useContext(WorkerContext);
    const history = useHistory();
    const dispatch = useDispatch();
    const user = useSelector((state:RootState) => state.account);
@@ -29,7 +30,7 @@ const GetLoan = ({ handleClose, show, loan }:Props) => {
    const requestLoan = async () => {
       setLoading(true);
       try {
-         const result = await Api.newLoan(user.username, user.token, LoanType.Startup);
+         const result = await apiWorker.newLoan(LoanType.Startup);
          dispatch(setUser(result));
          handleClose;
          history.push('/loans');

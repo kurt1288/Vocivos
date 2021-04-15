@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import Api from '../../Api';
 import { CargoType, Ship } from '../../Api/types';
 import { RootState } from '../../store';
+import { WorkerContext } from '../../WorkerContext';
 
 const Worth = () => {
+   const [apiWorker] = useContext(WorkerContext);
    const { token, username } = useSelector((state:RootState) => state.account);
    const { marketData } = useSelector((state:RootState) => state);
    const { credits, ships, loans } = useSelector((state:RootState) => state.user);
@@ -15,7 +16,7 @@ const Worth = () => {
 
    useEffect(() => {
       const getShipPrices = async () => {
-         const getShips = await Api.availableShips(token, username);
+         const getShips = await apiWorker.availableShips();
          setShipPrices(getShips.ships);
       };
 
