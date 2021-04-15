@@ -12,7 +12,6 @@ interface LoanRepaymentResponse {
 
 const Owned = () => {
    const [apiWorker] = useContext(WorkerContext);
-   const { username, token } = useSelector((state:RootState) => state.account);
    const { loans, credits } = useSelector((state:RootState) => state.user);
    const dispatch = useDispatch();
    const [response, setResponse] = useState<LoanRepaymentResponse>();

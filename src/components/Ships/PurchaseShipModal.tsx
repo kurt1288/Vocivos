@@ -16,7 +16,6 @@ interface Props {
 const PurchaseShipModal = ({ handleClose, show, ship }:Props) => {
    const [apiWorker] = useContext(WorkerContext);
    const { credits } = useSelector((state:RootState) => state.user);
-   const { username, token } = useSelector((state:RootState) => state.account);
    const dispatch = useDispatch();
    const history = useHistory();
    const [loading, setLoading] = useState(false);

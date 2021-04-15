@@ -1,14 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Loan } from '../../Api/types';
-import { RootState } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
 import { CardLoader } from '../SkeletonLoaders';
 import GetLoan from './GetLoadModal';
 
 const Available = () => {
    const [apiWorker] = useContext(WorkerContext);
-   const user = useSelector((state:RootState) => state.account);
    const [loans, setLoans] = useState<Loan[]>();
    const [showModal, setModalShow] = useState(false);
    const [selectedLoan, setSelectedLoan] = useState<Loan>();

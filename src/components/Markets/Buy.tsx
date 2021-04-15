@@ -15,7 +15,6 @@ interface Props {
 
 const Buy = ({ handleClose, show, ship }:Props) => {
    const [apiWorker] = useContext(WorkerContext);
-   const { token, username } = useSelector((state:RootState) => state.account);
    const { credits } = useSelector((state:RootState) => state.user);
    const dispatch = useDispatch();
    const [marketData, setMarketData] = useState<Marketplace[]>();

@@ -1,12 +1,12 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useContext, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import {
    OwnedShip, Location, LocationType, CargoType, FlightPlan,
 } from '../../Api/types';
 import {
-   addFlightPlan, RootState, setCredits, updateShip, updateShips,
+   addFlightPlan, setCredits, updateShip, updateShips,
 } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
 import { ModalPlaceholder } from '../SkeletonLoaders';
@@ -22,7 +22,6 @@ const Travel = ({
    handleClose, shipError, show, ship,
 }: Props) => {
    const [apiWorker] = useContext(WorkerContext);
-   const { token, username } = useSelector((state:RootState) => state.account);
    const dispatch = useDispatch();
    const [locations, setLocations] = useState<Location[]>();
    const [error, setError] = useState<string>('');

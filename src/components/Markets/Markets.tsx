@@ -8,7 +8,6 @@ import { MarketCardLoader } from '../SkeletonLoaders';
 
 const Markets = () => {
    const [apiWorker] = useContext(WorkerContext);
-   const { token } = useSelector((state:RootState) => state.account);
    const { ships } = useSelector((state:RootState) => state.user);
    const marketData = useSelector((state:RootState) => state.marketData);
    const systems = useSelector((state:RootState) => state.systems);

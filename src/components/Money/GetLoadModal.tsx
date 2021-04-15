@@ -1,10 +1,10 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useContext, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { Loan, LoanType } from '../../Api/types';
-import { RootState, setUser } from '../../store';
+import { setUser } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
 
 interface Props {
@@ -17,7 +17,6 @@ const GetLoan = ({ handleClose, show, loan }:Props) => {
    const [apiWorker] = useContext(WorkerContext);
    const history = useHistory();
    const dispatch = useDispatch();
-   const user = useSelector((state:RootState) => state.account);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string>('');
    const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900' : 'hidden';

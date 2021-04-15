@@ -6,7 +6,6 @@ import { WorkerContext } from '../../WorkerContext';
 
 const Worth = () => {
    const [apiWorker] = useContext(WorkerContext);
-   const { token, username } = useSelector((state:RootState) => state.account);
    const { marketData } = useSelector((state:RootState) => state);
    const { credits, ships, loans } = useSelector((state:RootState) => state.user);
    const [uniqueShipCount, setUniqueShipCount] = useState<{ shipType: string; uniques: number; }[]>([]);

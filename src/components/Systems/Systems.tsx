@@ -18,7 +18,6 @@ interface SortedLocation {
 
 const SystemMap = () => {
    const [apiWorker] = useContext(WorkerContext);
-   const token = useSelector((state:RootState) => state.account.token);
    const systems = useSelector((state:RootState) => state.systems);
    const dispatch = useDispatch();
    const [sortedLocations, setSortedLocations] = useState<SortedSystem[]>([]);

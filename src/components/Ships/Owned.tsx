@@ -15,9 +15,7 @@ export interface shipGroups {
 const Owned = () => {
    const [apiWorker] = useContext(WorkerContext);
    const { ships } = useSelector((state:RootState) => state.user);
-   const {
-      flightPlans, automateAll, systems, account,
-   } = useSelector((state:RootState) => state);
+   const { flightPlans, automateAll, systems } = useSelector((state:RootState) => state);
    const [shipGroups, setShipGroups] = useState<shipGroups>();
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('type');
