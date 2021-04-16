@@ -53,7 +53,12 @@ const Worth = () => {
             good.quantity += ship.cargo.find((x) => x.good === cargo)?.quantity as number;
          });
          const markets = marketData.filter((x) => x.planet.marketplace.find((y) => y.symbol === cargo));
-         good.bestValue = Math.max(...markets?.map((market) => market.planet.marketplace.find((marketCargo) => marketCargo.symbol === cargo)?.sellPricePerUnit as number));
+         const locationsWithGood = markets?.map((market) => market.planet.marketplace.find((marketCargo) => marketCargo.symbol === cargo)?.sellPricePerUnit as number);
+         if (locationsWithGood.length > 0) {
+            good.bestValue = Math.max(...locationsWithGood);
+         } else {
+            good.bestValue = 0;
+         }
          cargosArray.push(good);
       });
       setCargos(cargosArray);
