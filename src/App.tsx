@@ -7,6 +7,7 @@ import { Route, Switch } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Comlink from 'comlink';
 import AutomationWorker from 'worker-loader?filename=automation.worker.js!./automation';
+import Timer from 'easytimer.js';
 import { AutomationType, Automation } from './automation';
 import {
    addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setCredits,
@@ -21,9 +22,7 @@ import Ships from './components/Ships/Ships';
 import Systems from './components/Systems/Systems';
 import Location from './components/Systems/Location';
 import Loans from './components/Money/Money';
-import {
-   FlightPlan, Market, Purchase,
-} from './Api/types';
+import { CargoType, FlightPlan, Purchase } from './Api/types';
 import Markets from './components/Markets/Markets';
 import { AutoAction } from './components/Automation/Models';
 import { WorkerContext } from './WorkerContext';
@@ -36,6 +35,13 @@ export interface WorkerDataUpdate {
 export interface WorkerError {
    shipId: string,
    error: string | null,
+}
+
+enum AutomationWorkerApiAction {
+   Buy,
+   Sell,
+   CreateFlightPlan,
+   MarketData,
 }
 
 function App() {
@@ -96,31 +102,50 @@ function App() {
       dispatch(setAllAutomationState(false));
    };
 
-   const webworkerUpdateState = async (data:WorkerDataUpdate) => {
-      if (data.type === AutoAction.AddFlightPlan) {
-         dispatch(addFlightPlan(data.data as FlightPlan));
-      } else if (data.type === AutoAction.RemoveFlightPlan) {
-         dispatch(removeFlightPlan(data.data as FlightPlan));
-      } else {
-         dispatch(setCredits((data.data as Purchase).credits));
-         dispatch(updateShip((data.data as Purchase).ship));
+   const automationWorkerMakeApiCall = async (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => {
+      switch (action) {
+         case AutomationWorkerApiAction.Buy: {
+            const order = await apiWorker.purchaseOrder(data.shipId as string, data.good as CargoType, data.quantity as number);
+            dispatch(setCredits(order.credits));
+            dispatch(updateShip(order.ship));
+            return order;
+         }
+         case AutomationWorkerApiAction.Sell: {
+            const order = await apiWorker.sellOrder(data.shipId as string, data.good as CargoType, data.quantity as number);
+            dispatch(setCredits(order.credits));
+            dispatch(updateShip(order.ship));
+            return order;
+         }
+         case AutomationWorkerApiAction.CreateFlightPlan: {
+            const flightPlan = await apiWorker.createFlightPlan(data.shipId as string, data.to as string);
+            dispatch(addFlightPlan(flightPlan.flightPlan));
+            const timer = new Timer();
+            timer.start({ precision: 'seconds', target: { seconds: flightPlan.flightPlan.timeRemainingInSeconds } });
+            timer.addEventListener('targetAchieved', () => {
+               dispatch(removeFlightPlan(flightPlan.flightPlan));
+            });
+            return flightPlan;
+         }
+         case AutomationWorkerApiAction.MarketData: {
+            const market = await apiWorker.getMarket(data.location as string);
+            dispatch(updateMarketData({ updatedAt: Date.now(), planet: market.location }));
+            return market;
+         }
+         default:
+            return null;
       }
-   };
-
-   const webworkerUpdateMarketData = (data: Market) => {
-      dispatch(updateMarketData({ updatedAt: Date.now(), planet: data.location }));
    };
 
    useEffect(() => {
       if (automationWorker) {
          automationWorker[0].updateState(store);
       }
-   }, [user.ships, marketData, flightPlans, systems]);
+   }, [user.credits, user.ships, marketData, flightPlans, systems]);
 
    useEffect(() => {
       const createWorker = async () => {
          const AutoWorker = Comlink.wrap<AutomationType>(new AutomationWorker());
-         const instance = await new AutoWorker(Comlink.proxy(webworkerUpdateState), Comlink.proxy(webworkerUpdateMarketData), Comlink.proxy(webworkerError));
+         const instance = await new AutoWorker(Comlink.proxy(automationWorkerMakeApiCall), Comlink.proxy(webworkerError));
          // set state doesn't work here with just a comlink object. needs to be in an array.
          setAutomationWorker([instance]);
       };

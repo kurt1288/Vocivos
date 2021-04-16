@@ -3,17 +3,21 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable lines-between-class-members */
 import * as Comlink from 'comlink';
-import Timer from 'easytimer.js';
-import Api from './Api';
 import {
-   CargoType, Market, Marketplace, OwnedShip, Planet, Location, LocationType,
+   CargoType, Marketplace, OwnedShip, Planet, Location, LocationType, Purchase, FlightPlanRes, Market,
 } from './Api/types';
 import { WorkerDataUpdate } from './App';
-import { AutoAction } from './components/Automation/Models';
 import store, { RootState } from './store';
 
 export interface AutomationType {
-   new(stateUpdateCallback: (data: WorkerDataUpdate) => void, updateMarketDataCallback: (data: Market) => void, errorCallback: (error: string) => void): Automation
+   new(automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void): Automation
+}
+
+enum AutomationWorkerApiAction {
+   Buy,
+   Sell,
+   CreateFlightPlan,
+   MarketData,
 }
 
 enum DispatchAction {
@@ -42,8 +46,7 @@ interface Dispatched {
 }
 
 export class Automation {
-   stateUpdateCallback: (data: WorkerDataUpdate) => void;
-   updateMarketDataCallback: (data: Market) => void;
+   automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>;
    errorCallback: (error: string) => void;
    private state = store.getState();
    private markets = this.state.marketData;
@@ -51,9 +54,8 @@ export class Automation {
    private dispatched: Dispatched[] = [];
    private marketUpdateTime = 600000;
 
-   constructor(stateUpdateCallback: (data: WorkerDataUpdate) => void, updateMarketDataCallback: (data: Market) => void, errorCallback: (error: string) => void) {
-      this.stateUpdateCallback = stateUpdateCallback;
-      this.updateMarketDataCallback = updateMarketDataCallback;
+   constructor(automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void) {
+      this.automationWorkerMakeApiCall = automationWorkerMakeApiCall;
       this.errorCallback = errorCallback;
    }
 
@@ -222,13 +224,12 @@ export class Automation {
 
       // if there's no cached data, or if the cached data is older than 10 minutes, update
       if (!this.state.marketData || !planet || (Date.now() - planet.updatedAt > this.marketUpdateTime)) {
-         const data = await Api.getMarket(this.state.account.token, location);
+         const data = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.MarketData, { location }) as Market;
          if (this.markets.some((item) => (item.planet.symbol === location))) {
             this.markets = this.markets.map((item) => ((item.planet.symbol === location) ? { updatedAt: Date.now(), planet: data.location } : item));
          } else {
             this.markets.push({ updatedAt: Date.now(), planet: data.location });
          }
-         this.updateMarketDataCallback(data);
       }
    }
 
@@ -253,22 +254,13 @@ export class Automation {
    }
 
    private async createFlightPlan(ship: OwnedShip, route: TradeRoute | ScoutRoute, action: DispatchAction.Trade | DispatchAction.Scout) {
-      const flightplan = await Api.createFlightPlan(this.state.account.token, this.state.account.username, ship.id, route.to);
-      this.stateUpdateCallback({ type: AutoAction.AddFlightPlan, data: flightplan.flightPlan });
+      await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.CreateFlightPlan, { shipId: ship.id, to: route.to });
       this.dispatched.push({ ship: ship.id, action, route });
-
-      const timer = new Timer();
-      timer.start({ precision: 'seconds', target: { seconds: flightplan.flightPlan.timeRemainingInSeconds } });
-      timer.addEventListener('targetAchieved', () => {
-         this.stateUpdateCallback({ type: AutoAction.RemoveFlightPlan, data: flightplan.flightPlan });
-      });
    }
 
    private async buyMarketGood(shipId: string, good: CargoType, quantity: number) {
       if (!quantity || quantity <= 0) { return; }
-      const goodOrder = await Api.purchaseOrder(this.state.account.token, this.state.account.username, shipId, good, quantity);
-      this.stateUpdateCallback({ type: AutoAction.Buy, data: goodOrder });
-      this.state.user.credits = goodOrder.credits;
+      await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Buy, { shipId, good, quantity });
    }
 
    private getClosestBodies(location: string) {
@@ -405,9 +397,7 @@ export class Automation {
             for (const ship of this.dispatched) {
                const stateShip = this.state.user.ships.find((x) => x.id === ship.ship);
                if (stateShip?.location === ship.route.to && ship.action === DispatchAction.Trade) {
-                  const order = await Api.sellOrder(this.state.account.token, this.state.account.username, ship.ship, (ship.route as TradeRoute).good, stateShip.cargo.find((x) => x.good === (ship.route as TradeRoute).good)?.quantity as number);
-                  this.stateUpdateCallback({ type: AutoAction.Buy, data: order });
-                  this.state.user.credits = order.credits;
+                  await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Sell, { shipId: ship.ship, good: (ship.route as TradeRoute).good, quantity: stateShip.cargo.find((x) => x.good === (ship.route as TradeRoute).good)?.quantity as number });
                   this.dispatched.splice(this.dispatched.findIndex((x) => x.ship === ship.ship), 1);
                } else if (stateShip?.location === ship.route.to && ship.action === DispatchAction.Scout) {
                   this.dispatched.splice(this.dispatched.findIndex((x) => x.ship === ship.ship), 1);
