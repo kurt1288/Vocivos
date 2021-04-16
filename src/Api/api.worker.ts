@@ -7,7 +7,7 @@ import {
 } from './types';
 
 export interface ApiType {
-   new(username:string, token:string): Api
+   new(username?:string, token?:string): Api
 }
 
 // IMPORTANT: camelCase used because: https://github.com/pmmmwh/react-refresh-webpack-plugin/blob/main/docs/TROUBLESHOOTING.md#usage-with-indirection-like-workers-and-js-templates
@@ -20,11 +20,11 @@ enum fetchMethod {
 
 export class Api {
    private BASE_URL = 'https://api.spacetraders.io';
-   private username:string
-   private token:string;
+   private username?: string = undefined;
+   private token?: string = undefined;
    private limiter:Bottleneck;
 
-   constructor(username:string, token:string) {
+   constructor(username?:string, token?:string) {
       this.username = username;
       this.token = token;
       this.limiter = new Bottleneck({
@@ -108,8 +108,8 @@ export class Api {
       return result;
    }
 
-   async getToken() {
-      const response = await fetch(`${this.BASE_URL}/users/${this.username}/token`, { method: fetchMethod.Post });
+   async getToken(username: string) {
+      const response = await fetch(`${this.BASE_URL}/users/${username}/token`, { method: fetchMethod.Post });
 
       if (response.status >= 400) {
          throw new Error('Username already exists');
@@ -118,6 +118,11 @@ export class Api {
       const result = await response.json() as Account;
 
       return result;
+   }
+
+   async setCredentials(username: string, token: string) {
+      this.username = username;
+      this.token = token;
    }
 
    async getUser() {

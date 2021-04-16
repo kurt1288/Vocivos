@@ -31,6 +31,10 @@ export const WorkerProvider: React.FunctionComponent = function WorkerProvider({
          (new ApiWorker(apiKey.username, apiKey.token)).then((api) => {
             setWorker([api]);
          });
+      } else {
+         (new ApiWorker().then((api) => {
+            setWorker([api]);
+         }));
       }
    }, []);
 

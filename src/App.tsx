@@ -92,7 +92,10 @@ function App() {
             }
          }
       };
-      FetchAccount();
+
+      if (account.username && account.token) {
+         FetchAccount();
+      }
    }, []);
 
    const webworkerError = (data:string) => {
@@ -169,19 +172,16 @@ function App() {
                   <NavBar />
                   <div className="bg-gray-800 py-4 flex-grow text-gray-200">
                      <div className="container min-h-full mx-auto">
-                        { account.token.length !== 0
-                           && (
-                              <Switch>
-                                 <Route exact path="/" component={Profile} />
-                                 <Route path="/ships" component={Ships} />
-                                 <Route path="/money" component={Loans} />
-                                 <Route path="/markets" component={Markets} />
-                                 <Route path="/systems/:location" component={Location} />
-                                 <Suspense fallback={<div />}>
-                                    <Route exact path="/systems" component={Systems} />
-                                 </Suspense>
-                              </Switch>
-                           )}
+                        <Switch>
+                           <Route exact path="/" component={Profile} />
+                           <Route path="/ships" component={Ships} />
+                           <Route path="/money" component={Loans} />
+                           <Route path="/markets" component={Markets} />
+                           <Route path="/systems/:location" component={Location} />
+                           <Suspense fallback={<div />}>
+                              <Route exact path="/systems" component={Systems} />
+                           </Suspense>
+                        </Switch>
                      </div>
                   </div>
                </React.Fragment>

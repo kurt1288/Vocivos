@@ -18,9 +18,10 @@ const GetApiKey = () => {
       e.preventDefault();
       if (formValid) {
          try {
-            const token = await apiWorker.getToken();
+            const token = await apiWorker.getToken(userName);
             localStorage.setItem('apiKey', JSON.stringify({ username: token.user.username, token: token.token }));
             dispatch(setToken({ username: token.user.username, token: token.token }));
+            await apiWorker.setCredentials(userName, token.token);
             const user = await apiWorker.getUser();
             dispatch(setUser(user));
          } catch (err:unknown) {
@@ -35,6 +36,8 @@ const GetApiKey = () => {
       e.preventDefault();
       if (formValid) {
          try {
+            await apiWorker.setCredentials(userName, userToken);
+
             // Validate the user/token
             const user = await apiWorker.getUser();
 
