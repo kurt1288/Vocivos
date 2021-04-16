@@ -3,6 +3,7 @@
 import React, { useContext, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { PurchaseLocation, Ship } from '../../Api/types';
 import { RootState, setUser } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
@@ -25,11 +26,23 @@ const PurchaseShipModal = ({ handleClose, show, ship }:Props) => {
    const purchaseShip = async (location:string) => {
       if (!ship) { return; }
 
-      setLoading(true);
-      const result = await apiWorker.buyShip(location, ship?.type);
-      dispatch(setUser(result));
-      handleClose;
-      history.push('/ships');
+      try {
+         setLoading(true);
+         const result = await apiWorker.buyShip(location, ship?.type);
+         dispatch(setUser(result));
+         handleClose;
+         history.push('/ships');
+      } catch (err: unknown) {
+         toast((err as Error).message, {
+            position: 'bottom-right',
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: 0,
+         });
+      }
    };
 
    const renderButtons = (location: PurchaseLocation) => {

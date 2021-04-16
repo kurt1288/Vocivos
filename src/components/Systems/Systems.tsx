@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { Location, LocationType } from '../../Api/types';
 import { RootState, setSystems } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
@@ -25,8 +26,20 @@ const SystemMap = () => {
    useEffect(() => {
       const GetSystems = async () => {
          if (systems.length === 0) {
-            const temp = (await apiWorker.systemsInfo()).systems;
-            dispatch((setSystems(temp)));
+            try {
+               const temp = (await apiWorker.systemsInfo()).systems;
+               dispatch((setSystems(temp)));
+            } catch (err: unknown) {
+               toast((err as Error).message, {
+                  position: 'bottom-right',
+                  autoClose: false,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                  progress: 0,
+               });
+            }
          }
       };
       GetSystems();

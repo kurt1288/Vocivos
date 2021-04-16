@@ -1,6 +1,7 @@
 import { formatDistanceToNow } from 'date-fns';
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import { Location } from '../../Api/types';
 import { RootState, setSystems, updateMarketData } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
@@ -17,17 +18,41 @@ const Markets = () => {
    const [activeSystem, setActiveSystem] = useState<string>();
 
    const changeSystem = async (system:string) => {
-      setActiveSystem(system);
-      setLocations(undefined);
-      const data = (await apiWorker.getLocations(system)).locations;
-      setLocations(data);
+      try {
+         setActiveSystem(system);
+         setLocations(undefined);
+         const data = (await apiWorker.getLocations(system)).locations;
+         setLocations(data);
+      } catch (err: unknown) {
+         toast((err as Error).message, {
+            position: 'bottom-right',
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: 0,
+         });
+      }
    };
 
    useEffect(() => {
       const GetSystems = async () => {
          if (systems.length === 0) {
-            const temp = (await apiWorker.systemsInfo()).systems;
-            dispatch((setSystems(temp)));
+            try {
+               const temp = (await apiWorker.systemsInfo()).systems;
+               dispatch((setSystems(temp)));
+            } catch (err: unknown) {
+               toast((err as Error).message, {
+                  position: 'bottom-right',
+                  autoClose: false,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                  progress: 0,
+               });
+            }
          }
       };
       GetSystems();
@@ -47,8 +72,20 @@ const Markets = () => {
       const getMarketData = async () => {
          locations?.forEach(async (location) => {
             if (ships.some((x) => x.location === location.symbol)) {
-               const data = await apiWorker.getMarket(location.symbol);
-               dispatch(updateMarketData({ updatedAt: Date.now(), planet: data.location }));
+               try {
+                  const data = await apiWorker.getMarket(location.symbol);
+                  dispatch(updateMarketData({ updatedAt: Date.now(), planet: data.location }));
+               } catch (err: unknown) {
+                  toast((err as Error).message, {
+                     position: 'bottom-right',
+                     autoClose: false,
+                     hideProgressBar: false,
+                     closeOnClick: true,
+                     pauseOnHover: true,
+                     draggable: true,
+                     progress: 0,
+                  });
+               }
             }
          });
       };

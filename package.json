@@ -23,6 +23,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
     "react-three-fiber": "^5.3.19",
+    "react-toastify": "^7.0.3",
     "redux": "^4.0.5",
     "three": "^0.126.1"
   },

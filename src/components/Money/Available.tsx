@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { Loan } from '../../Api/types';
 import { WorkerContext } from '../../WorkerContext';
 import { CardLoader } from '../SkeletonLoaders';
@@ -12,7 +13,19 @@ const Available = () => {
 
    useEffect(() => {
       const GetLoans = async () => {
-         setLoans((await apiWorker.getLoansAvailable()).loans);
+         try {
+            setLoans((await apiWorker.getLoansAvailable()).loans);
+         } catch (err: unknown) {
+            toast((err as Error).message, {
+               position: 'bottom-right',
+               autoClose: false,
+               hideProgressBar: false,
+               closeOnClick: true,
+               pauseOnHover: true,
+               draggable: true,
+               progress: 0,
+            });
+         }
       };
       GetLoans();
    }, []);

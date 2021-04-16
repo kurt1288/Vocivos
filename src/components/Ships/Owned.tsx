@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import { LocationType, OwnedShip } from '../../Api/types';
 import {
    RootState, setAllAutomationState, setCredits, updateShip,
@@ -60,9 +61,21 @@ const Owned = () => {
    const sellAllCargo = () => {
       ships.forEach((ship) => {
          ship.cargo.forEach(async (cargo) => {
-            const result = await apiWorker.sellOrder(ship.id, cargo.good, cargo.quantity);
-            dispatch(setCredits(result.credits));
-            dispatch(updateShip(result.ship));
+            try {
+               const result = await apiWorker.sellOrder(ship.id, cargo.good, cargo.quantity);
+               dispatch(setCredits(result.credits));
+               dispatch(updateShip(result.ship));
+            } catch (err: unknown) {
+               toast((err as Error).message, {
+                  position: 'bottom-right',
+                  autoClose: false,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                  progress: 0,
+               });
+            }
          });
       });
    };

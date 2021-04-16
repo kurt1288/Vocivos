@@ -2,6 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import {
    Cargo, LocationType, Marketplace, OwnedShip,
 } from '../../Api/types';
@@ -29,8 +30,20 @@ const Sell = ({ handleClose, show, ship }:Props) => {
    useEffect(() => {
       const getMarket = async () => {
          if (!ship.location) { return; }
-         const data = (await apiWorker.getMarket(ship.location)).location.marketplace;
-         setMarketData(data);
+         try {
+            const data = (await apiWorker.getMarket(ship.location)).location.marketplace;
+            setMarketData(data);
+         } catch (err: unknown) {
+            toast((err as Error).message, {
+               position: 'bottom-right',
+               autoClose: false,
+               hideProgressBar: false,
+               closeOnClick: true,
+               pauseOnHover: true,
+               draggable: true,
+               progress: 0,
+            });
+         }
       };
       getMarket();
    }, []);

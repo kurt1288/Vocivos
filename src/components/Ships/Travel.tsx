@@ -2,6 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 import {
    OwnedShip, Location, LocationType, CargoType, FlightPlan,
 } from '../../Api/types';
@@ -31,8 +32,20 @@ const Travel = ({
    useEffect(() => {
       const getLocations = async () => {
          if (!ship.location) { return; }
-         const loc = (await apiWorker.getLocations(ship.location.split('-')[0])).locations;
-         setLocations(loc);
+         try {
+            const loc = (await apiWorker.getLocations(ship.location.split('-')[0])).locations;
+            setLocations(loc);
+         } catch (err: unknown) {
+            toast((err as Error).message, {
+               position: 'bottom-right',
+               autoClose: false,
+               hideProgressBar: false,
+               closeOnClick: true,
+               pauseOnHover: true,
+               draggable: true,
+               progress: 0,
+            });
+         }
       };
       getLocations();
    }, []);
@@ -67,9 +80,13 @@ const Travel = ({
             setError(message);
             // If the ship failed a warp jump, it's destroyed so we should update the ships
             if (type === LocationType.Wormhole) {
-               const { ships } = await apiWorker.ownedShips();
-               dispatch(updateShips(ships));
-               shipError(message);
+               try {
+                  const { ships } = await apiWorker.ownedShips();
+                  dispatch(updateShips(ships));
+                  shipError(message);
+               } catch (e: unknown) {
+                  setError((e as Error).message);
+               }
             }
          }
       }

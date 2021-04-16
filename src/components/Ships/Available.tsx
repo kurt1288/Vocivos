@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import { Ship } from '../../Api/types';
 import { RootState } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
@@ -17,9 +18,21 @@ const Available = () => {
    const [selectedShip, setSelectedShip] = useState<Ship>();
 
    const GetShips = async () => {
-      const getShips = await apiWorker.availableShips();
-      getShips.ships.sort((a, b) => ((a.type > b.type) ? 1 : (b.type > a.type) ? -1 : 0));
-      setShips(getShips.ships);
+      try {
+         const getShips = await apiWorker.availableShips();
+         getShips.ships.sort((a, b) => ((a.type > b.type) ? 1 : (b.type > a.type) ? -1 : 0));
+         setShips(getShips.ships);
+      } catch (err: unknown) {
+         toast((err as Error).message, {
+            position: 'bottom-right',
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: 0,
+         });
+      }
    };
 
    const lowestPrice = (ship: Ship) => (

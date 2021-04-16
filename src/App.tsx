@@ -54,8 +54,6 @@ function App() {
    const [apiWorker] = useContext(WorkerContext);
 
    useEffect(() => {
-      apiWorker.getStatus().then((status) => console.log(status));
-
       const FetchAccount = async () => {
          try {
             const result = await apiWorker.getUser();

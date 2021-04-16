@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import { CargoType, Ship } from '../../Api/types';
 import { RootState } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
@@ -15,8 +16,20 @@ const Worth = () => {
 
    useEffect(() => {
       const getShipPrices = async () => {
-         const getShips = await apiWorker.availableShips();
-         setShipPrices(getShips.ships);
+         try {
+            const getShips = await apiWorker.availableShips();
+            setShipPrices(getShips.ships);
+         } catch (err: unknown) {
+            toast((err as Error).message, {
+               position: 'bottom-right',
+               autoClose: false,
+               hideProgressBar: false,
+               closeOnClick: true,
+               pauseOnHover: true,
+               draggable: true,
+               progress: 0,
+            });
+         }
       };
 
       getShipPrices();
