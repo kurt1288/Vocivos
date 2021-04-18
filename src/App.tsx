@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as Comlink from 'comlink';
 import AutomationWorker from 'worker-loader?filename=automation.worker.js!./automation';
 import Timer from 'easytimer.js';
+import { ToastContainer, toast } from 'react-toastify';
 import { AutomationType, Automation } from './automation';
 import {
    addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setCredits,
@@ -100,6 +101,15 @@ function App() {
 
    const webworkerError = (data:string) => {
       console.log(data);
+      toast.error(data, {
+         position: 'bottom-right',
+         autoClose: false,
+         hideProgressBar: false,
+         closeOnClick: true,
+         pauseOnHover: true,
+         draggable: true,
+         progress: 0,
+      });
       dispatch(setAllAutomationState(false));
    };
 
@@ -170,6 +180,7 @@ function App() {
             || account.username === undefined || account.username === null || account.username.length === 0) ? <SignIn /> : (
                <React.Fragment>
                   <NavBar />
+                  <ToastContainer />
                   <div className="bg-gray-800 py-4 flex-grow text-gray-200">
                      <div className="container min-h-full mx-auto">
                         <Switch>

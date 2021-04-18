@@ -34,7 +34,7 @@ const Sell = ({ handleClose, show, ship }:Props) => {
             const data = (await apiWorker.getMarket(ship.location)).location.marketplace;
             setMarketData(data);
          } catch (err: unknown) {
-            toast((err as Error).message, {
+            toast.error((err as Error).message, {
                position: 'bottom-right',
                autoClose: false,
                hideProgressBar: false,

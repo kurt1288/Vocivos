@@ -24,7 +24,7 @@ const Markets = () => {
          const data = (await apiWorker.getLocations(system)).locations;
          setLocations(data);
       } catch (err: unknown) {
-         toast((err as Error).message, {
+         toast.error((err as Error).message, {
             position: 'bottom-right',
             autoClose: false,
             hideProgressBar: false,
@@ -43,7 +43,7 @@ const Markets = () => {
                const temp = (await apiWorker.systemsInfo()).systems;
                dispatch((setSystems(temp)));
             } catch (err: unknown) {
-               toast((err as Error).message, {
+               toast.error((err as Error).message, {
                   position: 'bottom-right',
                   autoClose: false,
                   hideProgressBar: false,
@@ -76,7 +76,7 @@ const Markets = () => {
                   const data = await apiWorker.getMarket(location.symbol);
                   dispatch(updateMarketData({ updatedAt: Date.now(), planet: data.location }));
                } catch (err: unknown) {
-                  toast((err as Error).message, {
+                  toast.error((err as Error).message, {
                      position: 'bottom-right',
                      autoClose: false,
                      hideProgressBar: false,

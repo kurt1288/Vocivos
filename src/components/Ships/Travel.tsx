@@ -36,7 +36,7 @@ const Travel = ({
             const loc = (await apiWorker.getLocations(ship.location.split('-')[0])).locations;
             setLocations(loc);
          } catch (err: unknown) {
-            toast((err as Error).message, {
+            toast.error((err as Error).message, {
                position: 'bottom-right',
                autoClose: false,
                hideProgressBar: false,

@@ -33,7 +33,7 @@ const PurchaseShipModal = ({ handleClose, show, ship }:Props) => {
          handleClose;
          history.push('/ships');
       } catch (err: unknown) {
-         toast((err as Error).message, {
+         toast.error((err as Error).message, {
             position: 'bottom-right',
             autoClose: false,
             hideProgressBar: false,
