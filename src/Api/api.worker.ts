@@ -66,11 +66,10 @@ export class Api {
          });
       }
 
+      // The API sometimes randomly returns a 500. So we'll just wait for a minute and retry.
       if (response.status === 500 && retry < 5) {
          console.log(`${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })}: API error 500`);
-         const header = response.headers.get('retry-after');
-         const retryAfter = header ? parseInt(header, 10) * 1000 : 1000;
-         await this.wait(retryAfter);
+         await this.wait(60000);
          return this.makeRequest(url, type, payload, retry + 1);
       }
 
