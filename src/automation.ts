@@ -439,6 +439,7 @@ export class Automation {
 
             await this.wait(500);
          } catch (error: unknown) {
+            this.enabled = false;
             this.errorCallback((error as Error).message);
          }
       }
