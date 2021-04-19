@@ -71,13 +71,23 @@ const Locations = () => {
                      <ul className="mt-3 pl-5">
                         {system.locations.map((location) => (
                            <React.Fragment key={location.parent.symbol}>
-                              <li className="py-1 underline hover:text-yellow-600 w-max"><Link to={`systems/${location.parent.symbol}`}>{ location.parent.name }</Link></li>
+                              <li className="py-1 w-max">
+                                 <Link className="underline hover:text-yellow-600" to={`systems/${location.parent.symbol}`}>{ location.parent.name }</Link>
+                                 { location.parent.structures && location.parent.structures.length > 0
+                                    ? <span className="text-sm"> ({location.parent.structures.length} structure{location.parent.structures.length > 1 ? 's' : ''})</span>
+                                    : ''}
+                              </li>
                               { location.satellites.length > 0
                               && (
                                  <ul className="pl-5">
                                     {
                                        location.satellites.map((satellite) => (
-                                          <li key={satellite.symbol} className="py-1 underline hover:text-yellow-600 w-max"><Link to={`systems/${satellite.symbol}`}>{ satellite.name }</Link></li>
+                                          <li key={satellite.symbol} className="py-1 w-max">
+                                             <Link className="underline hover:text-yellow-600" to={`systems/${satellite.symbol}`}>{ satellite.name }</Link>
+                                             { satellite.structures && satellite.structures.length > 0
+                                                ? <span className="text-sm"> ({satellite.structures.length} structure{satellite.structures.length > 1 ? 's' : ''})</span>
+                                                : ''}
+                                          </li>
                                        ))
                                     }
                                  </ul>
