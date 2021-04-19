@@ -38,10 +38,6 @@ const ShipCard = ({ ship, compact, shipError }:Props) => {
    useEffect(() => {
       if (!flightPlan) { return; }
 
-      if (!automation && isPast(new Date(flightPlan.arrivesAt))) {
-         dispatch(removeFlightPlan(flightPlan));
-      }
-
       setRemainingTime(formatDistanceToNowStrict(new Date(flightPlan.arrivesAt)));
    }, [time]);
 
