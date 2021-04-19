@@ -3,7 +3,10 @@
 import * as Comlink from 'comlink';
 import Bottleneck from 'bottleneck';
 import {
-   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo, OwnedShips, Jettison, CargoType, DepositResponse, LocationResponse, GetLoanResponse, BuyShipResponse,
+   Status, Account, User, ShipsAvailable, Systems, Loans,
+   Market, Purchase, Locations, FlightPlanRes, ShipInfo,
+   OwnedShips, Jettison, CargoType, DepositResponse, LocationResponse,
+   GetLoanResponse, BuyShipResponse, AvailableStructuresResponse,
 } from './types';
 
 export interface ApiType {
@@ -222,6 +225,11 @@ export class Api {
    async warpJump(shipId: string) {
       const url = `${this.BASE_URL}/users/${this.username}/warp-jump`;
       return this.makeRequest<FlightPlanRes>(url, fetchMethod.Post, { shipId });
+   }
+
+   async getStructures() {
+      const url = `${this.BASE_URL}/game/structures`;
+      return this.makeRequest<AvailableStructuresResponse>(url, fetchMethod.Get);
    }
 }
 

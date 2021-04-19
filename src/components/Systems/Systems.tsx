@@ -1,101 +1,21 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { Location, LocationType } from '../../Api/types';
-import { RootState, setSystems } from '../../store';
-import { WorkerContext } from '../../WorkerContext';
+import React from 'react';
+import { NavLink, Route, Switch } from 'react-router-dom';
+import Locations from './Locations';
+import Structures from './Structures';
 
-interface SortedSystem {
-   symbol: string,
-   name: string,
-   locations: SortedLocation[],
-}
-
-interface SortedLocation {
-   parent: Location,
-   satellites: Location[],
-}
-
-const SystemMap = () => {
-   const [apiWorker] = useContext(WorkerContext);
-   const systems = useSelector((state:RootState) => state.systems);
-   const dispatch = useDispatch();
-   const [sortedLocations, setSortedLocations] = useState<SortedSystem[]>([]);
-
-   useEffect(() => {
-      const GetSystems = async () => {
-         if (systems.length === 0) {
-            try {
-               const temp = (await apiWorker.systemsInfo()).systems;
-               dispatch((setSystems(temp)));
-            } catch (err: unknown) {
-               toast.error((err as Error).message, {
-                  position: 'bottom-right',
-                  autoClose: false,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                  progress: 0,
-               });
-            }
-         }
-      };
-      GetSystems();
-   }, []);
-
-   useEffect(() => {
-      const sorted:SortedSystem[] = [];
-      systems.forEach((system) => {
-         const sortedSystem:SortedSystem = { symbol: system.symbol, name: system.name, locations: [] };
-         sorted.push(sortedSystem);
-         system.locations.forEach((location) => {
-            if (location.type !== LocationType.Moon) {
-               sortedSystem.locations.push({ parent: location, satellites: [] });
-            } else {
-               sortedSystem.locations.find((x) => x.parent.symbol === (`${location.symbol.split('-')[0]}-${location.symbol.split('-')[1]}`))?.satellites.push(location);
-            }
-         });
-      });
-      setSortedLocations(sorted);
-   }, [systems]);
-
-   return (
-      <React.Fragment>
-         <div className="h-1/4">
-            { sortedLocations
-               && (
-                  <React.Fragment>
-                     <div className="grid gap-3 grid-cols-4 mt-4">
-                        { sortedLocations.map((system) => (
-                           <div key={system.symbol}>
-                              <h2 className="text-3xl">{ system.name }</h2>
-                              <ul className="mt-3 pl-5">
-                                 {system.locations.map((location) => (
-                                    <React.Fragment key={location.parent.symbol}>
-                                       <li className="py-1 underline hover:text-yellow-600 w-max"><Link to={`systems/${location.parent.symbol}`}>{ location.parent.name }</Link></li>
-                                       { location.satellites.length > 0
-                                       && (
-                                          <ul className="pl-5">
-                                             {
-                                                location.satellites.map((satellite) => (
-                                                   <li key={satellite.symbol} className="py-1 underline hover:text-yellow-600 w-max"><Link to={`systems/${satellite.symbol}`}>{ satellite.name }</Link></li>
-                                                ))
-                                             }
-                                          </ul>
-                                       )}
-                                    </React.Fragment>
-                                 ))}
-                              </ul>
-                           </div>
-                        ))}
-                     </div>
-                  </React.Fragment>
-               )}
-         </div>
-      </React.Fragment>
-   );
-};
+const SystemMap = () => (
+   <React.Fragment>
+      <div className="text-sm mb-5">
+         <NavLink exact to="/systems" className="mr-4 pb-1" activeClassName="subMenuActive">Systems</NavLink>
+         <NavLink exact to="/systems/structures" className="mr-4 pb-1" activeClassName="subMenuActive">Your Structures</NavLink>
+      </div>
+      <div className="h-1/4">
+         <Switch>
+            <Route exact path="/systems" component={Locations} />
+            <Route exact path="/systems/structures" component={Structures} />
+         </Switch>
+      </div>
+   </React.Fragment>
+);
 
 export default SystemMap;

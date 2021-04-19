@@ -146,6 +146,12 @@ export interface Location {
    name: string,
    x: number,
    y: number,
+   ships: {
+      shipId: string,
+      username: string,
+      shipType: string,
+   }[],
+   allowsConstruction: boolean,
    anomaly?: string,
    messages?: string[],
    structures?: Structure[]
@@ -157,9 +163,11 @@ export interface Locations {
 
 export interface Structure {
    id: string,
-   name: string,
-   completed: boolean,
-   materials: StructureMaterials[],
+   type: LocationType,
+   location: string,
+   ownedBy?: {
+      username: string
+   }
 }
 
 export interface LocationResponse {
@@ -247,4 +255,17 @@ export interface FlightPlan {
    shipId: string,
    terminatedAt: Date | null,
    timeRemainingInSeconds: number,
+}
+
+export interface AvailableStructures {
+   allowedLocationTypes: LocationType[],
+   consumes: CargoType[],
+   price: number,
+   name: string,
+   produces: CargoType[],
+   symbol: string,
+}
+
+export interface AvailableStructuresResponse {
+   structures: AvailableStructures[]
 }
