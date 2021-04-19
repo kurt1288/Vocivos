@@ -231,6 +231,11 @@ export class Api {
       const url = `${this.BASE_URL}/game/structures`;
       return this.makeRequest<AvailableStructuresResponse>(url, fetchMethod.Get);
    }
+
+   async getLocationsForStructure(type: string) {
+      const url = `${this.BASE_URL}/game/systems/OE/locations?allowsConstruction=true&type=${type}`;
+      return this.makeRequest<Locations>(url, fetchMethod.Get);
+   }
 }
 
 Comlink.expose(Api);
