@@ -58,8 +58,14 @@ const spacetraders = createSlice({
       setCredits: (state, { payload }:PayloadAction<number>) => {
          state.user.credits = payload;
       },
+      addLoan: (state, { payload }:PayloadAction<OwnedLoan>) => {
+         state.user.loans.push(payload);
+      },
       updateLoans: (state, { payload }:PayloadAction<OwnedLoan[]>) => {
          state.user.loans = payload;
+      },
+      addShip: (state, { payload }:PayloadAction<OwnedShip>) => {
+         state.user.ships.push(payload);
       },
       updateShip: (state, { payload }:PayloadAction<OwnedShip>) => {
          Object.assign(state.user.ships.find((x) => x.id === payload.id), payload);
@@ -116,7 +122,7 @@ const spacetraders = createSlice({
 
 export const {
    setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan,
-   updateMarketData, reset,
+   updateMarketData, reset, addLoan, addShip,
    updateShips, setSystems, updateLoans, setAllAutomationState,
 } = spacetraders.actions;
 

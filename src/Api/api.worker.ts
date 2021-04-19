@@ -3,7 +3,7 @@
 import * as Comlink from 'comlink';
 import Bottleneck from 'bottleneck';
 import {
-   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo, OwnedShips, Jettison, CargoType, DepositResponse, LocationResponse,
+   Status, Account, User, ShipsAvailable, Systems, Loans, Market, Purchase, Locations, FlightPlanRes, ShipInfo, OwnedShips, Jettison, CargoType, DepositResponse, LocationResponse, GetLoanResponse, BuyShipResponse,
 } from './types';
 
 export interface ApiType {
@@ -141,7 +141,7 @@ export class Api {
 
    async newLoan(type: string) {
       const url = `${this.BASE_URL}/users/${this.username}/loans`;
-      return this.makeRequest<User>(url, fetchMethod.Post, { type });
+      return this.makeRequest<GetLoanResponse>(url, fetchMethod.Post, { type });
    }
 
    async replayLoan(loanId: string) {
@@ -161,7 +161,7 @@ export class Api {
 
    async buyShip(location: string, type: string) {
       const url = `${this.BASE_URL}/users/${this.username}/ships`;
-      return this.makeRequest<User>(url, fetchMethod.Post, { location, type });
+      return this.makeRequest<BuyShipResponse>(url, fetchMethod.Post, { location, type });
    }
 
    async shipInfo(shipId: string) {

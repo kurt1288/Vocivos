@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { PurchaseLocation, Ship } from '../../Api/types';
-import { RootState, setUser } from '../../store';
+import { addShip, RootState, setCredits } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
 
 interface Props {
@@ -29,7 +29,8 @@ const PurchaseShipModal = ({ handleClose, show, ship }:Props) => {
       try {
          setLoading(true);
          const result = await apiWorker.buyShip(location, ship?.type);
-         dispatch(setUser(result));
+         dispatch(setCredits(result.credits));
+         dispatch(addShip(result.ship));
          handleClose;
          history.push('/ships');
       } catch (err: unknown) {

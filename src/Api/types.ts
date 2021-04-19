@@ -110,6 +110,11 @@ export interface OwnedShip {
    y: number,
 }
 
+export interface BuyShipResponse {
+   credits: number,
+   ship: OwnedShip,
+}
+
 export interface Cargo {
    good: CargoType,
    quantity: number,
@@ -128,6 +133,11 @@ export interface User {
       ships: OwnedShip[],
       username: string,
    }
+}
+
+export interface GetLoanResponse {
+   credits: number,
+   loan: OwnedLoan,
 }
 
 export interface Location {

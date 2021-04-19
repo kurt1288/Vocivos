@@ -4,7 +4,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { Loan, LoanType } from '../../Api/types';
-import { setUser } from '../../store';
+import { addLoan, setCredits } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
 
 interface Props {
@@ -30,7 +30,8 @@ const GetLoan = ({ handleClose, show, loan }:Props) => {
       setLoading(true);
       try {
          const result = await apiWorker.newLoan(LoanType.Startup);
-         dispatch(setUser(result));
+         dispatch(setCredits(result.credits));
+         dispatch(addLoan(result.loan));
          handleClose;
          history.push('/loans');
       } catch (err: unknown) {
