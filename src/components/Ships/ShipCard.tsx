@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
-   formatDistanceToNowStrict, getUnixTime, isFuture, isPast,
+   formatDistanceToNowStrict, getUnixTime, isFuture,
 } from 'date-fns';
 import {
    Cargo, CargoType, OwnedShip,
 } from '../../Api/types';
-import { removeFlightPlan, RootState } from '../../store';
+import { RootState } from '../../store';
 import Buy from '../Markets/Buy';
 import Sell from '../Markets/Sell';
 import Travel from './Travel';
@@ -22,7 +22,6 @@ const ShipCard = ({ ship, compact, shipError }:Props) => {
    const systems = useSelector((state:RootState) => state.systems);
    const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.shipId === ship.id));
    const automation = useSelector((state:RootState) => state.automateAll);
-   const dispatch = useDispatch();
    const [showBuyModal, setBuyModalShow] = useState(false);
    const [showSellModal, setSellModalShow] = useState(false);
    const [showTravelModal, setTravelModalShow] = useState(false);
