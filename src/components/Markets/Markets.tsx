@@ -236,7 +236,7 @@ const Markets = () => {
                <tbody>
                   { getBestRoutes().map((systemRoute) => (
                      systemRoute.routes.map((route) => (
-                        <tr className="border-b border-gray-500 hover:bg-gray-900" key={route.from + route.to + route.cpdv}>
+                        <tr className="border-b border-gray-500 hover:bg-gray-900" key={route.good + route.from + route.to + route.cpdv}>
                            <td className="py-1">{ formatString(route.good) }</td>
                            <td className="py-1">{ route.from }</td>
                            <td className="py-1">{ route.to }</td>
