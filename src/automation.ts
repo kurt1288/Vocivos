@@ -4,13 +4,12 @@
 /* eslint-disable lines-between-class-members */
 import * as Comlink from 'comlink';
 import {
-   CargoType, Marketplace, OwnedShip, Planet, Location, LocationType, Purchase, FlightPlanRes, Market,
+   CargoType, Marketplace, OwnedShip, Planet, Location, LocationType, Purchase, FlightPlanRes, Market, System,
 } from './Api/types';
-import { WorkerDataUpdate } from './App';
-import store, { RootState } from './store';
+import store, { RootState, StoredMarket } from './store';
 
 export interface AutomationType {
-   new(automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void): Automation
+   new(automationGetStore: () => Promise<RootState>, automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void): Automation
 }
 
 enum AutomationWorkerApiAction {
@@ -51,15 +50,20 @@ interface Dispatched {
 }
 
 export class Automation {
+   automationGetStore: () => Promise<RootState>;
    automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>;
    errorCallback: (error: string) => void;
-   private state = store.getState();
-   private markets = this.state.marketData;
+   // private state = store.getState();
+   private markets: StoredMarket[] = [];
+   private credits = 0;
+   private ships: OwnedShip[] = [];
+   private systems: System[] = [];
    private enabled = false;
    private dispatched: Dispatched[] = [];
-   private marketUpdateTime = 600000;
+   private marketUpdateTime = 60000;
 
-   constructor(automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void) {
+   constructor(automationGetStore: () => Promise<RootState>, automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void) {
+      this.automationGetStore = automationGetStore;
       this.automationWorkerMakeApiCall = automationWorkerMakeApiCall;
       this.errorCallback = errorCallback;
    }
@@ -68,14 +72,18 @@ export class Automation {
       this.enabled = false;
    }
 
-   start() {
+   async start() {
+      const state = await this.automationGetStore();
+      this.markets = state.marketData;
+      this.credits = state.user.credits;
+      this.ships = state.user.ships;
+      this.systems = state.systems;
       this.enabled = true;
       this.automate();
    }
 
    updateState(state: RootState) {
-      this.state = state;
-      this.markets = state.marketData;
+      this.ships = state.user.ships;
    }
 
    private wait = (time:number) => (
@@ -102,7 +110,7 @@ export class Automation {
    }
 
    private fuelPenalty(ship: OwnedShip) {
-      if (this.state.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(ship.location as string))?.locations.find((x) => x.symbol === ship.location)?.type !== 'PLANET') {
+      if (this.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(ship.location as string))?.locations.find((x) => x.symbol === ship.location)?.type !== 'PLANET') {
          return 0;
       }
 
@@ -250,11 +258,11 @@ export class Automation {
    }
 
    private async updateMarketData(location:string) {
-      const planet = this.state.marketData?.find((x) => x.planet.symbol === location);
-      const ship = this.state.user.ships.some((x) => x.location === location);
+      const planet = this.markets?.find((x) => x.planet.symbol === location);
+      const ship = this.ships.some((x) => x.location === location);
 
       // if there's no cached data, or if the cached data is older than 10 minutes, update
-      if (ship && (!this.state.marketData || !planet || (Date.now() - planet.updatedAt > this.marketUpdateTime))) {
+      if (ship && (!this.markets || !planet || (Date.now() - planet.updatedAt > this.marketUpdateTime))) {
          const data = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.MarketData, { location }) as Market;
          if (this.markets.some((item) => (item.planet.symbol === location))) {
             this.markets = this.markets.map((item) => ((item.planet.symbol === location) ? { updatedAt: Date.now(), planet: data.location } : item));
@@ -265,8 +273,8 @@ export class Automation {
    }
 
    private async buyFuel(ship: OwnedShip, route: TradeRoute | ScoutRoute) {
-      const from = this.state.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(route.from))?.locations.find((x) => x.symbol === route.from) as Location;
-      const to = this.state.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(route.to))?.locations.find((x) => x.symbol === route.to) as Location;
+      const from = this.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(route.from))?.locations.find((x) => x.symbol === route.from) as Location;
+      const to = this.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(route.to))?.locations.find((x) => x.symbol === route.to) as Location;
       let fuelRequired = Automation.fuelRequired(from, to) + this.fuelPenalty(ship);
 
       // Because the calculation of fuel isn't perfect, sometimes excess fuel is purchased. So check the existing cargo for any fuel.
@@ -285,17 +293,32 @@ export class Automation {
    }
 
    private async createFlightPlan(ship: OwnedShip, route: TradeRoute | ScoutRoute, action: DispatchAction.Trade | DispatchAction.Scout) {
-      await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.CreateFlightPlan, { shipId: ship.id, to: route.to });
+      const flightPlan = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.CreateFlightPlan, { shipId: ship.id, to: route.to }) as FlightPlanRes;
+      const shipIndex = this.ships.findIndex((x) => x.id === flightPlan.flightPlan.shipId);
+      if (shipIndex) {
+         this.ships[shipIndex].location = undefined;
+         this.ships[shipIndex].flightPlanId = flightPlan.flightPlan.id;
+         this.ships[shipIndex].spaceAvailable += flightPlan.flightPlan.fuelConsumed;
+         const fuel = ship.cargo.find((x) => x.good === CargoType.Fuel);
+         if (fuel && flightPlan.flightPlan.fuelRemaining > 0) {
+            fuel.quantity = flightPlan.flightPlan.fuelRemaining;
+         } else if (fuel && flightPlan.flightPlan.fuelRemaining === 0) {
+            ship.cargo.splice(ship.cargo.findIndex((x) => x.good === CargoType.Fuel), 1);
+         }
+      }
       this.dispatched.push({ ship: ship.id, action, route });
    }
 
    private async buyMarketGood(shipId: string, good: CargoType, quantity: number) {
       if (!quantity || quantity <= 0) { return; }
-      await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Buy, { shipId, good, quantity });
+      const order = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Buy, { shipId, good, quantity }) as Purchase;
+      const shipIndex = this.ships.findIndex((x) => x.id === order.ship.id);
+      this.ships[shipIndex] = order.ship;
+      this.credits = order.credits;
    }
 
    private getClosestBodies(location: string) {
-      const system = this.state.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(location));
+      const system = this.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(location));
 
       if (!system) { return null; }
 
@@ -318,9 +341,9 @@ export class Automation {
       while (this.enabled) {
          try {
             // sort ships by speed so the fastest get dispatched first and filter out ships already dispatched, in transit, and at wormholes
-            const idleShips = [...this.state.user.ships.filter((x) => {
+            const idleShips = [...this.ships.filter((x) => {
                if (!x.location) { return false; }
-               const currentLocation = this.state.systems.find((y) => y.symbol === Automation.getSystemSymbolFromLocation(x.location as string))?.locations.find((z) => z.symbol === x.location);
+               const currentLocation = this.systems.find((y) => y.symbol === Automation.getSystemSymbolFromLocation(x.location as string))?.locations.find((z) => z.symbol === x.location);
                if (!currentLocation) { return false; }
                if (Automation.getSystemSymbolFromLocation(currentLocation.symbol) !== 'OE') { return false; }
                if (currentLocation?.type === LocationType.Wormhole) { return false; }
@@ -352,11 +375,11 @@ export class Automation {
                   }
                   continue;
                } else {
-                  const location = this.state.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(ship.location as string))?.locations.find((x) => x.symbol === ship.location);
+                  const location = this.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(ship.location as string))?.locations.find((x) => x.symbol === ship.location);
                   if (!location) { continue; }
 
                   // If there's any locations missing market data entirely, we should scout them.
-                  const systemLocations = this.state.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(ship.location as string))?.locations;
+                  const systemLocations = this.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(ship.location as string))?.locations;
                   const missing = systemLocations?.filter(
                      (x) => !this.markets.some((y) => y.planet.symbol === x.symbol)
                      && x.type !== LocationType.Wormhole
@@ -428,9 +451,12 @@ export class Automation {
             }
 
             for (const ship of this.dispatched) {
-               const stateShip = this.state.user.ships.find((x) => x.id === ship.ship);
+               const stateShip = this.ships.find((x) => x.id === ship.ship);
                if (stateShip?.location === ship.route.to && ship.action === DispatchAction.Trade) {
-                  await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Sell, { shipId: ship.ship, good: (ship.route as TradeRoute).good, quantity: stateShip.cargo.find((x) => x.good === (ship.route as TradeRoute).good)?.quantity as number });
+                  const order = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Sell, { shipId: ship.ship, good: (ship.route as TradeRoute).good, quantity: stateShip.cargo.find((x) => x.good === (ship.route as TradeRoute).good)?.quantity as number }) as Purchase;
+                  const shipIndex = this.ships.findIndex((x) => x.id === order.ship.id);
+                  this.ships[shipIndex] = order.ship;
+                  this.credits = order.credits;
                   this.dispatched.splice(this.dispatched.findIndex((x) => x.ship === ship.ship), 1);
                } else if (stateShip?.location === ship.route.to && ship.action === DispatchAction.Scout) {
                   this.dispatched.splice(this.dispatched.findIndex((x) => x.ship === ship.ship), 1);
@@ -448,15 +474,15 @@ export class Automation {
    private getMaxQuantity(good:Marketplace, ship:OwnedShip) {
       const maxCargo = Math.floor(ship.spaceAvailable / good.volumePerUnit);
 
-      if (maxCargo * good.pricePerUnit < this.state.user.credits && maxCargo <= good.quantityAvailable && maxCargo <= 300) {
+      if (maxCargo * good.pricePerUnit < this.credits && maxCargo <= good.quantityAvailable && maxCargo <= 300) {
          return maxCargo;
       } if (maxCargo > good.quantityAvailable && good.quantityAvailable <= 300) {
          return good.quantityAvailable;
-      } if (Math.floor(this.state.user.credits / good.pricePerUnit) > 300) {
+      } if (Math.floor(this.credits / good.pricePerUnit) > 300) {
          return 300;
       }
 
-      return Math.floor(this.state.user.credits / good.pricePerUnit);
+      return Math.floor(this.credits / good.pricePerUnit);
    }
 }
 

@@ -10,7 +10,7 @@ import AutomationWorker from 'worker-loader?filename=automation.worker.js!./auto
 import Timer from 'easytimer.js';
 import { ToastContainer, toast } from 'react-toastify';
 import { AutomationType, Automation } from './automation';
-import {
+import store, {
    addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setCredits,
    setSystems,
    setUser, StoredMarket, updateMarketData, updateShip,
@@ -27,6 +27,7 @@ import { CargoType, FlightPlan, Purchase } from './Api/types';
 import Markets from './components/Markets/Markets';
 import { AutoAction } from './components/Automation/Models';
 import { WorkerContext } from './WorkerContext';
+import Structures from './components/Systems/Structures';
 
 export interface WorkerDataUpdate {
    type: AutoAction.Travel | AutoAction.AddFlightPlan | AutoAction.RemoveFlightPlan | AutoAction.Buy | AutoAction.Sell,
@@ -46,7 +47,7 @@ enum AutomationWorkerApiAction {
 }
 
 function App() {
-   const store = useSelector((state:RootState) => state);
+   // const store = useSelector((state:RootState) => state);
    const {
       account, user, automateAll, marketData, flightPlans, systems,
    } = useSelector((state:RootState) => state);
@@ -147,16 +148,21 @@ function App() {
       }
    };
 
+   const automationGetStore = async () => {
+      console.log(store.getState());
+      return store.getState();
+   };
+
    useEffect(() => {
       if (automationWorker) {
-         automationWorker[0].updateState(store);
+         automationWorker[0].updateState(store.getState());
       }
-   }, [user.credits, user.ships, marketData, flightPlans, systems]);
+   }, [user.ships.length, flightPlans]);
 
    useEffect(() => {
       const createWorker = async () => {
          const AutoWorker = Comlink.wrap<AutomationType>(new AutomationWorker());
-         const instance = await new AutoWorker(Comlink.proxy(automationWorkerMakeApiCall), Comlink.proxy(webworkerError));
+         const instance = await new AutoWorker(Comlink.proxy(automationGetStore), Comlink.proxy(automationWorkerMakeApiCall), Comlink.proxy(webworkerError));
          // set state doesn't work here with just a comlink object. needs to be in an array.
          setAutomationWorker([instance]);
       };
@@ -188,6 +194,7 @@ function App() {
                            <Route path="/ships" component={Ships} />
                            <Route path="/money" component={Loans} />
                            <Route path="/markets" component={Markets} />
+                           <Route path="/structures" component={Structures} />
                            <Route path="/systems/:location" component={Location} />
                            <Suspense fallback={<div />}>
                               <Route exact path="/systems" component={Systems} />
