@@ -27,6 +27,7 @@ const Markets = () => {
    const { ships } = useSelector((state:RootState) => state.user);
    const marketData = useSelector((state:RootState) => state.marketData);
    const systems = useSelector((state:RootState) => state.systems);
+   const automationEnabled = useSelector((state:RootState) => state.automateAll);
    const dispatch = useDispatch();
    const [locations, setLocations] = useState<Location[]>();
    const [time, setTime] = useState<number>(Date.now());
@@ -104,7 +105,10 @@ const Markets = () => {
             }
          });
       };
-      getMarketData();
+      // When automating, this request can be queued and by the time it executes the ship may have left, which results in an API error
+      if (!automationEnabled) {
+         getMarketData();
+      }
    }, [locations, ships]);
 
    const formatString = (value:string) => (
