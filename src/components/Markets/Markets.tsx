@@ -1,11 +1,26 @@
+/* eslint-disable no-continue */
 import { formatDistanceToNow } from 'date-fns';
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { Location } from '../../Api/types';
+import { CargoType, Location, Planet } from '../../Api/types';
 import { RootState, setSystems, updateMarketData } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
 import { MarketCardLoader } from '../SkeletonLoaders';
+
+interface SystemRoutes {
+   system: string;
+   routes: TradeRoute[];
+}
+
+interface TradeRoute {
+   good: CargoType;
+   from: string;
+   to: string;
+   fuelRequired: number;
+   cpdv: number;
+   lastUpdated: number;
+}
 
 const Markets = () => {
    const [apiWorker] = useContext(WorkerContext);
@@ -92,11 +107,11 @@ const Markets = () => {
       getMarketData();
    }, [locations, ships]);
 
+   const formatString = (value:string) => (
+      value.toLowerCase().split('_').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(' '));
+
    const getDataForLocation = (location: Location) => {
       const data = marketData.find((x) => x.planet.symbol === location.symbol);
-
-      const formatString = (value:string) => (
-         value.toLowerCase().split('_').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(' '));
 
       if (!data || data?.planet.marketplace.length === 0) {
          return <p className="mt-3 text-sm text-gray-400">No data available</p>;
@@ -122,9 +137,112 @@ const Markets = () => {
       return `Updated ${formatDistanceToNow(new Date(data.updatedAt), { addSuffix: true })}`;
    };
 
+   const getSystemSymbolFromLocation = (location: string) => {
+      if (!location) {
+         console.log(location);
+         return '';
+      }
+      return location.split('-')[0];
+   };
+
+   const distanceBetween = (point1: Planet | Location, point2: Planet | Location) => (
+      Math.ceil(Math.sqrt(((point2.x - point1.x) ** 2) + ((point2.y - point1.y) ** 2)))
+   );
+
+   const fuelRequired = (from: Planet | Location, to: Planet | Location) => (
+      Math.round((distanceBetween(to, from) / 4)) + 1
+   );
+
+   const getBestRoutes = () => {
+      const bestRoutes: SystemRoutes[] = [];
+      const uniqueLocations = Array.from(new Set(marketData.map((market) => market.planet.symbol)));
+      const uniqueSystems:string[] = Array.from(new Set(uniqueLocations.map((location: any) => getSystemSymbolFromLocation(location as string))));
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const system of uniqueSystems) {
+         const bestSystemRoutes: TradeRoute[] = [];
+
+         // eslint-disable-next-line no-restricted-syntax
+         for (const type of Object.values(CargoType)) {
+            if (type === CargoType.Research || type === CargoType.Fuel) { continue; } // exclude research for now
+
+            // all locations that have up-to-date data and have the good in question
+            const data = [...marketData].filter((x) => getSystemSymbolFromLocation(x.planet.symbol) === system && x.planet.marketplace.find((y) => y.symbol === type));
+            // const data = [...this.markets].filter((x) => (Date.now() - x.updatedAt <= this.marketUpdateTime) && x.planet.marketplace.find((y) => y.symbol === type));
+
+            if (data.length <= 1) { continue; }
+            for (let i = 0; i < data.length; i += 1) {
+               const current = data[i];
+
+               for (let y = 0; y < data.length; y += 1) {
+                  if (data[y].planet !== current.planet) {
+                     const creditDiff = (data[y].planet.marketplace.find((x) => x.symbol === type)?.sellPricePerUnit as number) - (current.planet.marketplace.find((x) => x.symbol === type)?.purchasePricePerUnit as number);
+                     const distance = distanceBetween(current.planet, data[y].planet);
+                     const cpdv = creditDiff / distance / (current.planet.marketplace.find((x) => x.symbol === type)?.volumePerUnit as number);
+                     const lastUpdated = current.updatedAt > data[y].updatedAt ? current.updatedAt : data[y].updatedAt;
+
+                     // exclude any negatives because we don't want to trade on routes that lose money
+                     if (cpdv <= 0) { continue; }
+
+                     const existing = bestSystemRoutes.find((x) => x.good === type);
+                     if (existing && existing.cpdv < cpdv) {
+                        bestSystemRoutes[bestSystemRoutes.findIndex((x) => x.good === type)] = {
+                           good: type,
+                           from: current.planet.symbol,
+                           to: data[y].planet.symbol,
+                           fuelRequired: fuelRequired(current.planet, data[y].planet),
+                           cpdv,
+                           lastUpdated,
+                        };
+                     } else if (!existing) {
+                        bestSystemRoutes.push({
+                           good: type,
+                           from: current.planet.symbol,
+                           to: data[y].planet.symbol,
+                           fuelRequired: fuelRequired(current.planet, data[y].planet),
+                           cpdv,
+                           lastUpdated,
+                        });
+                     }
+                  }
+               }
+            }
+         }
+
+         bestRoutes.push({ system, routes: bestSystemRoutes.sort((a, b) => ((a.cpdv < b.cpdv) ? 1 : (b.cpdv < a.cpdv) ? -1 : 0)) });
+      }
+
+      return bestRoutes;
+   };
+
    return (
       <React.Fragment>
          <h2 className="text-3xl mb-5">Markets</h2>
+         <div className="my-7">
+            <h3>Best Routes</h3>
+            <table className="mx-auto mt-3 w-3/4 text-sm">
+               <thead>
+                  <tr className="border-b border-gray-500 text-sm leading-normal">
+                     <th className="font-normal text-gray-400 text-left">Good</th>
+                     <th className="font-normal text-gray-400 text-left">From</th>
+                     <th className="font-normal text-gray-400 text-left">To</th>
+                     <th className="font-normal text-gray-400 text-left">Credits per distance volume</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  { getBestRoutes().map((systemRoute) => (
+                     systemRoute.routes.map((route) => (
+                        <tr className="border-b border-gray-500 hover:bg-gray-900" key={route.from + route.to + route.cpdv}>
+                           <td className="py-1">{ formatString(route.good) }</td>
+                           <td className="py-1">{ route.from }</td>
+                           <td className="py-1">{ route.to }</td>
+                           <td className="py-1">{ Math.ceil(route.cpdv * 100) / 100 }</td>
+                        </tr>
+                     ))
+                  ))}
+               </tbody>
+            </table>
+         </div>
          <p className="text-xs text-gray-400 mb-1">System</p>
          { systems.map((system) => (
             <button key={system.symbol} type="button" className={`text-sm mr-4 pb-1 mb-5 ${activeSystem === system.symbol ? 'subMenuActive' : ''}`} value={system.symbol} onClick={(e) => changeSystem(e.currentTarget.value)}>{ system.name }</button>
@@ -143,7 +261,8 @@ const Markets = () => {
                         </div>
                         { getDataForLocation(location) }
                      </div>
-                  )))}
+                  ))
+               )}
          </div>
       </React.Fragment>
    );
