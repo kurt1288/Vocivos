@@ -6,7 +6,7 @@ import * as Comlink from 'comlink';
 import {
    CargoType, Marketplace, OwnedShip, Planet, Location, LocationType, Purchase, FlightPlanRes, Market, System,
 } from './Api/types';
-import store, { RootState, StoredMarket } from './store';
+import { RootState, StoredMarket } from './store';
 
 export interface AutomationType {
    new(automationGetStore: () => Promise<RootState>, automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => Promise<Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void): Automation
@@ -315,6 +315,7 @@ export class Automation {
       const shipIndex = this.ships.findIndex((x) => x.id === order.ship.id);
       this.ships[shipIndex] = order.ship;
       this.credits = order.credits;
+      ((((this.markets.find((x) => x.planet.symbol === order.ship.location) as StoredMarket).planet.marketplace).find((x) => x.symbol === order.order.good) as Marketplace).purchasePricePerUnit as number) = order.order.pricePerUnit;
    }
 
    private getClosestBodies(location: string) {
@@ -457,6 +458,7 @@ export class Automation {
                   const shipIndex = this.ships.findIndex((x) => x.id === order.ship.id);
                   this.ships[shipIndex] = order.ship;
                   this.credits = order.credits;
+                  ((((this.markets.find((x) => x.planet.symbol === order.ship.location) as StoredMarket).planet.marketplace).find((x) => x.symbol === order.order.good) as Marketplace).sellPricePerUnit as number) = order.order.pricePerUnit;
                   this.dispatched.splice(this.dispatched.findIndex((x) => x.ship === ship.ship), 1);
                } else if (stateShip?.location === ship.route.to && ship.action === DispatchAction.Scout) {
                   this.dispatched.splice(this.dispatched.findIndex((x) => x.ship === ship.ship), 1);

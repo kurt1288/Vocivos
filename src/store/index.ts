@@ -1,6 +1,6 @@
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-   FlightPlan, Planet, OwnedLoan, OwnedShip, User, System, CargoType,
+   FlightPlan, Planet, OwnedLoan, OwnedShip, User, System, CargoType, Purchase, Marketplace,
 } from '../Api/types';
 
 export interface StoredMarket {
@@ -111,6 +111,12 @@ const spacetraders = createSlice({
          }
          localStorage.setItem('marketData', JSON.stringify(state.marketData));
       },
+      updateGoodPriceAfterBuy: (state, { payload }:PayloadAction<Purchase>) => {
+         ((((state.marketData.find((x) => x.planet.symbol === payload.ship.location) as StoredMarket).planet.marketplace).find((x) => x.symbol === payload.order.good) as Marketplace).purchasePricePerUnit as number) = payload.order.pricePerUnit;
+      },
+      updateGoodPriceAfterSell: (state, { payload }:PayloadAction<Purchase>) => {
+         ((((state.marketData.find((x) => x.planet.symbol === payload.ship.location) as StoredMarket).planet.marketplace).find((x) => x.symbol === payload.order.good) as Marketplace).sellPricePerUnit as number) = payload.order.pricePerUnit;
+      },
       setSystems: (state, { payload }:PayloadAction<System[]>) => {
          state.systems = payload;
       },
@@ -123,7 +129,8 @@ const spacetraders = createSlice({
 export const {
    setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan,
    updateMarketData, reset, addLoan, addShip,
-   updateShips, setSystems, updateLoans, setAllAutomationState,
+   updateShips, setSystems, updateLoans, setAllAutomationState, updateGoodPriceAfterBuy,
+   updateGoodPriceAfterSell,
 } = spacetraders.actions;
 
 const { reducer } = spacetraders;

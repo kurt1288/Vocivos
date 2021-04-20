@@ -13,7 +13,7 @@ import { AutomationType, Automation } from './automation';
 import store, {
    addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setCredits,
    setSystems,
-   setUser, StoredMarket, updateMarketData, updateShip,
+   setUser, StoredMarket, updateGoodPriceAfterBuy, updateGoodPriceAfterSell, updateMarketData, updateShip,
 } from './store';
 import './App.css';
 import NavBar from './components/NavBar';
@@ -120,12 +120,14 @@ function App() {
             const order = await apiWorker.purchaseOrder(data.shipId as string, data.good as CargoType, data.quantity as number);
             dispatch(setCredits(order.credits));
             dispatch(updateShip(order.ship));
+            dispatch(updateGoodPriceAfterBuy(order));
             return order;
          }
          case AutomationWorkerApiAction.Sell: {
             const order = await apiWorker.sellOrder(data.shipId as string, data.good as CargoType, data.quantity as number);
             dispatch(setCredits(order.credits));
             dispatch(updateShip(order.ship));
+            dispatch(updateGoodPriceAfterSell(order));
             return order;
          }
          case AutomationWorkerApiAction.CreateFlightPlan: {
