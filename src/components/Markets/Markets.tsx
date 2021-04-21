@@ -238,8 +238,8 @@ const Markets = () => {
                      systemRoute.routes.map((route) => (
                         <tr className="border-b border-gray-500 hover:bg-gray-900" key={route.good + route.from + route.to + route.cpdv}>
                            <td className="py-1">{ formatString(route.good) }</td>
-                           <td className="py-1">{ route.from }</td>
-                           <td className="py-1">{ route.to }</td>
+                           <td className="py-1">{ systems.find((x) => x.symbol === getSystemSymbolFromLocation(route.from))?.locations.find((x) => x.symbol === route.from)?.name }</td>
+                           <td className="py-1">{ systems.find((x) => x.symbol === getSystemSymbolFromLocation(route.to))?.locations.find((x) => x.symbol === route.to)?.name }</td>
                            <td className="py-1">{ Math.ceil(route.cpdv * 100) / 100 }</td>
                         </tr>
                      ))
