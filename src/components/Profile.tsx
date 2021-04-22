@@ -54,7 +54,7 @@ const Profile = () => {
                   </div>
                   <div className="mb-4 min-h-1/4">
                      <h3 className="text-xl mb-4">Ships</h3>
-                     <div className="pl-5 grid grid-cols-4 gap-3">
+                     <div className="pl-5 grid grid-cols-5 gap-3">
                         { ships.length === 0
                            ? (
                               <div>
