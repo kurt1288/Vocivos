@@ -45,28 +45,37 @@ export class Api {
    ): Promise<T> {
       let response:Response;
 
-      if (type === fetchMethod.Get) {
-         response = await this.limiter.schedule(async () => {
-            const data = await fetch(url, {
-               method: type,
-               headers: {
-                  Authorization: `Bearer ${this.token}`,
-               },
+      try {
+         if (type === fetchMethod.Get) {
+            response = await this.limiter.schedule(async () => {
+               const data = await fetch(url, {
+                  method: type,
+                  headers: {
+                     Authorization: `Bearer ${this.token}`,
+                  },
+               });
+               return data;
             });
-            return data;
-         });
-      } else {
-         response = await this.limiter.schedule(async () => {
-            const data = await fetch(url, {
-               method: type,
-               headers: {
-                  Authorization: `Bearer ${this.token}`,
-                  'Content-Type': 'application/json',
-               },
-               body: JSON.stringify(payload),
+         } else {
+            response = await this.limiter.schedule(async () => {
+               const data = await fetch(url, {
+                  method: type,
+                  headers: {
+                     Authorization: `Bearer ${this.token}`,
+                     'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(payload),
+               });
+               return data;
             });
-            return data;
-         });
+         }
+      } catch (e) {
+         console.log(`${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })}: Network error: ${(e as Error).message}`);
+         if (retry < 5) {
+            await this.wait(10000);
+            return this.makeRequest(url, type, payload, retry + 1);
+         }
+         throw e;
       }
 
       // The API sometimes randomly returns a 500. So we'll just wait for a minute and retry.
