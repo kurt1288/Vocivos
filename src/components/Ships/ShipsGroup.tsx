@@ -48,7 +48,7 @@ const ShipsGroup = ({
       <div className="mb-10">
          <button type="button" className="flex items-center border-b border-gray-600 pb-2 mb-4" onClick={() => toggleCollapse()}>
             <span className={`mr-2 mt-0.5 ${collapseHeight === 'auto' ? 'arrow-down' : 'arrow-up'}`} />
-            <h3 className="text-xl">{ systems.find((x) => x.symbol === system)?.name }</h3>
+            <h3 className="text-xl">{ systems.find((x) => x.symbol === system)?.name } ({ ships.length })</h3>
          </button>
          <AnimateHeight id={`locations-${system}`} className={`locations-${system}`} duration={250} height={collapseHeight}>
             <div className="grid grid-cols-4 gap-4">
