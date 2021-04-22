@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { CargoType, Ship } from '../../Api/types';
+import { CargoType, LoanStatus, Ship } from '../../Api/types';
 import { RootState } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
 
@@ -72,7 +72,7 @@ const Worth = () => {
       cargos.forEach((cargo) => {
          total += (cargo.bestValue * cargo.quantity);
       });
-      loans.forEach((loan) => {
+      loans.filter((x) => x.status === LoanStatus.Current).forEach((loan) => {
          total -= loan.repaymentAmount;
       });
       setTotalWorth(total);
@@ -96,7 +96,7 @@ const Worth = () => {
                   <td className="py-3 px-6 text-center whitespace-nowrap">-</td>
                   <td className="py-3 px-6 text-right whitespace-nowrap">{ credits.toLocaleString() }</td>
                </tr>
-               { loans.map((loan) => (
+               { loans.filter((x) => x.status === LoanStatus.Current).map((loan) => (
                   <tr key={loan.id} className="border-b border-gray-500 hover:bg-gray-900">
                      <td className="py-3 px-6 text-left whitespace-nowrap">Loan</td>
                      <td className="py-3 px-6 text-left whitespace-nowrap">Liability</td>
