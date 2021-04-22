@@ -150,10 +150,7 @@ function App() {
       }
    };
 
-   const automationGetStore = async () => {
-      console.log(store.getState());
-      return store.getState();
-   };
+   const automationGetStore = async () => (store.getState());
 
    useEffect(() => {
       if (automationWorker) {
