@@ -24,6 +24,7 @@ const Profile = () => {
                   <p className="text-gray-400">Welcome</p>
                   <h2 className="text-3xl mb-4">{ username }</h2>
                   <div>
+                     <h3 className="text-xl mb-4">Messages</h3>
                      { systems.map((system) => system.locations.map((location) => (location.messages && location.messages.length > 0
                         ? (
                            <div className="text-sm p-4 bg-blue-800 text-blue-200 rounded-sm" key={location.symbol}>
