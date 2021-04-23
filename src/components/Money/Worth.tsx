@@ -67,7 +67,7 @@ const Worth = () => {
    useEffect(() => {
       let total = credits;
       uniqueShipCount.forEach((ship) => {
-         total += ship.uniques * (shipPrices.find((x) => x.type === ship.shipType)?.purchaseLocations[0].price as number);
+         total += ship.uniques * Math.round((shipPrices.find((x) => x.type === ship.shipType)?.purchaseLocations[0].price as number) * 0.25);
       });
       cargos.forEach((cargo) => {
          total += (cargo.bestValue * cargo.quantity);
@@ -109,7 +109,7 @@ const Worth = () => {
                      <td className="py-3 px-6 text-left whitespace-nowrap">{ ship.shipType }</td>
                      <td className="py-3 px-6 text-left whitespace-nowrap">Ship</td>
                      <td className="py-3 px-6 text-center whitespace-nowrap">{ ship.uniques.toLocaleString() }</td>
-                     <td className="py-3 px-6 text-right whitespace-nowrap">{ (ship.uniques * (shipPrices.find((x) => x.type === ship.shipType)?.purchaseLocations[0].price as number)).toLocaleString() }</td>
+                     <td className="py-3 px-6 text-right whitespace-nowrap">{ (ship.uniques * Math.round((shipPrices.find((x) => x.type === ship.shipType)?.purchaseLocations[0].price as number) * 0.25)).toLocaleString() }</td>
                   </tr>
                ))}
                { cargos.map((cargo) => {
