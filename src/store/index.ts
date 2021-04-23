@@ -112,10 +112,22 @@ const spacetraders = createSlice({
          localStorage.setItem('marketData', JSON.stringify(state.marketData));
       },
       updateGoodPriceAfterBuy: (state, { payload }:PayloadAction<Purchase>) => {
-         ((((state.marketData.find((x) => x.planet.symbol === payload.ship.location) as StoredMarket).planet.marketplace).find((x) => x.symbol === payload.order.good) as Marketplace).purchasePricePerUnit as number) = payload.order.pricePerUnit;
+         const market = state.marketData.find((x) => x.planet.symbol === payload.ship.location);
+         if (market) {
+            const marketplace = market.planet.marketplace.find((x) => x.symbol === payload.order.good);
+            if (marketplace) {
+               marketplace.purchasePricePerUnit = payload.order.pricePerUnit;
+            }
+         }
       },
       updateGoodPriceAfterSell: (state, { payload }:PayloadAction<Purchase>) => {
-         ((((state.marketData.find((x) => x.planet.symbol === payload.ship.location) as StoredMarket).planet.marketplace).find((x) => x.symbol === payload.order.good) as Marketplace).sellPricePerUnit as number) = payload.order.pricePerUnit;
+         const market = state.marketData.find((x) => x.planet.symbol === payload.ship.location);
+         if (market) {
+            const marketplace = market.planet.marketplace.find((x) => x.symbol === payload.order.good);
+            if (marketplace) {
+               marketplace.sellPricePerUnit = payload.order.pricePerUnit;
+            }
+         }
       },
       setSystems: (state, { payload }:PayloadAction<System[]>) => {
          state.systems = payload;
