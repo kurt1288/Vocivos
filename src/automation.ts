@@ -265,15 +265,19 @@ export class Automation {
          const distance = Automation.distanceBetween(fromPlanet, toPlanet);
          const cpdv = creditDiff / distance / (fromMarket.planet.marketplace.find((x) => x.symbol === item.symbol)?.volumePerUnit as number);
          const lastUpdated = fromMarket.updatedAt > toMarket.updatedAt ? fromMarket.updatedAt : toMarket.updatedAt;
-         bestGood.push({
-            good: item.symbol as CargoType,
-            from,
-            to,
-            fuelRequired: Automation.fuelRequired(fromPlanet, toPlanet),
-            cpdv,
-            lastUpdated,
-         });
+         if (cpdv > 0) {
+            bestGood.push({
+               good: item.symbol as CargoType,
+               from,
+               to,
+               fuelRequired: Automation.fuelRequired(fromPlanet, toPlanet),
+               cpdv,
+               lastUpdated,
+            });
+         }
       }
+
+      if (bestGood.length === 0) { return null; }
 
       // Get most profitable route from current location
       return bestGood.reduce((max, obj) => (obj.cpdv > max.cpdv ? obj : max));
