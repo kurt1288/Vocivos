@@ -1,13 +1,13 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useContext, useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import {
    OwnedShip, Location, LocationType, CargoType, FlightPlan,
 } from '../../Api/types';
 import {
-   addFlightPlan, setCredits, updateShip, updateShips,
+   addFlightPlan, RootState, setCredits, updateShip, updateShips,
 } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
 import { ModalPlaceholder } from '../SkeletonLoaders';
@@ -22,9 +22,10 @@ interface Props {
 const Travel = ({
    handleClose, shipError, show, ship,
 }: Props) => {
+   const { systems } = useSelector((state:RootState) => state);
    const [apiWorker] = useContext(WorkerContext);
    const dispatch = useDispatch();
-   const [locations, setLocations] = useState<Location[]>();
+   const [locations, setLocations] = useState<Location[]>(systems.find((x) => x.symbol === ship.location?.split('-')[0])?.locations as Location[]);
    const [error, setError] = useState<string>('');
    const [autoBuyFuel, setAutoBuyFuel] = useState(true);
    const showHideModal = show ? 'fixed w-full h-full top-0 left-0 flex items-center justify-center text-gray-900 z-10' : 'hidden';
@@ -47,7 +48,9 @@ const Travel = ({
             });
          }
       };
-      getLocations();
+      if (!systems || systems.length === 0) {
+         getLocations();
+      }
    }, []);
 
    const createFlightPlan = async (type: LocationType, location: string, retry = true) => {
