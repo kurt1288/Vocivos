@@ -62,9 +62,20 @@ const Owned = () => {
       ships.forEach((ship) => {
          ship.cargo.forEach(async (cargo) => {
             try {
-               const result = await apiWorker.sellOrder(ship.id, cargo.good, cargo.quantity);
-               dispatch(setCredits(result.credits));
-               dispatch(updateShip(result.ship));
+               if (cargo.quantity > 300) {
+                  let { quantity } = cargo;
+                  while (quantity > 0) {
+                     // eslint-disable-next-line no-await-in-loop
+                     const result = await apiWorker.sellOrder(ship.id, cargo.good, quantity > 300 ? 300 : quantity);
+                     dispatch(setCredits(result.credits));
+                     dispatch(updateShip(result.ship));
+                     quantity -= 300;
+                  }
+               } else {
+                  const result = await apiWorker.sellOrder(ship.id, cargo.good, cargo.quantity);
+                  dispatch(setCredits(result.credits));
+                  dispatch(updateShip(result.ship));
+               }
             } catch (err: unknown) {
                toast.error((err as Error).message, {
                   position: 'bottom-right',
