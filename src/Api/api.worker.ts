@@ -6,7 +6,7 @@ import {
    Status, Account, User, ShipsAvailable, Systems, Loans,
    Market, Purchase, Locations, FlightPlanRes, ShipInfo,
    OwnedShips, Jettison, CargoType, DepositResponse, LocationResponse,
-   GetLoanResponse, BuyShipResponse, AvailableStructuresResponse,
+   GetLoanResponse, BuyShipResponse, AvailableStructuresResponse, ScrapShipResponse,
 } from './types';
 
 export interface ApiType {
@@ -19,6 +19,7 @@ enum fetchMethod {
    Get = 'get',
    Post = 'post',
    Put = 'put',
+   Delete = 'delete',
 }
 
 export class Api {
@@ -179,6 +180,11 @@ export class Api {
    async shipInfo(shipId: string) {
       const url = `${this.BASE_URL}/users/${this.username}/ships/${shipId}`;
       return this.makeRequest<ShipInfo>(url, fetchMethod.Get);
+   }
+
+   async scrapShip(shipId: string) {
+      const url = `${this.BASE_URL}/users/${this.username}/ships/${shipId}`;
+      return this.makeRequest<ScrapShipResponse>(url, fetchMethod.Delete);
    }
 
    async systemsInfo() {

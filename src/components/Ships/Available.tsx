@@ -1,7 +1,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
 import { Ship } from '../../Api/types';
 import { RootState } from '../../store';
 import { WorkerContext } from '../../WorkerContext';
@@ -10,30 +9,12 @@ import PurchaseShipModal from './PurchaseShipModal';
 
 const Available = () => {
    const [apiWorker] = useContext(WorkerContext);
-   const user = useSelector((state:RootState) => state);
-   const [ships, setShips] = useState<Ship[]>();
+   const { user, availableShips } = useSelector((state:RootState) => state);
+   const [ships, setShips] = useState<Ship[]>(availableShips);
    const [sortOrder, setOrder] = useState(false);
    const [sortType, setSortType] = useState('class');
    const [showModal, setModalShow] = useState(false);
    const [selectedShip, setSelectedShip] = useState<Ship>();
-
-   const GetShips = async () => {
-      try {
-         const getShips = await apiWorker.availableShips();
-         getShips.ships.sort((a, b) => ((a.type > b.type) ? 1 : (b.type > a.type) ? -1 : 0));
-         setShips(getShips.ships);
-      } catch (err: unknown) {
-         toast.error((err as Error).message, {
-            position: 'bottom-right',
-            autoClose: false,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: 0,
-         });
-      }
-   };
 
    const lowestPrice = (ship: Ship) => (
       ship.purchaseLocations.reduce((prev, curr) => (prev.price < curr.price ? prev : curr)).price
@@ -80,10 +61,6 @@ const Available = () => {
       sort(sortType);
    }, [sortType, sortOrder]);
 
-   useEffect(() => {
-      GetShips();
-   }, []);
-
    return (
       <React.Fragment>
          <PurchaseShipModal show={showModal} ship={selectedShip} handleClose={() => setModalShow(false)} />
@@ -126,7 +103,7 @@ const Available = () => {
                      </div>
                      <div className="text-right">
                         <p className="text-xs text-gray-400">{ ship.purchaseLocations.length } available</p>
-                        <p className={`text-sm ${(lowestPrice(ship) > user.user.credits) ? 'text-red-400' : ''}`}>{ lowestPrice(ship).toLocaleString() } credits</p>
+                        <p className={`text-sm ${(lowestPrice(ship) > user.credits) ? 'text-red-400' : ''}`}>{ lowestPrice(ship).toLocaleString() } credits</p>
                      </div>
                   </div>
                   <div className="flex mt-3">

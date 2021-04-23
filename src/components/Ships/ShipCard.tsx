@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useContext, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
    formatDistanceToNowStrict, getUnixTime, isFuture,
 } from 'date-fns';
+import { toast } from 'react-toastify';
 import {
    Cargo, CargoType, OwnedShip,
 } from '../../Api/types';
-import { RootState } from '../../store';
+import { RootState, updateScrapShip } from '../../store';
 import Buy from '../Markets/Buy';
 import Sell from '../Markets/Sell';
 import Travel from './Travel';
 import TravelProgressBar from './TravelProgress';
+import { WorkerContext } from '../../WorkerContext';
 
 interface Props {
    ship: OwnedShip,
@@ -19,14 +21,18 @@ interface Props {
 }
 
 const ShipCard = ({ ship, compact, shipError }:Props) => {
+   const [apiWorker] = useContext(WorkerContext);
    const systems = useSelector((state:RootState) => state.systems);
    const flightPlan = useSelector((state:RootState) => state.flightPlans.find((x) => x.shipId === ship.id));
    const automation = useSelector((state:RootState) => state.automateAll);
+   const availableShips = useSelector((state:RootState) => state.availableShips);
    const [showBuyModal, setBuyModalShow] = useState(false);
    const [showSellModal, setSellModalShow] = useState(false);
    const [showTravelModal, setTravelModalShow] = useState(false);
    const [remainingTime, setRemainingTime] = useState<string>();
    const [time, setTime] = useState<number>(Date.now());
+   const [isHovered, setIsHovered] = useState(false);
+   const dispatch = useDispatch();
 
    useEffect(() => {
       const interval = setInterval(() => setTime(Date.now()), 1000);
@@ -48,10 +54,41 @@ const ShipCard = ({ ship, compact, shipError }:Props) => {
    const formatString = (value:string) => (
       value.toLowerCase().split('_').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(' '));
 
-   const calcProgress = ():number => {
+   const calcProgress = () => {
       if (!flightPlan) { return 0; }
 
       return (((Date.now() / 1000) - (getUnixTime(new Date(flightPlan.arrivesAt)) - flightPlan.timeRemainingInSeconds)) / flightPlan.timeRemainingInSeconds) * 100;
+   };
+
+   const getShipValue = () => {
+      const price = availableShips.find((x) => x.type === ship.type)?.purchaseLocations[0].price;
+      return price ? Math.round(price * 0.25).toLocaleString() : 'unknown';
+   };
+
+   const scrapShip = async () => {
+      try {
+         const result = (await apiWorker.scrapShip(ship.id)).success;
+         dispatch(updateScrapShip({ ship, result }));
+         toast.success(result, {
+            position: 'bottom-right',
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: 0,
+         });
+      } catch (err: unknown) {
+         toast.error((err as Error).message, {
+            position: 'bottom-right',
+            autoClose: false,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: 0,
+         });
+      }
    };
 
    return (
@@ -97,9 +134,16 @@ const ShipCard = ({ ship, compact, shipError }:Props) => {
             </div>
          ) : (
             <div className="focus:outline-none bg-gray-900 border border-gray-700 rounded">
-               <div className="flex justify-between items-center p-3 bg-gray-700 border-b border-gray-600">
+               <div className="flex justify-between items-center p-3 bg-gray-700 border-b border-gray-600" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
                   <div>
-                     <h3 className="text-xl">{ ship.type }</h3>
+                     <div className="flex items-baseline">
+                        <h3 className="text-xl">{ ship.type }</h3>
+                        <button type="button" className={`${isHovered ? 'block' : 'hidden'}`} title={`Scrap ship for ${getShipValue()} credits`} onClick={() => scrapShip()}>
+                           <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                           </svg>
+                        </button>
+                     </div>
                      <p className="text-xs text-gray-400">{ ship.manufacturer }</p>
                   </div>
                   <div className="flex flex-col">

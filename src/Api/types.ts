@@ -115,6 +115,10 @@ export interface BuyShipResponse {
    ship: OwnedShip,
 }
 
+export interface ScrapShipResponse {
+   success: string,
+}
+
 export interface Cargo {
    good: CargoType,
    quantity: number,

@@ -11,7 +11,7 @@ import Timer from 'easytimer.js';
 import { ToastContainer, toast } from 'react-toastify';
 import { AutomationType, Automation } from './automation';
 import store, {
-   addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setCredits,
+   addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setAvailableShips, setCredits,
    setSystems,
    setUser, StoredMarket, updateGoodPriceAfterBuy, updateGoodPriceAfterSell, updateMarketData, updateShip,
 } from './store';
@@ -49,7 +49,7 @@ enum AutomationWorkerApiAction {
 function App() {
    // const store = useSelector((state:RootState) => state);
    const {
-      account, user, automateAll, marketData, flightPlans, systems,
+      account, user, automateAll, flightPlans,
    } = useSelector((state:RootState) => state);
    const [automationWorker, setAutomationWorker] = useState<[Comlink.Remote<Automation>]>();
    const dispatch = useDispatch();
@@ -95,8 +95,27 @@ function App() {
          }
       };
 
+      const GetShips = async () => {
+         try {
+            const getShips = await apiWorker.availableShips();
+            getShips.ships.sort((a, b) => ((a.type > b.type) ? 1 : (b.type > a.type) ? -1 : 0));
+            dispatch(setAvailableShips(getShips.ships));
+         } catch (err: unknown) {
+            toast.error((err as Error).message, {
+               position: 'bottom-right',
+               autoClose: false,
+               hideProgressBar: false,
+               closeOnClick: true,
+               pauseOnHover: true,
+               draggable: true,
+               progress: 0,
+            });
+         }
+      };
+
       if (account.username && account.token) {
          FetchAccount();
+         GetShips();
       }
    }, []);
 
