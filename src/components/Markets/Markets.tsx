@@ -224,28 +224,33 @@ const Markets = () => {
          <h2 className="text-3xl mb-5">Markets</h2>
          <div className="my-7">
             <h3>Best Routes</h3>
-            <table className="mx-auto mt-3 w-3/4 text-sm">
-               <thead>
-                  <tr className="border-b border-gray-500 text-sm leading-normal">
-                     <th className="font-normal text-gray-400 text-left">Good</th>
-                     <th className="font-normal text-gray-400 text-left">From</th>
-                     <th className="font-normal text-gray-400 text-left">To</th>
-                     <th className="font-normal text-gray-400 text-left">Credits per distance volume</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  { getBestRoutes().map((systemRoute) => (
-                     systemRoute.routes.map((route) => (
-                        <tr className="border-b border-gray-500 hover:bg-gray-900" key={route.good + route.from + route.to + route.cpdv}>
-                           <td className="py-1">{ formatString(route.good) }</td>
-                           <td className="py-1">{ systems.find((x) => x.symbol === getSystemSymbolFromLocation(route.from))?.locations.find((x) => x.symbol === route.from)?.name }</td>
-                           <td className="py-1">{ systems.find((x) => x.symbol === getSystemSymbolFromLocation(route.to))?.locations.find((x) => x.symbol === route.to)?.name }</td>
-                           <td className="py-1">{ Math.ceil(route.cpdv * 100) / 100 }</td>
-                        </tr>
-                     ))
-                  ))}
-               </tbody>
-            </table>
+            <div className="flex mt-2">
+               { getBestRoutes().map((system) => (
+                  <div className="w-1/2 mx-6">
+                     <h4 className="text-lg">{ systems.find((x) => x.symbol === system.system)?.name }</h4>
+                     <table className="w-full text-sm" key={system.system}>
+                        <thead>
+                           <tr className="border-b border-gray-500 text-sm leading-normal">
+                              <th className="font-normal text-gray-400 text-left">Good</th>
+                              <th className="font-normal text-gray-400 text-left">From</th>
+                              <th className="font-normal text-gray-400 text-left">To</th>
+                              <th className="font-normal text-gray-400 text-left">Credits per distance volume</th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           { system.routes.map((route) => (
+                              <tr className="border-b border-gray-500 hover:bg-gray-900" key={route.good + route.from + route.to + route.cpdv}>
+                                 <td className="py-1">{ formatString(route.good) }</td>
+                                 <td className="py-1">{ systems.find((x) => x.symbol === getSystemSymbolFromLocation(route.from))?.locations.find((x) => x.symbol === route.from)?.name }</td>
+                                 <td className="py-1">{ systems.find((x) => x.symbol === getSystemSymbolFromLocation(route.to))?.locations.find((x) => x.symbol === route.to)?.name }</td>
+                                 <td className="py-1">{ Math.ceil(route.cpdv * 100) / 100 }</td>
+                              </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                  </div>
+               ))}
+            </div>
          </div>
          <p className="text-xs text-gray-400 mb-1">System</p>
          { systems.map((system) => (
