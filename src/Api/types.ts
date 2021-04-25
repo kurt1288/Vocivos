@@ -12,16 +12,21 @@ export enum LocationType {
 }
 
 export enum CargoType {
+   BiometricFirearms = 'BIOMETRIC_FIREARMS',
    Chemicals = 'CHEMICALS',
    Construction = 'CONSTRUCTION_MATERIALS',
    Consumer = 'CONSUMER_GOODS',
    Electronics = 'ELECTRONICS',
    ExoticPlasma = 'EXOTIC PLASMA',
+   Explosives = 'EXPLOSIVES',
    Food = 'FOOD',
    Fuel = 'FUEL',
    FusionReactors = 'FUSION_REACTORS',
    Machinery = 'MACHINERY',
    Metals = 'METALS',
+   Nanobots = 'NANOTBOTS',
+   Narcotics = 'NARCOTICS',
+   PrecisionInstruments = 'PRECISION_INSTRUMENTS',
    ProteinSynthesizers = 'PROTEIN_SYNTHESIZERS',
    RareMetals = 'RARE_METALS',
    Research = 'RESEARCH',
@@ -181,7 +186,6 @@ export interface Structure {
 
 export interface LocationResponse {
    location: Location,
-   dockedShips: number,
 }
 
 export interface System {
