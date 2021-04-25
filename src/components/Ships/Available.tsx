@@ -102,7 +102,7 @@ const Available = () => {
                         <p className="text-xs text-gray-400">{ ship.manufacturer }</p>
                      </div>
                      <div className="text-right">
-                        <p className="text-xs text-gray-400">{ ship.purchaseLocations.length } available</p>
+                        <p className="text-xs text-gray-400">{ ship.purchaseLocations.length } location{ ship.purchaseLocations.length > 1 ? 's' : null }</p>
                         <p className={`text-sm ${(lowestPrice(ship) > user.credits) ? 'text-red-400' : ''}`}>{ lowestPrice(ship).toLocaleString() } credits</p>
                      </div>
                   </div>
