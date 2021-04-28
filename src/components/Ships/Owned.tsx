@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { LocationType, OwnedShip } from '../../Api/types';
+import { CargoType, LocationType, OwnedShip } from '../../Api/types';
 import {
    RootState, setAllAutomationState, setCredits, updateShip,
 } from '../../store';
@@ -61,31 +61,33 @@ const Owned = () => {
    const sellAllCargo = () => {
       ships.forEach((ship) => {
          ship.cargo.forEach(async (cargo) => {
-            try {
-               if (cargo.quantity > 300) {
-                  let { quantity } = cargo;
-                  while (quantity > 0) {
-                     // eslint-disable-next-line no-await-in-loop
-                     const result = await apiWorker.sellOrder(ship.id, cargo.good, quantity > 300 ? 300 : quantity);
+            if (cargo.good !== CargoType.Fuel) {
+               try {
+                  if (cargo.quantity > 300) {
+                     let { quantity } = cargo;
+                     while (quantity > 0) {
+                        // eslint-disable-next-line no-await-in-loop
+                        const result = await apiWorker.sellOrder(ship.id, cargo.good, quantity > 300 ? 300 : quantity);
+                        dispatch(setCredits(result.credits));
+                        dispatch(updateShip(result.ship));
+                        quantity -= 300;
+                     }
+                  } else {
+                     const result = await apiWorker.sellOrder(ship.id, cargo.good, cargo.quantity);
                      dispatch(setCredits(result.credits));
                      dispatch(updateShip(result.ship));
-                     quantity -= 300;
                   }
-               } else {
-                  const result = await apiWorker.sellOrder(ship.id, cargo.good, cargo.quantity);
-                  dispatch(setCredits(result.credits));
-                  dispatch(updateShip(result.ship));
+               } catch (err: unknown) {
+                  toast.error((err as Error).message, {
+                     position: 'bottom-right',
+                     autoClose: false,
+                     hideProgressBar: false,
+                     closeOnClick: true,
+                     pauseOnHover: true,
+                     draggable: true,
+                     progress: 0,
+                  });
                }
-            } catch (err: unknown) {
-               toast.error((err as Error).message, {
-                  position: 'bottom-right',
-                  autoClose: false,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                  progress: 0,
-               });
             }
          });
       });
