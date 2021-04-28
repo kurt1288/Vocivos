@@ -55,7 +55,7 @@ const Owned = () => {
    const automateDisabled = () => (
       !automateAll
       && ships.some((x) => systems.find((y) => y.symbol === x.location?.split('-')[0])?.locations.find((z) => z.symbol === x.location)?.type !== LocationType.Wormhole
-      && x.spaceAvailable !== x.maxCargo)
+      && x.cargo.some((y) => y.good !== CargoType.Fuel))
    );
 
    const sellAllCargo = () => {
