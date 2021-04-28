@@ -7,11 +7,11 @@ import { Route, Switch } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Comlink from 'comlink';
 import AutomationWorker from 'worker-loader?filename=automation.worker.js!./automation';
-import Timer from 'easytimer.js';
 import { ToastContainer, toast } from 'react-toastify';
 import { AutomationType, Automation } from './automation';
 import store, {
    addFlightPlan, addShip, removeFlightPlan, reset, RootState, setAllAutomationState, setAvailableShips, setCredits,
+   setSpyShip,
    setSystems,
    setUser, StoredMarket, updateGoodPriceAfterBuy, updateGoodPriceAfterSell, updateMarketData, updateShip,
 } from './store';
@@ -23,7 +23,9 @@ import Ships from './components/Ships/Ships';
 import Systems from './components/Systems/Systems';
 import Location from './components/Systems/Location';
 import Loans from './components/Money/Money';
-import { CargoType, FlightPlan, Purchase } from './Api/types';
+import {
+   CargoType, FlightPlan, OwnedShip, Purchase,
+} from './Api/types';
 import Markets from './components/Markets/Markets';
 import { AutoAction } from './components/Automation/Models';
 import { WorkerContext } from './WorkerContext';
@@ -88,6 +90,13 @@ function App() {
             const loadedMarketData = marketDataStore !== null ? JSON.parse(marketDataStore) as StoredMarket[] : null;
             loadedMarketData?.map((data) => (
                dispatch(updateMarketData(data))
+            ));
+
+            // Update spy ships, if any saved
+            const spyShipsData = localStorage.getItem('spyShips');
+            const loadedSpyShipsData = spyShipsData !== null ? JSON.parse(spyShipsData) as OwnedShip[] : null;
+            loadedSpyShipsData?.map((data) => (
+               dispatch(setSpyShip(data))
             ));
          } catch (err: unknown) {
             if ((err as Error).message === 'Invalid username or token.') {

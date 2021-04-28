@@ -149,9 +149,11 @@ const spacetraders = createSlice({
       },
       setSpyShip: (state, { payload }:PayloadAction<OwnedShip>) => {
          state.spyShips.push(payload);
+         localStorage.setItem('spyShips', JSON.stringify(state.spyShips));
       },
       removeSpyShip: (state, { payload }:PayloadAction<OwnedShip>) => {
          state.spyShips.splice(state.spyShips.findIndex((x) => x.id === payload.id), 1);
+         localStorage.setItem('spyShips', JSON.stringify(state.spyShips));
       },
    },
 });
