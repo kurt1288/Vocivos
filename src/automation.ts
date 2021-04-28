@@ -89,12 +89,12 @@ export class Automation {
    }
 
    updateState(state: RootState) {
-      const oldLength = this.ships.length;
+      const old = this.ships;
       this.ships = state.user.ships;
       this.spyShips = state.spyShips;
 
-      if (oldLength !== state.user.ships.length) {
-         const newShips = state.user.ships.filter((x) => !this.ships.some((y) => x.id === y.id));
+      if (old.length !== state.user.ships.length) {
+         const newShips = state.user.ships.filter((x) => !old.some((y) => y.id === x.id));
          for (const ship of newShips) {
             this.dispatch(ship.id);
          }
