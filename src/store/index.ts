@@ -24,6 +24,7 @@ interface InitialState {
    automateAll: boolean,
    systems: System[],
    availableShips: Ship[],
+   spyShips: OwnedShip[],
 }
 
 const initialState: InitialState = {
@@ -42,6 +43,7 @@ const initialState: InitialState = {
    automateAll: false,
    systems: [],
    availableShips: [],
+   spyShips: [],
 };
 
 const spacetraders = createSlice({
@@ -145,6 +147,12 @@ const spacetraders = createSlice({
          const credits = parseInt(payload.result.replace(/[^0-9]/g, ''), 10);
          state.user.credits += credits;
       },
+      setSpyShip: (state, { payload }:PayloadAction<OwnedShip>) => {
+         state.spyShips.push(payload);
+      },
+      removeSpyShip: (state, { payload }:PayloadAction<OwnedShip>) => {
+         state.spyShips.splice(state.spyShips.findIndex((x) => x.id === payload.id), 1);
+      },
    },
 });
 
@@ -152,7 +160,7 @@ export const {
    setUser, setToken, setCredits, updateShip, addFlightPlan, removeFlightPlan,
    updateMarketData, reset, addLoan, addShip,
    updateShips, setSystems, updateLoans, setAllAutomationState, updateGoodPriceAfterBuy,
-   updateGoodPriceAfterSell, setAvailableShips, updateScrapShip,
+   updateGoodPriceAfterSell, setAvailableShips, updateScrapShip, setSpyShip, removeSpyShip,
 } = spacetraders.actions;
 
 const { reducer } = spacetraders;

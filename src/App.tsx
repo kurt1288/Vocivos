@@ -11,7 +11,7 @@ import Timer from 'easytimer.js';
 import { ToastContainer, toast } from 'react-toastify';
 import { AutomationType, Automation } from './automation';
 import store, {
-   addFlightPlan, removeFlightPlan, reset, RootState, setAllAutomationState, setAvailableShips, setCredits,
+   addFlightPlan, addShip, removeFlightPlan, reset, RootState, setAllAutomationState, setAvailableShips, setCredits,
    setSystems,
    setUser, StoredMarket, updateGoodPriceAfterBuy, updateGoodPriceAfterSell, updateMarketData, updateShip,
 } from './store';
@@ -44,6 +44,8 @@ enum AutomationWorkerApiAction {
    Sell,
    CreateFlightPlan,
    MarketData,
+   BuyShip,
+   RemoveFlightPlan,
 }
 
 function App() {
@@ -133,7 +135,7 @@ function App() {
       dispatch(setAllAutomationState(false));
    };
 
-   const automationWorkerMakeApiCall = async (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string }) => {
+   const automationWorkerMakeApiCall = async (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string, flightPlan?: FlightPlan }) => {
       switch (action) {
          case AutomationWorkerApiAction.Buy: {
             const order = await apiWorker.purchaseOrder(data.shipId as string, data.good as CargoType, data.quantity as number);
@@ -152,17 +154,22 @@ function App() {
          case AutomationWorkerApiAction.CreateFlightPlan: {
             const flightPlan = await apiWorker.createFlightPlan(data.shipId as string, data.to as string);
             dispatch(addFlightPlan(flightPlan.flightPlan));
-            const timer = new Timer();
-            timer.start({ precision: 'seconds', target: { seconds: flightPlan.flightPlan.timeRemainingInSeconds } });
-            timer.addEventListener('targetAchieved', () => {
-               dispatch(removeFlightPlan(flightPlan.flightPlan));
-            });
             return flightPlan;
+         }
+         case AutomationWorkerApiAction.RemoveFlightPlan: {
+            dispatch(removeFlightPlan(data.flightPlan as FlightPlan));
+            return null;
          }
          case AutomationWorkerApiAction.MarketData: {
             const market = await apiWorker.getMarket(data.location as string);
             dispatch(updateMarketData({ updatedAt: Date.now(), planet: market.location }));
             return market;
+         }
+         case AutomationWorkerApiAction.BuyShip: {
+            const newShip = await apiWorker.buyShip(data.location as string, data.shipId as string);
+            dispatch(setCredits(newShip.credits));
+            dispatch(addShip(newShip.ship));
+            return newShip;
          }
          default:
             return null;

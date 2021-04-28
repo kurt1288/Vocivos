@@ -203,7 +203,7 @@ export interface Market {
 }
 
 export interface Marketplace {
-   symbol: string,
+   symbol: CargoType,
    volumePerUnit: number,
    pricePerUnit: number,
    quantityAvailable: number,

@@ -38,4 +38,8 @@
       
       border-bottom: 6px solid #F9FAFB;
     }
+
+    .spyShipState:checked + svg {
+       @apply text-green-400;
+    }
 }
