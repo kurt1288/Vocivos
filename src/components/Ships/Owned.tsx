@@ -63,14 +63,14 @@ const Owned = () => {
          ship.cargo.forEach(async (cargo) => {
             if (cargo.good !== CargoType.Fuel) {
                try {
-                  if (cargo.quantity > 300) {
+                  if (cargo.quantity > 500) {
                      let { quantity } = cargo;
                      while (quantity > 0) {
                         // eslint-disable-next-line no-await-in-loop
-                        const result = await apiWorker.sellOrder(ship.id, cargo.good, quantity > 300 ? 300 : quantity);
+                        const result = await apiWorker.sellOrder(ship.id, cargo.good, quantity > 500 ? 500 : quantity);
                         dispatch(setCredits(result.credits));
                         dispatch(updateShip(result.ship));
-                        quantity -= 300;
+                        quantity -= 500;
                      }
                   } else {
                      const result = await apiWorker.sellOrder(ship.id, cargo.good, cargo.quantity);

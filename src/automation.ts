@@ -380,7 +380,7 @@ export class Automation {
       if (!quantity || quantity <= 0) { return; }
       let tempQuantity = quantity;
       while (tempQuantity > 0) {
-         const order = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Buy, { shipId, good, quantity: tempQuantity > 300 ? 300 : tempQuantity }) as Purchase;
+         const order = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Buy, { shipId, good, quantity: tempQuantity > 500 ? 500 : tempQuantity }) as Purchase;
          const shipIndex = this.ships.findIndex((x) => x.id === order.ship.id);
          this.ships[shipIndex] = order.ship;
          this.credits = order.credits;
@@ -391,7 +391,7 @@ export class Automation {
                marketplace.purchasePricePerUnit = order.order.pricePerUnit;
             }
          }
-         tempQuantity -= 300;
+         tempQuantity -= 500;
       }
    }
 
@@ -424,18 +424,22 @@ export class Automation {
    }
 
    private async sellMarketGood(shipId: string, good: CargoType, quantity: number) {
-      const order = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Sell, { shipId, good, quantity }) as Purchase;
-      const shipIndex = this.ships.findIndex((x) => x.id === order.ship.id);
-      this.ships[shipIndex] = order.ship;
-      this.credits = order.credits;
+      let tempQuantity = quantity;
+      while (tempQuantity > 0) {
+         const order = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.Sell, { shipId, good, quantity: tempQuantity > 500 ? 500 : tempQuantity }) as Purchase;
+         const shipIndex = this.ships.findIndex((x) => x.id === order.ship.id);
+         this.ships[shipIndex] = order.ship;
+         this.credits = order.credits;
 
-      // Update the local market with the particular good's buy/sell info
-      const market = this.markets.find((x) => x.planet.symbol === order.ship.location);
-      if (market) {
-         const marketplace = market.planet.marketplace.find((x) => x.symbol === order.order.good);
-         if (marketplace) {
-            marketplace.sellPricePerUnit = order.order.pricePerUnit;
+         // Update the local market with the particular good's buy/sell info
+         const market = this.markets.find((x) => x.planet.symbol === order.ship.location);
+         if (market) {
+            const marketplace = market.planet.marketplace.find((x) => x.symbol === order.order.good);
+            if (marketplace) {
+               marketplace.sellPricePerUnit = order.order.pricePerUnit;
+            }
          }
+         tempQuantity -= 500;
       }
    }
 
