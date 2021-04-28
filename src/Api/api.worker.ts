@@ -73,7 +73,7 @@ export class Api {
       } catch (e) {
          console.log(`${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })}: Network error: ${(e as Error).message}`);
          if (retry < 5) {
-            await this.wait(10000);
+            await this.wait(60000);
             return this.makeRequest(url, type, payload, retry + 1);
          }
          throw e;
