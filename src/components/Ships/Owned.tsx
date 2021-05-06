@@ -121,7 +121,7 @@ const Owned = () => {
                type="button"
                className="text-sm cursor-pointer mr-2 p-2 rounded bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500 disabled:opacity-50 disabled:cursor-default"
                onClick={() => sellAllCargo()}
-               disabled={automateAll || (!automateAll && ships.some((x) => x.flightPlanId))}
+               disabled={automateAll || (!automateAll && ships.some((x) => x.flightPlanId)) || (!automateAll && !ships.some((x) => x.cargo.some((y) => y.good !== CargoType.Fuel)))}
             >
                Sell All Cargo
             </button>
