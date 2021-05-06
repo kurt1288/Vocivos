@@ -35,75 +35,47 @@ export class Api {
          minTime: 500,
          maxConcurrent: 1,
       });
-   }
 
-   private wait(time: number) {
-      return new Promise((resolve) => setTimeout(resolve, time));
+      this.limiter.on('failed', async (error, jobInfo) => {
+         if (error.status === 400 || error.status === 401) {
+            return null;
+         } if (jobInfo.retryCount < 10) {
+            if (error.status === 500) {
+               console.log(`${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })}: API error 500`);
+               return 30000;
+            }
+            console.log(`${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })} Error: ${error.message}`);
+            return error.retryHeader ? parseInt(error.retryHeader, 10) * 1000 : 1000;
+         }
+
+         return null;
+      });
    }
 
    private async makeRequest<T>(
-      url: string, type: fetchMethod, payload: Record<string, any> = {}, retry = 0,
+      url: string, type: fetchMethod, payload: Record<string, any> = {},
    ): Promise<T> {
-      let response:Response;
+      const response = await this.limiter.schedule(async () => {
+         const data = await fetch(url, {
+            method: type,
+            headers: {
+               Authorization: `Bearer ${this.token}`,
+               ...(type !== fetchMethod.Get && { 'Content-Type': 'application/json' }),
+            },
+            ...(type !== fetchMethod.Get && { body: JSON.stringify(payload) }),
+         });
 
-      try {
-         if (type === fetchMethod.Get) {
-            response = await this.limiter.schedule(async () => {
-               const data = await fetch(url, {
-                  method: type,
-                  headers: {
-                     Authorization: `Bearer ${this.token}`,
-                  },
-               });
-               return data;
-            });
-         } else {
-            response = await this.limiter.schedule(async () => {
-               const data = await fetch(url, {
-                  method: type,
-                  headers: {
-                     Authorization: `Bearer ${this.token}`,
-                     'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(payload),
-               });
-               return data;
-            });
+         if (data.status >= 400) {
+            const result = await data.json();
+            // Emit the 'failed' event
+            const error = { status: data.status, message: data.status === 401 ? 'Incorrect username or token' : result.error.message, retryHeader: data.headers.get('retry-after') };
+            throw error;
          }
-      } catch (e) {
-         console.log(`${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })}: Network error: ${(e as Error).message}`);
-         if (retry < 5) {
-            await this.wait(60000);
-            return this.makeRequest(url, type, payload, retry + 1);
-         }
-         throw e;
-      }
 
-      // The API sometimes randomly returns a 500. So we'll just wait for a minute and retry.
-      if (response.status === 500 && retry < 5) {
-         console.log(`${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })}: API error 500`);
-         await this.wait(60000);
-         return this.makeRequest(url, type, payload, retry + 1);
-      }
-
-      // Retry 3 times if rate limit error
-      if (response.status === 429 && retry < 3) {
-         const header = response.headers.get('retry-after');
-         const retryAfter = header ? parseInt(header, 10) * 1000 : 1000;
-         await this.wait(retryAfter);
-         return this.makeRequest(url, type, payload, retry + 1);
-      }
-
-      if (response.status === 401) {
-         throw new Error('Invalid username or token.');
-      }
+         return data;
+      });
 
       const result = await response.json();
-
-      if (response.status >= 400) {
-         console.log(`Error! URL: ${url}, Payload: ${JSON.stringify(payload)}, Response: ${JSON.stringify(result.error)}`);
-         throw new Error(result.error.message);
-      }
 
       return result;
    }
