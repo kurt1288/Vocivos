@@ -48,6 +48,7 @@ enum AutomationWorkerApiAction {
    MarketData,
    BuyShip,
    RemoveFlightPlan,
+   GetFlightPlan,
 }
 
 function App() {
@@ -168,6 +169,10 @@ function App() {
          case AutomationWorkerApiAction.RemoveFlightPlan: {
             dispatch(removeFlightPlan(data.flightPlan as FlightPlan));
             return null;
+         }
+         case AutomationWorkerApiAction.GetFlightPlan: {
+            const flightPlan = await apiWorker.queryFlightPlan(data.shipId as string);
+            return flightPlan;
          }
          case AutomationWorkerApiAction.MarketData: {
             const market = await apiWorker.getMarket(data.location as string);

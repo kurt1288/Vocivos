@@ -21,6 +21,7 @@ enum AutomationWorkerApiAction {
    MarketData,
    BuyShip,
    RemoveFlightPlan,
+   GetFlightPlan,
 }
 
 enum DispatchAction {
@@ -130,8 +131,10 @@ export class Automation {
 
       switch (ship.type) {
          case 'ZA-MK-II':
+         case 'ZA-MK-III':
          case 'EM-MK-II':
          case 'HM-MK-II':
+         case 'HM-MK-I':
             return 1;
          case 'GR-MK-I':
          case 'EM-MK-I':
@@ -369,9 +372,9 @@ export class Automation {
       this.dispatched.push({ shipId: ship.id, action, route });
       const timer = new Timer(flightPlan.flightPlan.arrivesAt);
       timer.start();
-      const targetCallback = () => {
+      const targetCallback = async () => {
          timer.removeEventListener('complete', targetCallback);
-         this.doRouteCompleted(ship.id, flightPlan.flightPlan);
+         await this.doRouteCompleted(ship.id, flightPlan.flightPlan);
       };
       timer.addEventListener('complete', targetCallback);
    }
@@ -443,27 +446,22 @@ export class Automation {
       }
    }
 
-   private async doRouteCompleted(shipId: string, flightPlan: FlightPlan) {
+   private async doRouteCompleted(shipId: string, flightPlan: FlightPlan, retry = 0) {
       await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.RemoveFlightPlan, { flightPlan });
       const ship = this.ships.find((x) => x.id === shipId);
       if (!ship || this.spyShips.some((x) => x.id === ship.id)) { return; }
 
+      const updatedFlightPlan = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.GetFlightPlan, { shipId: flightPlan.id }) as FlightPlanRes;
+      if (!updatedFlightPlan.flightPlan.terminatedAt && retry < 5) {
+         console.log('Ship has not yet arrived at destination. Waiting');
+         this.wait(1000 + (1000 * retry));
+         await this.doRouteCompleted(shipId, flightPlan, retry + 1);
+      }
+
       if (ship.cargo.filter((x) => x.good !== CargoType.Fuel).length > 0) {
          for (const cargo of ship.cargo) {
             if (cargo.good !== CargoType.Fuel) {
-               let retry = 0;
-               try {
-                  await this.sellMarketGood(shipId, cargo.good, cargo.quantity);
-               } catch (error: unknown) {
-                  if ((error as Error).message === 'Ships can only place a sell order while docked.' && retry < 5) {
-                     this.wait(1000 + (1000 * retry));
-                     await this.sellMarketGood(shipId, cargo.good, cargo.quantity);
-                     retry += 1;
-                  } else {
-                     this.enabled = false;
-                     this.errorCallback(`Error selling good. Ship: ${JSON.stringify(ship)}, Error: ${(error as Error).message}`);
-                  }
-               }
+               await this.sellMarketGood(shipId, cargo.good, cargo.quantity);
             }
          }
       } else {
@@ -556,6 +554,22 @@ export class Automation {
       }
    }
 
+   private async createSpyTimer() {
+      for (const ship of this.spyShips) {
+         if (ship.location) {
+            await this.updateMarketData(ship.location, true);
+         }
+      }
+
+      const timer = new Timer(new Date(Date.now() + (2 * 60 * 1000)));
+      timer.start();
+      const targetCallback = () => {
+         timer.removeEventListener('complete', targetCallback);
+         this.createSpyTimer();
+      };
+      timer.addEventListener('complete', targetCallback);
+   }
+
    private async initialize() {
       // Dispatch spy ships
       for (const system of this.systems) {
@@ -576,6 +590,8 @@ export class Automation {
             this.errorCallback(`Error dispatching spy ship. Error: ${(error as Error).message}`);
          }
       }
+
+      this.createSpyTimer();
 
       for (const ship of this.ships.sort((a, b) => ((a.speed < b.speed) ? 1 : (b.speed < a.speed) ? -1 : 0))) {
          // Don't want to dispatch spy ships
