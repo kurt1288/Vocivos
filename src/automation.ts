@@ -150,7 +150,7 @@ export class Automation {
       }
    }
 
-   private async BestTradeRoutes() {
+   private async BestTradeRoutes(ship: OwnedShip) {
       const bestRoutes: SystemRoutes[] = [];
 
       const locations = Array.from(new Set(this.ships.map((item) => item.location)));
@@ -174,7 +174,9 @@ export class Automation {
                   if (data[y].planet !== current.planet) {
                      const creditDiff = (data[y].planet.marketplace.find((x) => x.symbol === type)?.sellPricePerUnit as number) - (current.planet.marketplace.find((x) => x.symbol === type)?.purchasePricePerUnit as number);
                      const distance = Automation.distanceBetween(current.planet, data[y].planet);
-                     const cpdv = creditDiff / distance / (current.planet.marketplace.find((x) => x.symbol === type)?.volumePerUnit as number);
+                     const flightTime = Math.round(distance * (2 / ship.speed)) + 60;
+                     const fuelRequired = Automation.fuelRequired(current.planet, data[y].planet);
+                     const cpdv = (creditDiff * (ship.maxCargo - fuelRequired)) / flightTime / (current.planet.marketplace.find((x) => x.symbol === type)?.volumePerUnit as number);
                      const lastUpdated = current.updatedAt > data[y].updatedAt ? current.updatedAt : data[y].updatedAt;
 
                      // exclude any negatives because we don't want to trade on routes that lose money
@@ -186,7 +188,7 @@ export class Automation {
                            good: type,
                            from: current.planet.symbol,
                            to: data[y].planet.symbol,
-                           fuelRequired: Automation.fuelRequired(current.planet, data[y].planet),
+                           fuelRequired,
                            cpdv,
                            lastUpdated,
                         };
@@ -195,7 +197,7 @@ export class Automation {
                            good: type,
                            from: current.planet.symbol,
                            to: data[y].planet.symbol,
-                           fuelRequired: Automation.fuelRequired(current.planet, data[y].planet),
+                           fuelRequired,
                            cpdv,
                            lastUpdated,
                         });
@@ -211,12 +213,16 @@ export class Automation {
       return bestRoutes;
    }
 
-   private async getBestRoute(tradeRoutes: SystemRoutes[], location: string): Promise<TradeRoute | null> {
-      if (!tradeRoutes || tradeRoutes.length === 0 || !location) {
+   private async getBestRoute(ship: OwnedShip): Promise<TradeRoute | null> {
+      if (!ship.location) { return null; }
+
+      const tradeRoutes = await this.BestTradeRoutes(ship);
+
+      if (!tradeRoutes || tradeRoutes.length === 0) {
          return null;
       }
 
-      const systemRoutes = tradeRoutes.find((x) => x.system === Automation.getSystemSymbolFromLocation(location));
+      const systemRoutes = tradeRoutes.find((x) => x.system === Automation.getSystemSymbolFromLocation(ship.location));
 
       if (!systemRoutes) {
          return null;
@@ -234,7 +240,7 @@ export class Automation {
       // If the best route doesn't have a profitable return route, look for a route/return combo that's more profitable than just the best route
       for (let i = 1; i < routes.length; i += 1) {
          const nextBestRoute = routes[i];
-         const nextReturnRoute = this.getBestRouteFromLocationToLocation(nextBestRoute.to, nextBestRoute.from);
+         const nextReturnRoute = this.getBestRouteFromLocationToLocation(nextBestRoute.to, nextBestRoute.from, ship);
 
          if (nextReturnRoute && ((nextBestRoute.cpdv + nextReturnRoute.cpdv) > routes[0].cpdv)) {
             return nextBestRoute;
@@ -257,7 +263,7 @@ export class Automation {
       return route.reduce((max, obj) => (obj.cpdv > max.cpdv ? obj : max));
    }
 
-   private getBestRouteFromLocationToLocation(from: string, to: string) {
+   private getBestRouteFromLocationToLocation(from: string, to: string, ship: OwnedShip) {
       const fromMarket = [...this.markets].find((x) => x.planet.symbol === from);
       const toMarket = [...this.markets].find((x) => x.planet.symbol === to);
 
@@ -275,14 +281,16 @@ export class Automation {
          if (item.symbol !== CargoType.Fuel && item.symbol !== CargoType.Research) {
             const creditDiff = (toMarket.planet.marketplace.find((x) => x.symbol === item.symbol)?.sellPricePerUnit as number) - (fromMarket.planet.marketplace.find((x) => x.symbol === item.symbol)?.purchasePricePerUnit as number);
             const distance = Automation.distanceBetween(fromPlanet, toPlanet);
-            const cpdv = creditDiff / distance / (fromMarket.planet.marketplace.find((x) => x.symbol === item.symbol)?.volumePerUnit as number);
+            const flightTime = Math.round(distance * (2 / ship.speed)) + 60;
+            const fuelRequired = Automation.fuelRequired(fromPlanet, toPlanet);
+            const cpdv = (creditDiff * (ship.maxCargo - fuelRequired)) / flightTime / (fromMarket.planet.marketplace.find((x) => x.symbol === item.symbol)?.volumePerUnit as number);
             const lastUpdated = fromMarket.updatedAt > toMarket.updatedAt ? fromMarket.updatedAt : toMarket.updatedAt;
             if (cpdv > 0) {
                bestGood.push({
                   good: item.symbol,
                   from,
                   to,
-                  fuelRequired: Automation.fuelRequired(fromPlanet, toPlanet),
+                  fuelRequired,
                   cpdv,
                   lastUpdated,
                });
@@ -481,7 +489,7 @@ export class Automation {
 
          await this.updateMarketData(ship.location);
 
-         const routes = await this.BestTradeRoutes();
+         // const routes = await this.BestTradeRoutes(ship);
 
          const shouldScout = this.shouldScout(Automation.getSystemSymbolFromLocation(ship.location as string));
          if (shouldScout && shouldScout.length > 0) {
@@ -497,7 +505,7 @@ export class Automation {
             }
          }
 
-         const route = await this.getBestRoute(routes, ship.location);
+         const route = await this.getBestRoute(ship);
 
          // In cases where there is only market data for a single location, there will be no best route
          if (route) {
@@ -521,7 +529,7 @@ export class Automation {
             if (ship.location !== route.from) {
                const fuel = await this.buyFuel(ship, { from: ship.location, to: route.from });
                // If there's a profitable trade, even though it might not be the best, from the current location to the location with the best trade
-               const possibleTrade = this.getBestRouteFromLocationToLocation(ship.location, route.from);
+               const possibleTrade = this.getBestRouteFromLocationToLocation(ship.location, route.from, ship);
                if (possibleTrade) {
                   const maxQuantity = this.getMaxQuantity(this.markets.find((x) => x.planet.symbol === ship.location)?.planet.marketplace.find((x) => x.symbol === possibleTrade.good) as Marketplace, ship) - fuel;
                   if (maxQuantity > 0) {
