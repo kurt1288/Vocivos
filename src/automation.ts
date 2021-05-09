@@ -11,7 +11,7 @@ import { RootState, StoredMarket } from './store';
 import Timer from './Timer';
 
 export interface AutomationType {
-   new(automationGetStore: () => Promise<RootState>, automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string, flightPlan?: FlightPlan }) => Promise<Purchase | FlightPlanRes | Market | BuyShipResponse | null>, errorCallback: (error: string) => void): Automation
+   new(automationGetStore: () => Promise<RootState>, automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string, flightPlan?: FlightPlan }) => Promise<OwnedShip | Purchase | FlightPlanRes | Market | BuyShipResponse | null>, errorCallback: (error: string) => void): Automation
 }
 
 enum AutomationWorkerApiAction {
@@ -22,6 +22,7 @@ enum AutomationWorkerApiAction {
    BuyShip,
    RemoveFlightPlan,
    GetFlightPlan,
+   UpdateShip,
 }
 
 enum DispatchAction {
@@ -56,7 +57,7 @@ interface Dispatched {
 
 export class Automation {
    automationGetStore: () => Promise<RootState>;
-   automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string, flightPlan?: FlightPlan }) => Promise<Purchase | FlightPlanRes | Market | BuyShipResponse | null>;
+   automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string, flightPlan?: FlightPlan }) => Promise<OwnedShip | Purchase | FlightPlanRes | Market | BuyShipResponse | null>;
    errorCallback: (error: string) => void;
    private markets: StoredMarket[] = [];
    private credits = 0;
@@ -67,7 +68,7 @@ export class Automation {
    private dispatched: Dispatched[] = [];
    private marketUpdateTime = 600000;
 
-   constructor(automationGetStore: () => Promise<RootState>, automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string, flightPlan?: FlightPlan }) => Promise<Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void) {
+   constructor(automationGetStore: () => Promise<RootState>, automationWorkerMakeApiCall: (action: AutomationWorkerApiAction, data: { shipId?: string, good?: CargoType, quantity?: number, to?: string, location?: string, flightPlan?: FlightPlan }) => Promise<OwnedShip | Purchase | FlightPlanRes | Market | null>, errorCallback: (error: string) => void) {
       this.automationGetStore = automationGetStore;
       this.automationWorkerMakeApiCall = automationWorkerMakeApiCall;
       this.errorCallback = errorCallback;
@@ -481,7 +482,7 @@ export class Automation {
       }
    }
 
-   private async dispatch(shipId: string) {
+   private async dispatch(shipId: string, retry = 0) {
       try {
          const ship = this.ships.find((x) => x.id === shipId);
          if (!ship || !this.enabled) { return; }
@@ -557,8 +558,16 @@ export class Automation {
 
          console.log('Not best route found');
       } catch (error: unknown) {
-         this.enabled = false;
-         this.errorCallback(`Error dispatching ship: ${JSON.stringify(shipId)}, Error: ${(error as Error).message}`);
+         // Sometimes ship state isn't updated properly at a step, so next time it tries to do something it errors (such as buying too much).
+         // If that happens, update the ship and try one more time.
+         if (retry === 0) {
+            const ship = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.UpdateShip, { shipId }) as OwnedShip;
+            this.ships[this.ships.findIndex((x) => x.id === shipId)] = ship;
+            this.dispatch(shipId, 1);
+         } else {
+            this.enabled = false;
+            this.errorCallback(`Error dispatching ship: ${JSON.stringify(shipId)}, Error: ${(error as Error).message}`);
+         }
       }
    }
 

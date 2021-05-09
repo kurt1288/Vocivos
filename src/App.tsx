@@ -49,6 +49,7 @@ enum AutomationWorkerApiAction {
    BuyShip,
    RemoveFlightPlan,
    GetFlightPlan,
+   UpdateShip,
 }
 
 function App() {
@@ -184,6 +185,11 @@ function App() {
             dispatch(setCredits(newShip.credits));
             dispatch(addShip(newShip.ship));
             return newShip;
+         }
+         case AutomationWorkerApiAction.UpdateShip: {
+            const shipInfo = await apiWorker.shipInfo(data.shipId);
+            dispatch(updateShip(shipInfo.ship));
+            return shipInfo.ship;
          }
          default:
             return null;
