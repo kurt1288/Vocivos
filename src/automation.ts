@@ -560,13 +560,18 @@ export class Automation {
       } catch (error: unknown) {
          // Sometimes ship state isn't updated properly at a step, so next time it tries to do something it errors (such as buying too much).
          // If that happens, update the ship and try one more time.
-         if (retry === 0) {
-            const ship = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.UpdateShip, { shipId }) as OwnedShip;
-            this.ships[this.ships.findIndex((x) => x.id === shipId)] = ship;
-            this.dispatch(shipId, 1);
-         } else {
+         try {
+            if (retry === 0) {
+               const ship = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.UpdateShip, { shipId }) as OwnedShip;
+               this.ships[this.ships.findIndex((x) => x.id === shipId)] = ship;
+               this.dispatch(shipId, 1);
+            } else {
+               this.enabled = false;
+               this.errorCallback(`Error dispatching ship: ${JSON.stringify(shipId)}, Error: ${(error as Error).message}`);
+            }
+         } catch (error2: unknown) {
             this.enabled = false;
-            this.errorCallback(`Error dispatching ship: ${JSON.stringify(shipId)}, Error: ${(error as Error).message}`);
+            this.errorCallback(`Error dispatching ship: ${JSON.stringify(shipId)}, Error: ${(error2 as Error).message}`);
          }
       }
    }
