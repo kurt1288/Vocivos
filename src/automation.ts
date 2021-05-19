@@ -165,7 +165,7 @@ export class Automation {
             if (type === CargoType.Research || type === CargoType.Fuel) { continue; } // exclude research for now
 
             // all locations that have up-to-date data and have the good in question
-            const data = [...this.markets].filter((x) => Automation.getSystemSymbolFromLocation(x.planet.symbol) === system && x.planet.marketplace.find((y) => y.symbol === type));
+            const data = this.markets.filter((x) => Automation.getSystemSymbolFromLocation(x.planet.symbol) === system && x.planet.marketplace.find((y) => y.symbol === type));
 
             if (data.length <= 1) { continue; }
             for (let i = 0; i < data.length; i += 1) {
@@ -214,7 +214,7 @@ export class Automation {
       return bestRoutes;
    }
 
-   private async getBestRoute(ship: OwnedShip): Promise<TradeRoute | null> {
+   private async getBestRoute(ship: OwnedShip, systemSymbol: string): Promise<TradeRoute | null> {
       if (!ship.location) { return null; }
 
       const tradeRoutes = await this.BestTradeRoutes(ship);
@@ -223,7 +223,7 @@ export class Automation {
          return null;
       }
 
-      const systemRoutes = tradeRoutes.find((x) => x.system === Automation.getSystemSymbolFromLocation(ship.location));
+      const systemRoutes = tradeRoutes.find((x) => x.system === systemSymbol);
 
       if (!systemRoutes) {
          return null;
@@ -250,18 +250,6 @@ export class Automation {
 
       // Just do the best route if nothing else
       return routes[0];
-   }
-
-   private static getBestRouteFromLocation(from: string, routes: TradeRoute[]) {
-      const route = [...routes].filter((x) => x.from === from);
-
-      // if the current location doesn't have any profitable routes...
-      if (route === undefined || route.length === 0) {
-         return null;
-      }
-
-      // Get most profitable route from current location
-      return route.reduce((max, obj) => (obj.cpdv > max.cpdv ? obj : max));
    }
 
    private getBestRouteFromLocationToLocation(from: string, to: string, ship: OwnedShip) {
@@ -307,10 +295,10 @@ export class Automation {
 
    private async updateMarketData(location:string, force = false) {
       const planet = this.markets?.find((x) => x.planet.symbol === location);
-      const ship = this.ships.some((x) => x.location === location);
+      // const ship = this.ships.some((x) => x.location === location);
 
       // if there's no cached data, or if the cached data is older than 10 minutes, update
-      if (ship && (force || !this.markets || !planet || (Date.now() - planet.updatedAt > this.marketUpdateTime))) {
+      if (force || !this.markets || !planet || (Date.now() - planet.updatedAt > this.marketUpdateTime)) {
          const data = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.MarketData, { location }) as Market;
          if (this.markets.some((item) => (item.planet.symbol === location))) {
             this.markets = this.markets.map((item) => ((item.planet.symbol === location) ? { updatedAt: Date.now(), planet: data.location } : item));
@@ -459,26 +447,26 @@ export class Automation {
       await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.RemoveFlightPlan, { flightPlan });
       const ship = this.ships.find((x) => x.id === shipId);
       if (!ship || this.spyShips.some((x) => x.id === ship.id)) { return; }
+      if (!this.enabled) { return; }
 
-      const updatedFlightPlan = await this.automationWorkerMakeApiCall(AutomationWorkerApiAction.GetFlightPlan, { shipId: flightPlan.id }) as FlightPlanRes;
-      if (!updatedFlightPlan.flightPlan.terminatedAt && retry < 5) {
-         console.log('Ship has not yet arrived at destination. Waiting');
-         this.wait(1000 + (1000 * retry));
-         await this.doRouteCompleted(shipId, flightPlan, retry + 1);
-      }
-
-      if (ship.cargo.filter((x) => x.good !== CargoType.Fuel).length > 0) {
-         for (const cargo of ship.cargo) {
-            if (cargo.good !== CargoType.Fuel) {
-               await this.sellMarketGood(shipId, cargo.good, cargo.quantity);
+      try {
+         if (ship.cargo.filter((x) => x.good !== CargoType.Fuel).length > 0) {
+            for (const cargo of ship.cargo) {
+               if (cargo.good !== CargoType.Fuel) {
+                  await this.sellMarketGood(shipId, cargo.good, cargo.quantity);
+               }
             }
+         } else {
+            ship.location = flightPlan.destination;
          }
-      } else {
-         ship.location = flightPlan.destination;
-      }
 
-      if (this.enabled) {
          await this.dispatch(ship.id);
+      } catch (error: unknown) {
+         if ((error as Error).message === 'Ships can only place a sell order while docked.') {
+            console.log('Ship has not yet arrived at destination. Waiting');
+            this.wait(1000 + (1000 * retry));
+            await this.doRouteCompleted(shipId, flightPlan, retry + 1);
+         }
       }
    }
 
@@ -490,9 +478,9 @@ export class Automation {
 
          await this.updateMarketData(ship.location);
 
-         // const routes = await this.BestTradeRoutes(ship);
+         const systemSymbol = Automation.getSystemSymbolFromLocation(ship.location as string);
 
-         const shouldScout = this.shouldScout(Automation.getSystemSymbolFromLocation(ship.location as string));
+         const shouldScout = this.shouldScout(systemSymbol);
          if (shouldScout && shouldScout.length > 0) {
             if (ship.location === shouldScout[0]) {
                await this.updateMarketData(ship.location, true);
@@ -506,11 +494,11 @@ export class Automation {
             }
          }
 
-         const route = await this.getBestRoute(ship);
+         const route = await this.getBestRoute(ship, systemSymbol);
 
          // In cases where there is only market data for a single location, there will be no best route
          if (route) {
-            const location = this.systems.find((x) => x.symbol === Automation.getSystemSymbolFromLocation(ship.location as string))?.locations.find((x) => x.symbol === ship.location);
+            const location = this.systems.find((x) => x.symbol === systemSymbol)?.locations.find((x) => x.symbol === ship.location);
             if (!location) { return; }
 
             /**
@@ -556,7 +544,7 @@ export class Automation {
             return;
          }
 
-         console.log('Not best route found');
+         console.log('No best route found');
       } catch (error: unknown) {
          // Sometimes ship state isn't updated properly at a step, so next time it tries to do something it errors (such as buying too much).
          // If that happens, update the ship and try one more time.
