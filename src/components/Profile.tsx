@@ -41,7 +41,7 @@ const Profile = () => {
                            ? (
                               <div>
                                  <p>You have no loans!</p>
-                                 <Link to="/loans/available" className="text-sm text-yellow-700 hover:text-blue-600">Get a loan</Link>
+                                 <Link to="/money/loans/available" className="text-sm text-yellow-700 hover:text-blue-600">Get a loan</Link>
                               </div>
                            )
                            : (
